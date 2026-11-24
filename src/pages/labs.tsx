@@ -6,6 +6,8 @@ import { FrequencyMap, SidechainLab } from "@/components/labs/mix-lab"
 import { ScalesLab } from "@/components/labs/scales-lab"
 import { SliceLab } from "@/components/labs/slice-lab"
 import { SynthLab } from "@/components/labs/synth-lab"
+import { GenreSounds } from "@/components/labs/genre-sounds"
+import { GENRE_SOUNDS } from "@/data/genre-sounds"
 import { Sequencer } from "@/components/labs/sequencer"
 import { TimingTrainer } from "@/components/labs/timing-trainer"
 import { ProgressionBuilder } from "@/components/labs/progression-builder"
@@ -39,9 +41,10 @@ export function EarLab() {
 
 export function SoundDesignLab() {
   return (
-    <div className="space-y-10">
-      <PageHeader title="Sound design">A small synth with the same oscillator, filter and envelope as Drift. Change a control, play it, and watch the shape change.</PageHeader>
-      <SynthLab />
+    <div className="space-y-12">
+      <PageHeader title="Sound design">Signature sounds from each genre you can play and tweak, then a small synth with the same oscillator, filter and envelope as Drift to learn how the controls work.</PageHeader>
+      <Block title="Genre sounds" description={`${GENRE_SOUNDS.length} sounds across wave, phonk, house, techno, bass music and more.`}><GenreSounds /></Block>
+      <Block title="Synth playground" description="Change a control, play it, and watch the shape change."><SynthLab /></Block>
       <More to="/instruments?tab=modulation">the modulation guide</More>
     </div>
   )

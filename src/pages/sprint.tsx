@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils"
 const LAB: Record<string, [string, () => React.ReactNode]> = {
   s1: ["The Push drum layout and starter patterns", () => <div className="space-y-10"><DrumLayouts /><DrumPatterns /></div>],
   s2: ["Scales and chords on the grid", () => <ScalesLab />],
-  s3: ["Synth playground", () => <SynthLab />],
+  s3: ["Synth playground", () => <div className="space-y-4"><SynthLab /><p className="text-sm">Want to hear the sounds for your genres? <Link to="/labs/sound-design" className="underline">Play the genre sounds</Link>.</p></div>],
   s4: ["How Slice mode maps a loop to pads", () => <SliceLab />],
   s5: ["Arrangement map", () => <div className="space-y-4"><ArrangementMap /><p className="text-sm">Ready to plan your own? <Link to="/planner" className="underline">Open the track planner</Link>.</p></div>],
   s6: ["Mix references", () => <MixLab />],

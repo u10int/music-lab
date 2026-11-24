@@ -3,6 +3,7 @@ import { useNavigate } from "react-router"
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { FX, GLOSS, INSTR, RECIPES } from "@/data/guide"
 import { PATTERNS } from "@/data/patterns"
+import { GENRE_SOUNDS } from "@/data/genre-sounds"
 import { SHORT } from "@/data/push"
 import { SPRINTS } from "@/data/sprints"
 import { slug } from "@/lib/utils"
@@ -41,6 +42,7 @@ export default function SearchDialog({ open, setOpen }: { open: boolean; setOpen
     { heading: "Effects", items: FX.map((f) => ({ label: f.n, hint: f.tags.join(", "), to: `/instruments?tab=effects#fx-${slug(f.n)}` })) },
     { heading: "Glossary", items: GLOSS.map(([id, term, , def]) => ({ label: term, hint: def, to: `/instruments?tab=glossary#gl-${id}` })) },
     { heading: "Push 3 shortcuts", items: SHORT.map(([combo, effect]) => ({ label: combo, hint: effect, to: "/push?tab=shortcuts" })) },
+    { heading: "Genre sounds", items: GENRE_SOUNDS.map((g) => ({ label: g.name, hint: g.genre, to: `/labs/sound-design#sound-${g.id}` })) },
     { heading: "Drum patterns", items: PATTERNS.map((p) => ({ label: p.name, hint: p.bpm, to: `/labs/drums#pat-${p.id}` })) },
   ], [])
   return (
