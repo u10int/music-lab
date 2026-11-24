@@ -11,6 +11,7 @@ import { DrumLayouts } from "@/components/push/drum-layouts"
 import { SprintShortcuts } from "@/components/push/recording"
 import { References, Resources, Stuck } from "@/components/sprint-sections"
 import { SkillList } from "@/components/skill-list"
+import { SprintProofs, SprintRetro } from "@/components/today/retro"
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -150,6 +151,9 @@ export function SprintPage() {
           })}
         </div>
       </Block>
+
+      <SprintProofs p={p} s={s} />
+      <SprintRetro p={p} s={s} />
 
       <Card><CardContent className="space-y-6"><h2 className="text-xl font-medium">{LAB[s.id][0]}</h2>{LAB[s.id][1]()}</CardContent></Card>
       {s.id === "s2" && <Card><CardContent className="space-y-4"><h2 className="text-xl font-medium">Ear training</h2><EarTraining /></CardContent></Card>}

@@ -38,6 +38,7 @@ const SettingsPage = lazy(() => import("@/pages/settings").then((m) => ({ defaul
 const PlayAlongPage = lazy(() => import("@/pages/play-along").then((m) => ({ default: m.PlayAlongPage })))
 const PracticePage = lazy(() => import("@/pages/practice").then((m) => ({ default: m.PracticePage })))
 const TodayPage = lazy(() => import("@/pages/today").then((m) => ({ default: m.TodayPage })))
+const PracticeModePage = lazy(() => import("@/pages/practice-mode").then((m) => ({ default: m.PracticeModePage })))
 const FlashcardsPage = lazy(() => import("@/pages/flashcards").then((m) => ({ default: m.FlashcardsPage })))
 const GenresPage = lazy(() => import("@/pages/genres").then((m) => ({ default: m.GenresPage })))
 const GenrePage = lazy(() => import("@/pages/genres").then((m) => ({ default: m.GenrePage })))
@@ -78,6 +79,14 @@ function Layout() {
     raf = requestAnimationFrame(find)
     return () => cancelAnimationFrame(raf)
   }, [pathname, hash, search])
+  // ?embed=1: just the page, for showing a tool inside practice mode.
+  if (q.get("embed") === "1") return (
+    <TooltipProvider delayDuration={300}>
+      <main className="w-full px-4 py-6 sm:px-6">
+        <Suspense fallback={<p className="text-muted-foreground text-sm">Loading…</p>}><Outlet /></Suspense>
+      </main>
+    </TooltipProvider>
+  )
   return (
     <TooltipProvider delayDuration={300}>
       <SidebarProvider>
@@ -112,6 +121,7 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <HomeRoute dashboard={<Dashboard />} home={<HomePage />} /> },
       { path: "/today", element: <RequireAccount what="today’s session"><TodayPage /></RequireAccount> },
+      { path: "/today/practice", element: <RequireAccount what="practice mode"><PracticeModePage /></RequireAccount> },
       { path: "/sprints/:n", element: <RequireAccount what="your sprints"><SprintPage /></RequireAccount> },
       { path: "/exports", element: <RequireAccount what="your exports"><ExportsPage /></RequireAccount> },
       { path: "/practice", element: <RequireAccount what="your practice log"><PracticePage /></RequireAccount> },

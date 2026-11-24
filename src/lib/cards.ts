@@ -1,6 +1,7 @@
 import { SCALES } from "@/data/labs"
 import { FXPICK, GLOSS, INSTR } from "@/data/guide"
 import { REC, SHORT } from "@/data/push"
+import { LIVE_SHORTCUTS } from "@/data/learning"
 import { isoOf, todayISO, type Progress } from "./store"
 import { theory } from "./theory"
 
@@ -11,9 +12,10 @@ export interface Card {
   /** For Push cards: the buttons involved. */
   buttons?: string[]
 }
-export type DeckId = "push" | "chords" | "scales" | "glossary" | "effects" | "instruments"
+export type DeckId = "push" | "live" | "chords" | "scales" | "glossary" | "effects" | "instruments"
 export const DECKS: [DeckId, string, string][] = [
   ["push", "Push 3 controls", "Button combos and what the main buttons do."],
+  ["live", "Live shortcuts", "Keyboard shortcuts for working in Live on screen."],
   ["chords", "Chord spellings", "The notes in every major and minor triad."],
   ["scales", "Scale spellings", "Every major and natural minor scale."],
   ["glossary", "Sound design terms", "The glossary from the instrument guide."],
@@ -31,6 +33,7 @@ export function allCards(): Card[] {
   if (cache) return cache
   const out: Card[] = []
   for (const [combo, effect] of SHORT) out.push({ id: "push-" + combo, deck: "push", front: `On Push 3, how do you: ${effect.charAt(0).toLowerCase() + effect.slice(1)}?`, back: combo, buttons: combo.split(/\s*\+\s*/) })
+  for (const [keys, what] of LIVE_SHORTCUTS) out.push({ id: "live-" + keys, deck: "live", front: `In Live, how do you: ${what.charAt(0).toLowerCase() + what.slice(1)}?`, back: keys })
   for (const [btn, desc] of REC) out.push({ id: "pushbtn-" + btn, deck: "push", front: `What does the ${btn} button do?`, back: desc, buttons: [btn] })
   for (const pc of ROOT_PCS)
     for (const sc of ["major", "minor"] as const) {

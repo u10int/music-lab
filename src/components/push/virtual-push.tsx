@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react"
+import { useSearchParams } from "react-router"
+import { Button } from "@/components/ui/button"
 import { horizon, startClock, stopClock } from "@/audio/clock"
 import { drum, hit, playNote, type DrumKind } from "@/audio/engine"
 import { bindTempo, setPos, toggle, usePlayingId, usePos } from "@/audio/playback"
@@ -36,6 +38,42 @@ const ORANGE = "#f0a020", BLUE = "#5a8cff", GREEN = "#3fbf4a", OFF = "#3a3a3a", 
  * Play, Tap Tempo, Accent, Delete, Octave and Metronome-free practice all work
  * from the drawn buttons; pads you press on a connected Push light up too.
  */
+type Target = { pad: [number, number] } | { control: ControlId }
+interface Guide { id: string; title: string; intro: string; mode: "drums" | "notes"; clear?: boolean; steps: { text: string; target: Target }[] }
+// Pads are [row from the top, column]. Drum pad i sits at row 7 − ⌊i/4⌋, column i % 4; step s at row ⌊s/8⌋, column s % 8.
+const dp = (i: number): Target => ({ pad: [7 - Math.floor(i / 4), i % 4] })
+const st = (s: number): Target => ({ pad: [Math.floor(s / 8), s % 8] })
+const vp = (i: number): Target => ({ pad: [7 - Math.floor(i / 4), 4 + (i % 4)] })
+/** Guided practice: the next pad or button lights up, and the guide moves on when you press it. */
+export const GUIDES: Guide[] = [
+  { id: "four", title: "Four on the floor", intro: "Program a house beat the way you would on Push. Starts from an empty pattern.", mode: "drums", clear: true, steps: [
+    { text: "Select the Kick pad, bottom left.", target: dp(0) },
+    { text: "Press step 1 in the top row.", target: st(0) }, { text: "Step 5.", target: st(4) }, { text: "Step 9: first pad of the second row.", target: st(8) }, { text: "Step 13.", target: st(12) },
+    { text: "Select the Clap pad.", target: dp(3) },
+    { text: "Clap on step 5.", target: st(4) }, { text: "And step 13.", target: st(12) },
+    { text: "Select the Hat pad.", target: dp(6) },
+    { text: "Offbeat hats: step 3.", target: st(2) }, { text: "Step 7.", target: st(6) }, { text: "Step 11.", target: st(10) }, { text: "Step 15.", target: st(14) },
+    { text: "Press Play to hear it.", target: { control: "play" } },
+  ] },
+  { id: "velocity", title: "Velocity and Accent", intro: "Quiet hats against loud ones, using the 16 velocity pads and Accent.", mode: "drums", clear: true, steps: [
+    { text: "Select the Hat pad.", target: dp(6) },
+    { text: "Pick velocity 64 in the bottom-right block.", target: vp(7) },
+    { text: "Quiet hats on step 3.", target: st(2) }, { text: "Step 7.", target: st(6) }, { text: "Step 11.", target: st(10) }, { text: "Step 15.", target: st(14) },
+    { text: "Turn on Accent: every new hit is full velocity.", target: { control: "accent" } },
+    { text: "Loud hat on step 1.", target: st(0) }, { text: "Step 9.", target: st(8) },
+    { text: "Turn Accent off again.", target: { control: "accent" } },
+    { text: "Press Play and listen to the loud and quiet hats.", target: { control: "play" } },
+  ] },
+  { id: "triad", title: "A triad in Note mode", intro: "Find the root, third and fifth in the In Key layout, then move up an octave.", mode: "drums", steps: [
+    { text: "Press Note to switch to the instrument track.", target: { control: "note" } },
+    { text: "Play the root: the blue pad, bottom left.", target: { pad: [7, 0] } },
+    { text: "The third: two pads to the right.", target: { pad: [7, 2] } },
+    { text: "The fifth: up one row and one to the right.", target: { pad: [6, 1] } },
+    { text: "Move up an octave with Octave up.", target: { control: "octaveUp" } },
+    { text: "Play the root again, an octave higher.", target: { pad: [7, 0] } },
+  ] },
+]
+
 export function VirtualPush() {
   const [mode, setMode] = usePref<"drums" | "notes">("vpush-mode", "drums")
   // Drum state
@@ -58,6 +96,39 @@ export function VirtualPush() {
   const sc = SCALES.find((x) => x.id === scale) ?? SCALES[0], iv = sc.iv, names = spellScale(root, iv)
   const base = 36 + root + (root > 5 ? -12 : 0) + 12 + oct * 12
   const taps = useRef<number[]>([])
+  // Guided practice
+  const [params, setParams] = useSearchParams()
+  const [guideId, setGuideId] = useState<string | null>(() => GUIDES.some((g) => g.id === params.get("guide")) ? params.get("guide") : null)
+  const [gStep, setGStep] = useState(0)
+  const [gMiss, setGMiss] = useState(false)
+  const guide = GUIDES.find((g) => g.id === guideId) ?? null
+  const gTarget = guide?.steps[gStep]?.target
+  const startGuide = (id: string) => {
+    const g = GUIDES.find((x) => x.id === id)!
+    if (g.clear) setSeq({ ...seq, steps: seq.steps.map((row) => row.map(() => 0)) })
+    setMode(g.mode)
+    setOct(0)
+    setAccent(false)
+    setGuideId(id)
+    setGStep(0)
+    setGMiss(false)
+    setParams((sp) => { sp.set("guide", id); return sp }, { replace: true })
+  }
+  const endGuide = () => { setGuideId(null); setParams((sp) => { sp.delete("guide"); return sp }, { replace: true }) }
+  /** Checks a press against the guide's next target. */
+  const follow = (t: Target) => {
+    if (!guide || !gTarget) return
+    const hit = "pad" in t && "pad" in gTarget ? t.pad[0] === gTarget.pad[0] && t.pad[1] === gTarget.pad[1] : "control" in t && "control" in gTarget && t.control === gTarget.control
+    if (hit) { setGStep((x) => x + 1); setGMiss(false) } else setGMiss(true)
+  }
+  // Starting a guide from a link clears the pattern once.
+  const startedFromLink = useRef(false)
+  useEffect(() => {
+    if (startedFromLink.current || !guideId) return
+    startedFromLink.current = true
+    startGuide(guideId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const flash = <T,>(set: React.Dispatch<React.SetStateAction<T[]>>, v: T, ms = 140) => {
     set((l) => [...l, v])
@@ -111,6 +182,7 @@ export function VirtualPush() {
   const toggleStep = (s: number) => setSeq({ ...seq, steps: seq.steps.map((row, p) => (p !== sel ? row : row.map((v, j) => (j !== s ? v : v ? 0 : accent ? 127 : vel)))) })
 
   const onControl = (id: ControlId) => {
+    follow({ control: id })
     if (id === "play") play()
     else if (id === "note") setMode(mode === "drums" ? "notes" : "drums")
     else if (id === "accent") setAccent((a) => !a)
@@ -144,6 +216,7 @@ export function VirtualPush() {
     return { fill: on ? "#ffffff" : mix(BLUE, 0.15 + (i / 15) * 0.55), label: String(v), ink: on ? "#111" : "#ddd", aria: `Velocity ${v}`, pressed: on }
   }
   const onDrumPad = (r: number, c: number) => {
+    follow({ pad: [r, c] })
     if (r < 4) return toggleStep(r * 8 + c)
     if (c < 4) { const i = (7 - r) * 4 + c; setSel(i); strike(i); return }
     const i = (7 - r) * 4 + (c - 4), v = Math.round(((i + 1) / 16) * 127)
@@ -155,7 +228,9 @@ export function VirtualPush() {
     const { d, m } = noteAt(r, c), isRoot = d % 7 === 0, on = litNotes.includes(m)
     return { fill: on ? GREEN : isRoot ? BLUE : "#555", label: names[d % 7], ink: on || isRoot ? "#111" : "#eee", aria: `${noteName(m)}${isRoot ? ", root" : ""}` }
   }
-  const onNotePad = (r: number, c: number) => { const { m } = noteAt(r, c); playNote(m); tapNote(m); flash(setLitNotes, m, 180) }
+  const onNotePad = (r: number, c: number) => {
+    follow({ pad: [r, c] })
+    const { m } = noteAt(r, c); playNote(m); tapNote(m); flash(setLitNotes, m, 180) }
 
   const status = mode === "drums"
     ? `${DRUM_PADS[sel].name} pad (${noteName(36 + sel)}) · velocity ${accent ? "127, Accent on" : vel} · ${seq.tempo} BPM${playing ? ` · step ${step + 1} of 32` : ""}`
@@ -174,7 +249,31 @@ export function VirtualPush() {
       </div>
       <p className="text-muted-foreground text-sm tabular-nums" aria-live="polite">{status}</p>
       </div>
-      <Push3 pad={mode === "drums" ? drumPad : notePad} onPad={mode === "drums" ? onDrumPad : onNotePad} onControl={onControl}
+      <div className="flex flex-wrap items-center gap-2 border-y py-3">
+        <span className="text-sm font-medium">Guided practice</span>
+        {GUIDES.map((g) => (
+          <Button key={g.id} size="sm" variant={guideId === g.id ? "default" : "outline"} aria-pressed={guideId === g.id} onClick={() => (guideId === g.id ? endGuide() : startGuide(g.id))}>{g.title}</Button>
+        ))}
+      </div>
+      {guide && (
+        <div className="space-y-2 border border-foreground p-4" role="status" aria-live="polite">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="font-medium">{guide.title}</p>
+            <span className="text-muted-foreground text-sm tabular-nums">{Math.min(gStep + 1, guide.steps.length)} of {guide.steps.length}</span>
+          </div>
+          {gStep < guide.steps.length ? (
+            <p className="text-lg">{guide.steps[gStep].text}{gMiss && <span className="text-muted-foreground text-sm"> Not that one: press the outlined {"pad" in guide.steps[gStep].target ? "pad" : "button"}.</span>}</p>
+          ) : (
+            <p className="text-lg">Done. Try it on your Push the same way, without the outlines.</p>
+          )}
+          <div className="flex gap-2">
+            {gStep >= guide.steps.length && <Button size="sm" variant="outline" onClick={() => startGuide(guide.id)}>Again</Button>}
+            <Button size="sm" variant="ghost" onClick={endGuide}>End guide</Button>
+          </div>
+        </div>
+      )}
+      <Push3 selected={gTarget && "control" in gTarget ? gTarget.control : null} highlightPad={gTarget && "pad" in gTarget ? gTarget.pad : null}
+        pad={mode === "drums" ? drumPad : notePad} onPad={mode === "drums" ? onDrumPad : onNotePad} onControl={onControl}
         lit={{ play: playing ? "#23782b" : false, note: true, accent, tapTempo: false, delete: false, octaveUp: false, octaveDown: false }} />
     </div>
   )

@@ -54,7 +54,7 @@ export function PracticeTimer({ onStop, label }: { onStop: (minutes: number) => 
         <Button onClick={() => {
           setPref<TimerSession>("timer-session", { href: loc.pathname + loc.search, label: label ?? "Practice session" })
           setStart(Date.now())
-        }}><Play className="fill-current" />Start practice timer</Button>
+        }} variant="outline"><Play />Start practice timer</Button>
       )}
       {running && <Caption>The timer keeps running if you switch pages.</Caption>}
     </div>

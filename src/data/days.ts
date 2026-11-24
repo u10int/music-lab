@@ -51,7 +51,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
       { title: "Tour the buttons", detail: "Press Note, Session, Device, Mix and Browse in turn and watch what Live shows. Then find Add Track, Play, Record, Fixed Length, Duplicate, Delete and Undo.", min: 10, link: L("/push?tab=hardware", "Hardware map") },
       { title: "Make a drum track", detail: "Press Add Track and pick MIDI. Press Browse, go to Drums, and load a kit with the Load button: 808 Core Kit for wave and phonk, or any house kit. The pads light up in the drum layout.", min: 10 },
       { title: "Learn the 64-pad layout", detail: "Bottom-left 16 pads play the kit, the top four rows are steps for the selected pad, bottom-right sets loop length. Tap every pad once. Select the kick.", min: 10, link: L("/push?tab=drums", "Drum layouts") },
-      { title: "Program four on the floor", detail: "Kick selected: press steps 1, 5, 9 and 13. Select the clap: steps 5 and 13. Closed hat: every other step from 3. Press Play.", min: 15, link: L("/labs/sequencer?pattern=house", "Hear it first") },
+      { title: "Program four on the floor", detail: "Kick selected: press steps 1, 5, 9 and 13. Select the clap: steps 5 and 13. Closed hat: every other step from 3. Press Play.", min: 15, link: L("/push?guide=four", "Guided on the virtual Push") },
       { title: "Swap one sound", detail: "Select the clap pad, press Browse, and audition replacements with the encoder. Load the one that cuts through best.", min: 5 },
     ],
     check: ["You can find Note, Session, Browse and Add Track without looking", "A one-bar beat is playing from a kit you loaded on Push", "You swapped at least one pad's sound from Push"],
@@ -77,7 +77,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
       { title: "Hear the target", detail: "Play today's pattern. Count the 16 steps and note which ones the kick, snare and hats use.", min: 5, link: L("/labs/sequencer?{q}", "Today's pattern") },
       { title: "Program it on Push", detail: "Pick an empty clip slot on your drum track, set the loop to one bar, and step in kick, then snare, then hats. Match it by ear rather than copying the grid.", min: 15 },
       { title: "Set the feel: {v}", detail: "{how}", min: 10 },
-      { title: "Shape velocity", detail: "Hold a step and turn the velocity encoder. Drop the offbeat hats to about 60% so the beat leans on the downbeats.", min: 10, link: L("/push?tab=drums", "Step sequencer guide") },
+      { title: "Shape velocity", detail: "Hold a step and turn the velocity encoder. Drop the offbeat hats to about 60% so the beat leans on the downbeats.", min: 10, link: L("/push?guide=velocity", "Guided on the virtual Push") },
       { title: "Record a live layer", detail: "Turn on Fixed Length (1 bar), hold Repeat at 1/16 and play hats over the loop, letting the pressure on the pad set the velocity.", min: 5, link: L("/push?tab=drums", "Note Repeat") },
     ],
     check: ["The beat loops cleanly with no gap", "You changed the velocity of at least four steps", "You can hear and explain how today's {v} beat differs from the others"],
@@ -189,7 +189,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
     steps: [
       { title: "See the layout", detail: "Open the In Key grid in A minor. Each pad to the right is the next scale note; each row up is three scale notes (a fourth) higher.", min: 10, link: L("/labs/theory?tab=chords&key=9&scale=minor", "A minor on the grid") },
       { title: "Set it on Push", detail: "Press Scale. Choose A, Minor, In Key, 4ths. Play from the bottom-left pad (the root) to the right and up.", min: 10, link: L("/push?tab=notes", "Notes and scales") },
-      { title: "Find the octaves", detail: "Roots are lit. Find every A on the grid, then play A–C–E as one hand shape: root, two to the right, then up one and right one.", min: 15 },
+      { title: "Find the octaves", detail: "Roots are lit. Find every A on the grid, then play A–C–E as one hand shape: root, two to the right, then up one and right one.", min: 15, link: L("/push?guide=triad", "Guided on the virtual Push") },
       { title: "Chromatic for contrast", detail: "Switch to Chromatic and back. Notice how many wrong notes appear. In Key is your default this sprint.", min: 5 },
       { title: "Learn the why", detail: "Fourths mean a chord shape works anywhere on the grid, and a scale is always two rows of a familiar pattern.", min: 5, link: L("/labs/theory?tab=circle", "Circle of fifths") },
     ],
@@ -233,7 +233,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
   },
   "s2-w1-wknd": {
     outcome: "Scenes 1 and 2 of your Session sketch: drums and chords in a minor key.",
-    warmup: [W.chords("your sketch's key", "key=9&scale=minor"), W.beat("your Sprint 1 beat")],
+    warmup: [W.chords("{key}", "{kq}"), W.beat("your Sprint 1 beat")],
     steps: [
       { title: "Choose a key and tempo", detail: "Pick the key from this week you liked most. Open your default Set and set the tempo for your genre.", min: 10 },
       { title: "Scene 1 drums", detail: "Bring your best Sprint 1 beat into scene 1. Simplify it for an intro if needed.", min: 20 },
@@ -246,7 +246,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
   },
   "s2-w2-mon": {
     outcome: "A bassline for scene 1 that follows the chord roots, then adds passing notes.",
-    warmup: [W.chords("your sketch's key", "key=9&scale=minor"), W.ear("intervals", "interval")],
+    warmup: [W.chords("{key}", "{kq}"), W.ear("intervals", "interval")],
     steps: [
       { title: "Roots only", detail: "On a bass track, play just the root of each chord, one long note per bar, an octave or two below the chords.", min: 10, link: L("/labs/progressions", "Hear roots under chords") },
       { title: "Give it rhythm", detail: "Same notes, new rhythm: 8th notes, or a syncopated pattern that leaves space for the kick.", min: 15 },
@@ -264,7 +264,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
       { label: "A hook for scene 2", focus: "Second hook: keep scene 1's rhythm but move the notes higher, or answer scene 1's hook with a variation." },
     ],
     warmup: [
-      W.chords("your sketch's key", "key=9&scale=minor"),
+      W.chords("{key}", "{kq}"),
       { text: "Write a quick 4-note hook in the melody tool over i–VI–III–VII, then play it on Push", min: 5, link: L("/labs/melody", "Melody") },
     ],
     steps: [
@@ -278,7 +278,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
   },
   "s2-w2-fri": {
     outcome: "A hook rhythm copied from a reference and reused with your own notes.",
-    warmup: [W.ear("degrees", "scale degree"), W.chords("your sketch's key", "key=9&scale=minor")],
+    warmup: [W.ear("degrees", "scale degree"), W.chords("{key}", "{kq}")],
     steps: [
       { title: "Pick a hook", detail: "Choose a reference with a clear lead line. Loop 2 bars of it.", min: 5, link: L("/notebook", "Reference notebook") },
       { title: "Tap the rhythm", detail: "Tap the hook's rhythm on one pad until it's locked in. Ignore the notes.", min: 10 },
@@ -290,7 +290,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
   },
   "s2-w2-wknd": {
     outcome: "Scenes 3 and 4, then a 30-second export of all four scenes in order.",
-    warmup: [W.chords("your sketch's key", "key=9&scale=minor"), W.beat("scene 1's beat")],
+    warmup: [W.chords("{key}", "{kq}"), W.beat("scene 1's beat")],
     steps: [
       { title: "Scene 3: the peak", detail: "Everything in: full drums, bass with passing notes, the brightest hook.", min: 35 },
       { title: "Scene 4: the comedown", detail: "Strip back to chords and one element, or a new progression for contrast.", min: 30 },
@@ -324,7 +324,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
     ],
     warmup: [
       { text: "Load the {v} preset in the synth playground and play it from your computer keyboard", min: 5, link: L("/labs/sound-design?{q}", "Synth playground") },
-      W.chords("your sketch's key", "key=9&scale=minor"),
+      W.chords("{key}", "{kq}"),
     ],
     steps: [
       { title: "Start from init", detail: "Load Drift and reset it. Lock the device to the encoders so they stay on Drift while you play.", min: 5 },
@@ -350,7 +350,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
   },
   "s3-w1-wknd": {
     outcome: "Your bass and pluck presets finished, in Instrument Racks with 8 macros, saved.",
-    warmup: [W.drift("a reese bass"), W.chords("your sketch's key", "key=9&scale=minor")],
+    warmup: [W.drift("a reese bass"), W.chords("{key}", "{kq}")],
     steps: [
       { title: "Pick the best two", detail: "From this week, choose the bass and the pluck (or lead) you'll keep.", min: 10 },
       { title: "Wrap in a Rack", detail: "Group each into an Instrument Rack.", min: 10 },
@@ -381,7 +381,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
       { label: "A layered kick and snare", focus: "Layer a punchy transient over a body: two samples per pad, high-pass the body layer's top, trim tails so they don't smear." },
       { label: "Layered hats and perc", focus: "Hats and perc: two hats with different decays, a shaker, a rim. Tune them so they sit with your key." },
     ],
-    warmup: [W.drift("a pluck"), W.chords("your sketch's key", "key=9&scale=minor")],
+    warmup: [W.drift("a pluck"), W.chords("{key}", "{kq}")],
     steps: [
       { title: "Gather sources", detail: "Follow today's focus. Find samples in Splice or Live's library, or start from a Wavetable or Meld init.", min: 10 },
       { title: "Build it", detail: "Layer or design the sound until it works alone.", min: 20 },
@@ -491,7 +491,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
       { label: "A stutter fill", focus: "Resample one bar and repeat a 1/16 slice with Note Repeat for a stutter fill before a change." },
       { label: "A cowbell or bell melody", focus: "Phonk cowbell: a single cowbell hit in Simpler Classic mode, played as a melody in your key, then resampled with distortion." },
     ],
-    warmup: [W.chords("the sketch's key", "key=5&scale=minor"), { text: "Play the phonk cowbell sound and hear how a single hit becomes a melody", min: 5, link: L("/labs/sound-design#sound-phonk-cowbell", "Phonk cowbell") }],
+    warmup: [W.chords("{key}", "{kq}"), { text: "Play the phonk cowbell sound and hear how a single hit becomes a melody", min: 5, link: L("/labs/sound-design#sound-phonk-cowbell", "Phonk cowbell") }],
     steps: [
       { title: "Record the source", detail: "Resample the part of the sketch you need for today's focus.", min: 10 },
       { title: "Chop and play", detail: "Follow today's focus.", min: 20 },
@@ -514,7 +514,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
   },
   "s4-w2-wknd": {
     outcome: "The finished, exported 1-minute sampling sketch.",
-    warmup: [W.beat("the sketch's beat"), W.chords("the sketch's key", "key=5&scale=minor")],
+    warmup: [W.beat("the sketch's beat"), W.chords("{key}", "{kq}")],
     steps: [
       { title: "Fill out the minute", detail: "Arrange to about 60 seconds: intro, main loop, variation, the transition, ending.", min: 50 },
       { title: "Balance", detail: "Levels and a little EQ so the sample sits on top.", min: 30 },
@@ -528,7 +528,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
   /* ------------------------------------------------------------ Sprint 5: Arrangement */
   "s5-w1-mon": {
     outcome: "A bar-by-bar map of a progressive house reference: what enters and leaves, and where.",
-    warmup: [W.chords("your track's key", "key=1&scale=minor"), W.beat("a progressive house beat at 122 BPM")],
+    warmup: [W.chords("{key}", "{kq}"), W.beat("a progressive house beat at 122 BPM")],
     steps: [
       { title: "See a template", detail: "Play the progressive house arrangement and watch parts enter and leave by section.", min: 10, link: L("/labs/arrangement", "Arrangement map") },
       { title: "Pick your reference", detail: "Choose a 120–124 BPM progressive house track you'd love to make.", min: 5, link: L("/genres/prog", "Progressive house") },
@@ -545,7 +545,7 @@ export const DAY_PLANS: Record<string, DayPlan> = {
       { label: "the drop", focus: "Drop: everything in, at full energy. One or two scenes with small variations." },
       { label: "the breakdown and outro", focus: "Breakdown: drums out, chords and the hook exposed. Outro: mirror the intro so DJs can mix out." },
     ],
-    warmup: [W.beat("a progressive house beat"), W.chords("your track's key", "key=1&scale=minor")],
+    warmup: [W.beat("a progressive house beat"), W.chords("{key}", "{kq}")],
     steps: [
       { title: "Check the map", detail: "Read your plan for {v}: which parts play and for how long.", min: 5, link: L("/planner", "Track planner") },
       { title: "Build the scenes", detail: "Duplicate existing scenes and mute, add or vary parts until they match the plan.", min: 30 },
@@ -736,11 +736,12 @@ export const DAY_PLANS: Record<string, DayPlan> = {
 }
 
 /** The plan for a sprint week and slot, with the day's variant filled in. */
-export function dayPlan(sprintId: string, week: 1 | 2, slot: "mon" | "mid" | "fri" | "wknd", variantIdx = 0) {
+export function dayPlan(sprintId: string, week: 1 | 2, slot: "mon" | "mid" | "fri" | "wknd", variantIdx = 0, key = { name: "A minor", q: "key=9&scale=minor" }) {
   const p = DAY_PLANS[`${sprintId}-w${week}-${slot}`]
   if (!p) return null
   const v = p.variants?.[Math.max(0, Math.min(p.variants.length - 1, variantIdx))]
-  const fill = (s: string) => s.replaceAll("{how}", v?.how ?? "").replaceAll("{v}", v?.label ?? "").replaceAll("{q}", v?.q ?? "")
+  // {key} and {kq} are the key you've been working in, so "your sketch's key" means yours.
+  const fill = (s: string) => s.replaceAll("{how}", v?.how ?? "").replaceAll("{v}", v?.label ?? "").replaceAll("{q}", v?.q ?? "").replaceAll("{key}", key.name).replaceAll("{kq}", key.q)
   const link = (l?: DayLink) => (l ? { to: fill(l.to).replace(/[?&]$/, ""), label: fill(l.label) } : undefined)
   return {
     outcome: fill(p.outcome),

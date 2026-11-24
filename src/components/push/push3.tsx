@@ -47,8 +47,10 @@ const SCENES = ["1/32t", "1/32", "1/16t", "1/16", "1/8t", "1/8", "1/4t", "1/4"]
 export interface PadLook { fill: string; label?: string; ink?: string; aria: string; pressed?: boolean }
 
 export function Push3({
-  pad, onPad, onControl, lit = {}, selected, display, className,
+  pad, onPad, onControl, lit = {}, selected, highlightPad, display, className,
 }: {
+  /** A pad to outline, by row and column: the next one to press in a guide. */
+  highlightPad?: [number, number] | null
   /** How each pad looks, by row (0 is the top) and column. Omit for plain white pads. */
   pad?: (r: number, c: number) => PadLook
   onPad?: (r: number, c: number) => void
@@ -200,6 +202,7 @@ export function Push3({
         <path d="M1135 878 l5 -5 l5 5 M1135 913 l5 5 l5 -5 M1121 891 l-4 5 l4 5 M1159 891 l4 5 l-4 5" {...stroke} strokeWidth={1.3} />
         {face(1088, 958, 105, 24)}{T(1104, 973, "Shift", 7.5)}{T(1155, 973, "Select", 7.5)}<path d="M1141 963 v14" {...stroke} strokeWidth={1.3} />
 
+        {highlightPad && <rect x={PAD_X(highlightPad[1]) - 4} y={PAD_Y(highlightPad[0]) - 4} width={PAD_W + 8} height={PAD_H + 8} fill="none" stroke="#fff" strokeWidth={4} pointerEvents="none" className="motion-safe:animate-pulse" />}
         {/* Highlight for the hovered or selected control */}
         {box && <rect x={box.x - 3} y={box.y - 3} width={box.w + 6} height={box.h + 6} fill="none" stroke="var(--primary)" strokeWidth={4} pointerEvents="none" />}
 

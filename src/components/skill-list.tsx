@@ -1,4 +1,6 @@
-import { ArrowLeft, ArrowRight, Check, Clock } from "lucide-react"
+import { useEffect, useState } from "react"
+import { ArrowLeft, ArrowRight, Check, Clock, Timer } from "lucide-react"
+import { SKILL_CHECKS } from "@/data/learning"
 import { Link, useSearchParams } from "react-router"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -7,7 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { SKILL_GUIDES } from "@/data/skill-guides"
 import type { Sprint } from "@/data/sprints"
-import { fmtDay, update, useProgress } from "@/lib/store"
+import { fmtDay, todayISO, update, useProgress } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { SECTION_TITLE } from "@/components/page"
 
@@ -53,7 +55,7 @@ export function SkillList({ s }: { s: Sprint }) {
               <Checkbox id={key} checked={learned} onCheckedChange={(v) => setLearned(key, v === true)} aria-describedby={key + "-meta"} />
               <div className="min-w-0 flex-1">
                 <Label htmlFor={key} className={cn("leading-snug font-normal", learned && "text-muted-foreground line-through decoration-foreground/30")}>{title}</Label>
-                {g && <p id={key + "-meta"} className={cn("mt-0.5 text-xs tabular-nums", learned ? "text-foreground" : "text-muted-foreground")}>{learned ? status : `${g.min} min · ${status}`}</p>}
+                {g && <p id={key + "-meta"} className={cn("mt-0.5 text-xs tabular-nums", learned ? "text-foreground" : "text-muted-foreground")}>{learned ? status : `${g.min} min · ${status}`}{p.skillTests?.[key] ? ` · Checked in ${fmtSecs(p.skillTests[key].secs)}` : ""}{p.skillConf?.[key] ? ` · Confidence ${p.skillConf[key]}/5` : ""}</p>}
               </div>
               {g && (
                 <Button variant={n > 0 && !learned ? "default" : "outline"} size="sm" className="ml-7 sm:ml-0" onClick={() => open(key)}>
@@ -141,6 +143,8 @@ function Walkthrough({ s, skey, onGo }: { s: Sprint; skey: string; onGo: (k: str
         )}
       </div>
 
+      <div className="px-5 pb-8"><SkillCheckPanel skey={skey} /></div>
+
       <SheetFooter className="sticky bottom-0 gap-3 border-t bg-background p-4">
         <Button data-wt-learned="" variant={learned ? "outline" : "default"} onClick={() => setLearned(skey, !learned)}>
           {learned ? "Mark as not learned yet" : "I can do this: mark as learned"}
@@ -151,5 +155,64 @@ function Walkthrough({ s, skey, onGo }: { s: Sprint; skey: string; onGo: (k: str
         </div>
       </SheetFooter>
     </>
+  )
+}
+
+const fmtSecs = (n: number) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`
+
+/** A timed check: do the task within the limit, tick each check, and the skill is marked learned. */
+function SkillCheckPanel({ skey }: { skey: string }) {
+  const p = useProgress()
+  const c = SKILL_CHECKS[skey]
+  const [start, setStart] = useState<number | null>(null)
+  const [now, setNow] = useState(0)
+  const [ticks, setTicks] = useState<boolean[]>([])
+  const [result, setResult] = useState("")
+  useEffect(() => {
+    if (!start) return
+    const t = setInterval(() => setNow(Date.now()), 250)
+    return () => clearInterval(t)
+  }, [start])
+  if (!c) return null
+  const secs = start ? Math.floor((now - start) / 1000) : 0, limit = c.limit * 60, over = secs > limit
+  const passed = p.skillTests?.[skey]
+  const finish = () => {
+    const all = c.checks.every((_, i) => ticks[i])
+    if (!all) return setResult("Tick every check you met. If one didn’t happen, try again.")
+    if (over) { setResult(`That took ${fmtSecs(secs)}, over the ${c.limit}-minute limit. Practice once more and retry.`); setStart(null); return }
+    update((d) => {
+      (d.skillTests ??= {})[skey] = { at: todayISO(), secs }
+      d.done[skey] = true
+      ;(d.doneAt ??= {})[skey] ??= todayISO()
+    })
+    setResult(`Passed in ${fmtSecs(secs)}. Marked as learned.`)
+    setStart(null)
+  }
+  return (
+    <section className="space-y-3 border border-foreground p-4" aria-labelledby={`chk-${skey}`}>
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 id={`chk-${skey}`} className="font-semibold">Skill check</h3>
+        <span className="text-muted-foreground text-sm tabular-nums">{passed ? `Passed ${fmtDay.format(new Date(passed.at + "T00:00:00"))} in ${fmtSecs(passed.secs)}` : `${c.limit} min limit`}</span>
+      </div>
+      <p className="text-sm text-pretty">{c.task}</p>
+      {c.link && <Button variant="outline" size="sm" asChild><Link to={c.link.to}>{c.link.label}</Link></Button>}
+      {!start ? (
+        <Button size="sm" onClick={() => { setStart(Date.now()); setNow(Date.now()); setTicks([]); setResult("") }}><Timer />{passed ? "Take it again" : "Start the check"}</Button>
+      ) : (
+        <div className="space-y-3">
+          <p className={cn("text-3xl font-medium tabular-nums", over && "text-destructive")} role="timer">{fmtSecs(secs)} <span className="text-muted-foreground text-sm font-normal">of {c.limit}:00</span></p>
+          <ul className="space-y-2">
+            {c.checks.map((t, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <Checkbox id={`${skey}-chk-${i}`} checked={!!ticks[i]} onCheckedChange={(v) => setTicks((x) => { const n = [...x]; n[i] = v === true; return n })} className="mt-0.5" />
+                <Label htmlFor={`${skey}-chk-${i}`} className="text-sm font-normal">{t}</Label>
+              </li>
+            ))}
+          </ul>
+          <div className="flex gap-2"><Button size="sm" onClick={finish}><Check />I’m done</Button><Button size="sm" variant="ghost" onClick={() => setStart(null)}>Cancel</Button></div>
+        </div>
+      )}
+      {result && <p className="text-sm" role="status">{result}</p>}
+    </section>
   )
 }

@@ -1,4 +1,9 @@
-import { Link } from "react-router"
+import { useEffect } from "react"
+import { Link, useSearchParams } from "react-router"
+import { EarTrack, RhythmDictation } from "@/components/labs/rhythm-dictation"
+import { EAR_TRACK } from "@/data/learning"
+import { SPRINTS } from "@/data/sprints"
+import { currentWeek, sprintForWeek, useProgress } from "@/lib/store"
 import { ArrangementMap } from "@/components/labs/arrangement-map"
 import { DrumPatterns } from "@/components/labs/drum-lab"
 import { EarTraining } from "@/components/labs/ear-training"
@@ -45,9 +50,17 @@ export function TheoryLab() {
 }
 
 export function EarLab() {
+  const p = useProgress()
+  const [params] = useSearchParams()
+  // ?quiz=rhythm from a day plan jumps to rhythm dictation.
+  useEffect(() => {
+    if (params.get("quiz") === "rhythm") requestAnimationFrame(() => document.getElementById("rhythm")?.scrollIntoView({ block: "start" }))
+  }, [params])
   return (
     <div className="space-y-10">
       <PageHeader title="Ear training">Train your ears for theory and for mixing. Scores are saved with your progress.</PageHeader>
+      <Block title="Your ear track" description="Accuracy per drill over the last two weeks. Each sprint leans on one drill, listed first."><EarTrack focus={EAR_TRACK[SPRINTS[sprintForWeek(currentWeek(p).week)].id]?.quiz} /></Block>
+      <Block title="Rhythm dictation" description="Hear a one-bar beat, rebuild it on the grid, and check it hit by hit."><div id="rhythm" className="scroll-mt-6"><RhythmDictation /></div></Block>
       <Block title="Notes and chords" description="Chord qualities, intervals, progressions, scale degrees and keys."><EarTraining /></Block>
       <Block title="Mixing ears" description="Hear EQ, compression and sidechain the way you will in your own mixes."><MixEar /></Block>
     </div>

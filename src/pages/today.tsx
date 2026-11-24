@@ -1,8 +1,10 @@
 import { useRef, useState } from "react"
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check } from "lucide-react"
+import { ArrowLeft, Check, Play, Settings2 } from "lucide-react"
 import { Link, useSearchParams } from "react-router"
 import { Block, Caption, PageHeader, SECTION_TITLE } from "@/components/page"
-import { dayPlan } from "@/data/days"
+import { useKey } from "@/components/key-picker"
+import { ListeningSheet, PlanLink, ProofBox, ReflectionCard, StuckPanel, WeeklyChallenge, YourWork } from "@/components/today/parts"
+import { buildDay, PLAN_MIN, SLOT } from "@/lib/day"
 import { PracticeTimer } from "@/components/practice-timer"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -11,12 +13,12 @@ import { SKILL_GUIDES } from "@/data/skill-guides"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { SPRINTS } from "@/data/sprints"
-import { currentWeek, fmtMinutes, isoOf, minutesByDay, minutesThisWeek, sprintForWeek, streaks, todayISO, uid, update, usePref, useProgress, weekOf, weekStart, WEEKLY_GOAL_MIN, type Progress as Prog } from "@/lib/store"
+import { currentWeek, fmtMinutes, isoOf, minutesByDay, minutesThisWeek, sprintForWeek, streaks, todayISO, uid, update, usePref, useProgress, weekStart, WEEKLY_GOAL_MIN, type Progress as Prog } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
-export const SLOT: Record<number, ["mon" | "mid" | "fri" | "wknd", string]> = { 1: ["mon", "Monday: learn"], 2: ["mid", "Practice day"], 3: ["mid", "Practice day"], 4: ["mid", "Practice day"], 5: ["fri", "Friday: reference"], 6: ["wknd", "Weekend: build"], 0: ["wknd", "Weekend: build"] }
-export const PLAN_MIN: Record<string, number> = { mon: 60, mid: 60, fri: 60, wknd: 150 }
+export { PLAN_MIN, SLOT }
+const DAY_LETTERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const isRest = (p: Prog, d: Date) => !!p.practiceDays && !p.practiceDays.includes(d.getDay())
 
 const longDay = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" })
 /** A plan day is done once its planned minutes are logged, or it's marked done by hand. */
@@ -29,20 +31,20 @@ function SprintDays({ p, w1, sel, onPick }: { p: Prog; w1: number; sel: string; 
     const d = weekStart(p, w1)
     d.setDate(d.getDate() + i)
     const iso = isoOf(d)
-    return { iso, d, done: dayDone(p, iso, mins), future: iso > today, isToday: iso === today }
+    return { iso, d, done: dayDone(p, iso, mins), future: iso > today, isToday: iso === today, rest: isRest(p, d) }
   })
-  const missed = days.filter((x) => !x.future && !x.isToday && !x.done)
+  const missed = days.filter((x) => !x.future && !x.isToday && !x.done && !x.rest)
   return (
     <section aria-labelledby="days-h" className="space-y-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="days-h" className="text-sm font-medium">This sprint, day by day</h2>
         <p className="text-muted-foreground text-sm">
-          {missed.length ? <>{missed.length} {missed.length === 1 ? "day" : "days"} to catch up. <button type="button" className="text-foreground underline" onClick={() => onPick(missed[missed.length - 1].iso)}>Open the latest</button></> : "Nothing missed so far."}
+          {missed.length ? <>{missed.length} {missed.length === 1 ? "day" : "days"} to catch up. <button type="button" className="text-foreground underline" onClick={() => onPick(missed[missed.length - 1].iso)}>Open the latest</button>{missed.length >= 3 && <> or <button type="button" className="text-foreground underline" onClick={() => update((d) => { const st = new Date(d.start + "T00:00:00"); st.setDate(st.getDate() + 7); d.start = isoOf(st) })}>push the plan back a week</button></>}</> : "Nothing missed so far."}
         </p>
       </div>
       <ol className="grid grid-cols-7 gap-1 sm:grid-cols-14">
         {days.map((x) => {
-          const state = x.done ? "done" : x.future ? "upcoming" : x.isToday ? "today" : "missed"
+          const state = x.done ? "done" : x.rest ? "rest day" : x.future ? "upcoming" : x.isToday ? "today" : "missed"
           return (
             <li key={x.iso}>
               <button type="button" onClick={() => onPick(x.iso)} aria-current={x.iso === sel ? "date" : undefined}
@@ -52,7 +54,7 @@ function SprintDays({ p, w1, sel, onPick }: { p: Prog; w1: number; sel: string; 
                 <span>{x.d.toLocaleDateString(undefined, { weekday: "short" })}</span>
                 <span className="text-base font-medium">{x.d.getDate()}</span>
                 <span className="flex h-3.5 items-center justify-center" aria-hidden="true">
-                  {x.done ? <Check className="size-3.5" /> : state === "missed" ? <span className="text-[10px]">Missed</span> : x.isToday ? <span className="text-[10px]">Today</span> : null}
+                  {x.done ? <Check className="size-3.5" /> : state === "missed" ? <span className="text-[10px]">Missed</span> : x.isToday ? <span className="text-[10px]">Today</span> : x.rest ? <span className="text-[10px]">Rest</span> : null}
                 </span>
               </button>
             </li>
@@ -61,21 +63,6 @@ function SprintDays({ p, w1, sel, onPick }: { p: Prog; w1: number; sel: string; 
       </ol>
     </section>
   )
-}
-
-/** Adds from=today (and the day, when catching up) to an in-app link, so the tool shows a way back. */
-function withFrom(to: string, sel: string, isToday: boolean) {
-  if (/^https?:/.test(to)) return to
-  const [path, hash = ""] = to.split("#")
-  const extra = "from=today" + (isToday ? "" : `&day=${sel}`)
-  return path + (path.includes("?") ? "&" : "?") + extra + (hash ? "#" + hash : "")
-}
-
-function PlanLink({ to, label, sel, isToday }: { to: string; label: string; sel: string; isToday: boolean }) {
-  const href = withFrom(to, sel, isToday)
-  return /^https?:/.test(to)
-    ? <Button variant="outline" size="sm" asChild><a href={href} target="_blank" rel="noopener">{label}<ArrowUpRight /></a></Button>
-    : <Button variant="outline" size="sm" asChild><Link to={href}>{label}<ArrowRight /></Link></Button>
 }
 
 /** A checkable row: checkbox, text, optional minutes and link. */
@@ -92,6 +79,33 @@ function CheckRow({ id, on, set, children, meta, link }: { id: string; on: boole
   )
 }
 
+/** Which days you practice, and how long a day runs. Rest days never count as missed. */
+function Schedule({ p, short, setShort }: { p: Prog; short: boolean; setShort: (v: boolean) => void }) {
+  const [open, setOpen] = useState(false)
+  const days = p.practiceDays ?? [0, 1, 2, 3, 4, 5, 6]
+  const toggleDay = (n: number) => update((d) => { const cur = d.practiceDays ?? [0, 1, 2, 3, 4, 5, 6]; d.practiceDays = cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n].sort() })
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant={short ? "default" : "outline"} size="sm" aria-pressed={short} onClick={() => setShort(!short)}>{short ? "30-minute version on" : "Short on time? 30-minute version"}</Button>
+        <Button variant="ghost" size="sm" aria-expanded={open} onClick={() => setOpen(!open)}><Settings2 />Practice days</Button>
+      </div>
+      {open && (
+        <div className="flex flex-wrap items-center gap-3 border p-3">
+          <span className="text-sm">I practice on</span>
+          <div className="flex flex-wrap gap-1" role="group" aria-label="Practice days">
+            {[1, 2, 3, 4, 5, 6, 0].map((n) => (
+              <button key={n} type="button" aria-pressed={days.includes(n)} onClick={() => toggleDay(n)}
+                className={cn("h-8 min-w-11 border px-2 text-sm", days.includes(n) ? "border-foreground bg-foreground text-background" : "border-foreground/30 hover:border-foreground")}>{DAY_LETTERS[n]}</button>
+            ))}
+          </div>
+          <span className="text-muted-foreground text-sm">Other days are rest days and never count as missed.</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function TodayPage() {
   const p = useProgress()
   const today = todayISO()
@@ -100,24 +114,19 @@ export function TodayPage() {
   // Today, a past day you're catching up on, or a coming day to preview.
   const sel = asked && /^\d{4}-\d{2}-\d{2}$/.test(asked) ? asked : today
   const isToday = sel === today, future = sel > today
-  const selDate = new Date(sel + "T00:00:00")
   const pick = (iso: string) => setParams((sp) => { if (iso === today) sp.delete("day"); else sp.set("day", iso); return sp })
   const cur = currentWeek(p)
-  const week = isToday ? cur.week : weekOf(p, sel)
-  const inPlan = week >= 1 && week <= 12
-  const si = sprintForWeek(week), s = SPRINTS[si]
-  const day = selDate.getDay()
-  const [slot, slotName] = SLOT[day]
-  const weekInSprint = inPlan ? (week - 1) % 2 : 0
-  const plan = dayPlan(s.id, (weekInSprint + 1) as 1 | 2, slot, slot === "mid" ? day - 2 : 0)
+  const { root, scale } = useKey()
+  const [short, setShort] = usePref<boolean>("short-" + sel, false)
+  const D = buildDay(p, sel, { root, scale, short })
+  const { s, week, inPlan, slot, slotName, day, weekInSprint, sprintDay, plan, steps, warm, planMin } = D
+  const selDate = D.date
   const [checks, setChecks] = usePref<Record<string, boolean>>("today-" + sel, {})
-  const sprintDay = ((week - 1) % 2) * 7 + ((day + 6) % 7) + 1
   const tick = (k: string, v: boolean) => {
     const next = { ...checks, [k]: v }
     setChecks(next)
     // Checking off the last session step finishes the day.
-    const n = plan?.steps.length ?? 0
-    if (v && k.startsWith("s") && n && Array.from({ length: n }, (_, i) => next["s" + i]).every(Boolean) && !p.daysDone?.[sel]) update((d) => { d.daysDone ??= {}; d.daysDone[sel] = true })
+    if (v && k.startsWith("s-") && steps.length && steps.every((st) => next[st.id]) && !p.daysDone?.[sel]) update((d) => { d.daysDone ??= {}; d.daysDone[sel] = true })
   }
   const minutes = minutesByDay(p).get(sel) ?? 0
   const markedDone = !!p.daysDone?.[sel]
@@ -136,13 +145,14 @@ export function TodayPage() {
   }
 
   const weekMin = minutesThisWeek(p)
-  const planMin = PLAN_MIN[slot]
-  const steps = plan?.steps ?? [], warm = plan?.warmup ?? [], check = plan?.check ?? []
-  const stepsDone = steps.filter((_, i) => checks["s" + i]).length
-  const warmDone = warm.filter((_, i) => checks["w" + i]).length
+  const check = plan?.check ?? []
+  const stepsDone = steps.filter((st) => checks[st.id]).length
+  const warmDone = warm.filter((w) => checks[w.id]).length
   const allSteps = steps.length > 0 && stepsDone === steps.length
   const total = [...warm, ...steps].reduce((a, x) => a + x.min, 0)
-  const L = (to: string, label: string) => <PlanLink to={to} label={label} sel={sel} isToday={isToday} />
+  const L = (link: { to: string; label: string }) => <PlanLink link={link} sel={sel} isToday={isToday} />
+  const dayIsDone = markedDone || allSteps || minutes >= planMin
+  const practiceHref = `/today/practice${isToday ? "" : `?day=${sel}`}`
   const title = isToday ? "Today" : future ? "Coming up" : "Catching up"
 
   return (
@@ -165,6 +175,7 @@ export function TodayPage() {
             </p>
             <h2 id="focus-h" className="max-w-3xl text-3xl leading-tight font-medium text-balance sm:text-4xl">{s.weeks[weekInSprint][slot]}</h2>
             {plan && <p className="max-w-2xl text-lg text-pretty"><span className="text-muted-foreground">By the end: </span>{plan.outcome}</p>}
+            {plan && <Schedule p={p} short={short} setShort={setShort} />}
             {plan?.variant && (
               <div className="max-w-2xl space-y-2 border bg-card p-4">
                 <div className="flex flex-wrap gap-1.5" role="list" aria-label="This practice block's three days">
@@ -179,6 +190,11 @@ export function TodayPage() {
             )}
             {!future && (
               <div className="flex flex-wrap items-center gap-3 pt-1">
+                {plan && <Button size="lg" asChild><Link to={practiceHref}><Play className="fill-current" />Start practice mode</Link></Button>}
+              </div>
+            )}
+            {!future && (
+              <div className="flex flex-wrap items-center gap-3">
                 <PracticeTimer label={inPlan ? `Sprint ${s.n} · Day ${sprintDay} of 14` : "Practice session"} onStop={(m) => { setMins(String(m)); requestAnimationFrame(() => minsRef.current?.focus()) }} />
                 <Button variant={markedDone ? "default" : allSteps ? "default" : "outline"} size="sm" aria-pressed={markedDone} onClick={() => update((d) => { d.daysDone ??= {}; d.daysDone[sel] = !markedDone })}>
                   <Check />{markedDone ? "Day marked done" : "Mark this day done"}
@@ -211,12 +227,12 @@ export function TodayPage() {
                 <h2 id="warm-h" className={SECTION_TITLE}>1. Warm up</h2>
                 <span className="text-muted-foreground text-sm tabular-nums">{warmDone} of {warm.length} · {warm.reduce((a, x) => a + x.min, 0)} min</span>
               </div>
-              <p className="text-muted-foreground text-sm">Short drills that bring back earlier skills and set up today’s session.</p>
+              <p className="text-muted-foreground text-sm">Short drills that bring back earlier skills. Ones marked “For you” come from your ratings, ear scores and due flashcards.</p>
               <ul className="divide-y border-y">
-                {warm.map((w, i) => (
-                  <CheckRow key={i} id={`w${i}`} on={!!checks["w" + i]} set={(v) => tick("w" + i, v)}
-                    meta={<span className="text-muted-foreground text-xs tabular-nums">{w.min} min</span>}
-                    link={w.link && L(w.link.to, w.link.label)}>{w.text}</CheckRow>
+                {warm.map((w) => (
+                  <CheckRow key={w.id} id={w.id} on={!!checks[w.id]} set={(v) => tick(w.id, v)}
+                    meta={<span className="text-muted-foreground flex gap-2 text-xs tabular-nums">{w.tag && <span className="border border-foreground/40 px-1 text-foreground">{w.tag}</span>}{w.min} min</span>}
+                    link={w.link && L(w.link)}>{w.text}</CheckRow>
                 ))}
               </ul>
             </section>
@@ -229,13 +245,14 @@ export function TodayPage() {
               <Progress value={(stepsDone / Math.max(1, steps.length)) * 100} aria-hidden="true" className="h-1 [&>div]:bg-[var(--c)]" />
               <ol className="divide-y border-b">
                 {steps.map((st, i) => (
-                  <CheckRow key={i} id={`s${i}`} on={!!checks["s" + i]} set={(v) => tick("s" + i, v)}
-                    meta={<p className={cn("text-sm text-pretty", checks["s" + i] ? "text-muted-foreground" : "")}>{st.detail}</p>}
-                    link={st.link && L(st.link.to, st.link.label)}>
-                    <span className="flex items-baseline gap-2"><span className="text-muted-foreground tabular-nums">{i + 1}</span><span className="font-medium">{st.title}</span><span className="text-muted-foreground text-xs tabular-nums">{st.min} min</span></span>
+                  <CheckRow key={st.id} id={st.id} on={!!checks[st.id]} set={(v) => tick(st.id, v)}
+                    meta={<p className={cn("text-sm text-pretty", checks[st.id] ? "text-muted-foreground" : "")}>{st.text}</p>}
+                    link={st.link && L(st.link)}>
+                    <span className="flex flex-wrap items-baseline gap-2"><span className="text-muted-foreground tabular-nums">{i + 1}</span><span className="font-medium">{st.title}</span>{st.tag && <span className="border border-foreground/40 px-1 text-xs">{st.tag}</span>}<span className="text-muted-foreground text-xs tabular-nums">{st.min} min</span></span>
                   </CheckRow>
                 ))}
               </ol>
+              <StuckPanel smaller={D.smaller} stuck={D.stuck} sel={sel} isToday={isToday} />
             </section>
           </div>
 
@@ -270,9 +287,15 @@ export function TodayPage() {
                 })}
               </ul>
             </section>
+            <YourWork p={p} sel={sel} isToday={isToday} />
           </aside>
         </div>
       )}
+
+      {plan && slot === "fri" && !future && <ListeningSheet p={p} sprintId={s.id} />}
+      {plan && !future && dayIsDone && <ReflectionCard p={p} date={sel} skills={plan.skills.map((i) => ({ key: s.id + "-" + i, name: s.skills[i] }))} />}
+      {inPlan && <WeeklyChallenge p={p} week={week} sel={sel} isToday={isToday} />}
+      {plan && !future && <ProofBox p={p} date={sel} sprintId={s.id} titles={steps.map((st) => st.title!).filter(Boolean)} />}
 
       {!future && (
         <Block title="Log the session" description="Stopping the timer fills in the minutes. Sessions count toward your streak and weekly goal.">

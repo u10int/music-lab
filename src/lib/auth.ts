@@ -18,6 +18,9 @@ const set = (patch: Partial<AuthState>) => {
   state = { ...state, ...patch }
   listeners.forEach((l) => l())
 }
+/** The signed-in user, for code outside React. */
+export const getAuthUser = () => state.user
+
 export function useAuth() {
   return useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l) }, () => state)
 }

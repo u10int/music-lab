@@ -56,7 +56,23 @@ export interface Progress {
   reviews: Record<string, { well: string; hard: string; goal: string }>
   /** Plan days marked done by hand, keyed by date. A day also counts as done once its planned minutes are logged. */
   daysDone?: Record<string, boolean>
+  /** End-of-day reflections, keyed by date. */
+  reflections?: Record<string, Reflection>
+  /** Latest 1–5 confidence per skill, from reflections. */
+  skillConf?: Record<string, number>
+  /** Proof of work: notes, images and audio attached to plan steps. Files live in storage; this keeps the record. */
+  proofs?: Proof[]
+  /** Skill checks passed: skill key → date and seconds taken. */
+  skillTests?: Record<string, { at: string; secs: number }>
+  /** End-of-sprint retrospectives. */
+  retros?: Record<string, { well: string; change: string; carry: string; at: string }>
+  /** Weekly challenges done, by plan week. */
+  challenges?: Record<string, string>
+  /** Days of the week you practice (0 = Sunday). Other days are rest days and never count as missed. */
+  practiceDays?: number[]
 }
+export interface Reflection { clicked: string; hard: string; conf: Record<string, number> }
+export interface Proof { id: string; date: string; sprint: string; title: string; kind: "note" | "image" | "audio"; note: string; path?: string; name?: string }
 export interface Score { right: number; total: number }
 
 const isoDate = (d: Date) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0")

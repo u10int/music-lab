@@ -161,6 +161,22 @@ export function ReviewPage() {
         </Block>
       )}
 
+      {days.some((d) => p.reflections?.[d]) && (
+        <Block title="Your daily reflections" description="What you wrote at the end of each day this week.">
+          <ul className="divide-y border-y">
+            {days.filter((d) => p.reflections?.[d]).map((d) => {
+              const r = p.reflections![d]
+              return (
+                <li key={d} className="grid gap-2 py-3 sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]">
+                  <span className="text-sm font-medium">{fmtDay.format(new Date(d + "T00:00:00"))}</span>
+                  <p className="text-sm text-pretty"><span className="text-muted-foreground">Clicked: </span>{r.clicked || "–"}</p>
+                  <p className="text-sm text-pretty"><span className="text-muted-foreground">Hard: </span>{r.hard || "–"}</p>
+                </li>
+              )
+            })}
+          </ul>
+        </Block>
+      )}
       <Block title="Reflect" description="A few sentences each. They’re saved with your progress, and next week’s review shows your goal at the top.">
         <div className="grid gap-4 lg:grid-cols-3">
           {([["well", "What went well?", "Something you can now do, a sound you’re proud of"], ["hard", "What was hard?", "Where you got stuck or slowed down"], ["goal", "One goal for next week", "Specific and small, like “finish the Note Repeat walkthrough”"]] as const).map(([k, label, ph]) => (

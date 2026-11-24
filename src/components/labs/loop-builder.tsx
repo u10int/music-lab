@@ -170,6 +170,16 @@ export function LoopBuilder() {
     setStored(normalizeLoop(s.loop, s.loop.family))
   }
 
+  // ?loop=<id> from a day plan opens one of your saved loops.
+  const askedLoop = params.get("loop")
+  const loadedLoop = useRef<string | null>(null)
+  useEffect(() => {
+    if (!askedLoop || loadedLoop.current === askedLoop || !progress.loops?.length) return
+    loadedLoop.current = askedLoop
+    load(askedLoop)
+    setParams((sp) => { sp.delete("loop"); return sp }, { replace: true })
+  })
+
   const mixRow = (p: LoopPart) => {
     const m = loop.mix[p]
     const setMix = (patch: Partial<typeof m>) => setLoop({ mix: { ...loop.mix, [p]: { ...m, ...patch } } })
