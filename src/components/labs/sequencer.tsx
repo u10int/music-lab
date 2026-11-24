@@ -172,7 +172,7 @@ export function Sequencer() {
           <Select value="" onValueChange={loadPreset}>
             <SelectTrigger id="preset" size="sm" className="w-48"><SelectValue placeholder="A genre pattern" /></SelectTrigger>
             <SelectContent>
-              {FAMILIES.filter(([f]) => f !== "all").map(([f, label]) => (
+              {FAMILIES.filter(([f]) => f !== "all" && PATTERNS.some((p) => p.family === f)).map(([f, label]) => (
                 <SelectGroup key={f}>
                   <SelectLabel>{label}</SelectLabel>
                   {PATTERNS.filter((p) => p.family === f).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}

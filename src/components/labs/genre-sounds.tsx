@@ -18,7 +18,7 @@ import { Switch } from "@/components/ui/switch"
 import { FX } from "@/data/guide"
 import { GENRE_SOUNDS, type GenreSound } from "@/data/genre-sounds"
 import { SCALES } from "@/data/labs"
-import { FAMILIES, normalizeFamily, PATTERNS, type Family } from "@/data/patterns"
+import { familyOptions, normalizeFamily, PATTERNS, type Family } from "@/data/patterns"
 import { usePref } from "@/lib/store"
 import { cn, slug } from "@/lib/utils"
 
@@ -184,10 +184,10 @@ export function GenreSounds() {
     if (target && fam !== "all" && target.family !== fam) setFam("all")
   }, [hash, fam, setFam])
   const list = GENRE_SOUNDS.filter((s) => fam === "all" || s.family === fam)
-  const families = FAMILIES.filter(([f]) => f === "all" || GENRE_SOUNDS.some((s) => s.family === f))
+  const families = familyOptions((g) => GENRE_SOUNDS.some((s) => s.family === g))
   return (
     <div className="space-y-4">
-      <Seg label="Style" value={fam} onChange={setFam} options={families} />
+      <Seg label="Genre" value={fam} onChange={setFam} options={families} />
       <Caption>Each card plays a two-bar phrase in your key, over the matching drum pattern. Turn the knobs while it loops to hear what each control does, then open “How to make it in Live” for the instrument and effects.</Caption>
       <div className="grid gap-4 lg:grid-cols-2">{list.map((s) => <SoundCard key={s.id} s={s} />)}</div>
     </div>

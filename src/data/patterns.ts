@@ -3,7 +3,7 @@
  * beats 2–4). Each row is [lane, steps, ghost steps]. Ghost steps play quietly.
  * These are starting points: the defining hits of each style, not transcriptions.
  */
-export type Family = "wave" | "phonk" | "hardwave" | "prog" | "house" | "techno" | "dubtechno" | "trance" | "ambient" | "bass" | "breaks" | "futuregarage" | "hiphop" | "world"
+export type Family = (typeof FAMILIES)[number][0] extends infer F ? Exclude<F, "all"> : never
 export type Lane = "Kick" | "Snare" | "Clap" | "Rim" | "Hat" | "Open hat" | "Shaker" | "Tom" | "Ride" | "Cowbell"
 export interface Pattern {
   id: string
@@ -19,26 +19,47 @@ export interface Pattern {
   note: string
 }
 
-export const FAMILIES: [Family | "all", string][] = [
+export const FAMILIES = [
   ["all", "All"],
   ["wave", "Wave"],
   ["phonk", "Phonk"],
   ["hardwave", "Hardwave"],
   ["prog", "Progressive house"],
-  ["house", "House"],
-  ["techno", "Techno"],
-  ["dubtechno", "Dub techno"],
-  ["trance", "Trance and hard dance"],
-  ["ambient", "Ambient"],
-  ["bass", "Drum and bass, dubstep"],
-  ["breaks", "Breaks and garage"],
+  ["odesza", "ODESZA-style"],
   ["futuregarage", "Future garage"],
-  ["hiphop", "Hip-hop and trap"],
-  ["world", "Afro, Latin, retro"],
-]
+  ["house", "House"],
+  ["deephouse", "Deep house"],
+  ["techhouse", "Tech house"],
+  ["discohouse", "Disco house"],
+  ["basshouse", "Bass house"],
+  ["afrohouse", "Afro house"],
+  ["techno", "Techno"],
+  ["minimal", "Minimal techno"],
+  ["hardtechno", "Hard techno"],
+  ["dubtechno", "Dub techno"],
+  ["trance", "Trance"],
+  ["hardstyle", "Hardstyle"],
+  ["ambient", "Ambient"],
+  ["dnb", "Drum and bass"],
+  ["jungle", "Jungle"],
+  ["dubstep", "Dubstep"],
+  ["futurebass", "Future bass"],
+  ["ukg", "UK garage"],
+  ["breakbeat", "Breakbeat"],
+  ["electro", "Electro"],
+  ["synthwave", "Synthwave"],
+  ["trap", "Trap"],
+  ["boombap", "Boom bap"],
+  ["lofi", "Lo-fi hip-hop"],
+  ["reggaeton", "Reggaeton"],
+] as const satisfies readonly (readonly [string, string])[]
 /** Older saved filters used these; map them to current ones. */
 export function normalizeFamily(f: string): Family | "all" {
   return FAMILIES.some(([x]) => x === f) ? (f as Family | "all") : "all"
+}
+/** Filter options for the genres that have at least one item. */
+export function familyOptions(has: (f: Family) => boolean): [Family | "all", string][] {
+  return FAMILIES.filter(([f]) => f === "all" || has(f)).map(([f, l]) => [f, l])
 }
 
 const ALL16 = Array.from({ length: 16 }, (_, i) => i + 1)
@@ -67,9 +88,55 @@ export const PATTERNS: Pattern[] = [
   { id: "prog-deep", family: "prog", name: "Deep progressive (rolling)", bpm: "122–126 BPM", tempo: 124, swing: 0.08,
     rows: [["Kick", FOUR], ["Hat", OFFBEATS], ["Shaker", ALL16, []], ["Tom", [4, 7, 12], [15]], ["Rim", [10], [14]], ["Clap", [13]]],
     note: "The late-90s and 2000s DJ sound: hypnotic and percussive, with the arp and bassline doing the melodic work. Keep the clap sparse." },
+  // ODESZA-style melodic: big claps and toms, half-time hip-hop feel, fills to end phrases
+  { id: "odz-clap", family: "odesza", name: "Kick and layered clap", bpm: "About 95–110 BPM", tempo: 100, length: 32,
+    rows: [
+      ["Kick", [1, 8, 11, 17, 27], [24]],
+      ["Clap", [5, 13, 21, 29]],
+      ["Snare", [5, 13, 21, 29]],
+      ["Hat", [], [3, 5, 7, 9, 11, 13, 15, 19, 21, 23, 25, 27]],
+      ["Rim", [30, 31, 32]],
+    ],
+    note: "A kick and a clap layered with a snare carry the groove; the hats sit low, like Splice's breakdown of “Line of Sight”. Drop the hats entirely in verses and end each phrase with a short woodblock or snare fill." },
+  { id: "odz-march", family: "odesza", name: "Marching snare anthem", bpm: "About 100–120 BPM", tempo: 110, length: 32,
+    rows: [
+      ["Kick", [1, 11, 17, 27]],
+      ["Snare", [9, 25], [3, 4, 7, 12, 15, 16, 19, 20, 23, 28, 31, 32]],
+      ["Clap", [9, 25]],
+      ["Tom", [13, 14, 29, 30, 31]],
+      ["Shaker", [], [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]],
+    ],
+    note: "A drumline feel: quiet marching-snare ghost notes around a big backbeat, with tom pickups that build into the next bar. Humanize velocities so it sounds played, not programmed." },
+  { id: "odz-toms", family: "odesza", name: "Tribal toms", bpm: "About 100–115 BPM", tempo: 108, length: 32,
+    rows: [
+      ["Kick", [1, 7, 17, 23]],
+      ["Tom", [1, 4, 7, 11, 13, 17, 20, 23, 27, 29, 30], [15, 31, 32]],
+      ["Clap", [9, 25]],
+      ["Shaker", [3, 7, 11, 15, 19, 23, 27, 31], [1, 5, 9, 13, 17, 21, 25, 29]],
+      ["Rim", [14, 30]],
+    ],
+    note: "Big floor toms play the rhythm with the kick doubling the strongest hits. Layer two or three toms at different pitches and send them to a short room reverb." },
+  { id: "odz-chill", family: "odesza", name: "Chill half-time (early era)", bpm: "About 80–95 BPM", tempo: 86, swing: 0.25, length: 32,
+    rows: [
+      ["Kick", [1, 8, 11, 17, 24, 27], [16]],
+      ["Snare", [9, 25]],
+      ["Hat", [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31], [6, 14, 22, 30]],
+      ["Shaker", [], [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]],
+      ["Rim", [16], [32]],
+    ],
+    note: "Swung, laid-back hip-hop drums under chopped vocals and warm keys. Let the snare tail ring into a plate reverb." },
   { id: "wave", family: "wave", name: "Wave", bpm: "140–150 BPM, half-time feel", tempo: 145,
     rows: [["Kick", [1, 8, 11]], ["Snare", [9]], ["Hat", EIGHTHS]],
     note: "Add a 32nd-note hat roll into the snare with Note Repeat, then let the reese carry the low end." },
+  { id: "wave-rolls", family: "wave", name: "Wave drop with rolls", bpm: "140–150 BPM, half-time feel", tempo: 145, length: 32,
+    rows: [
+      ["Kick", [1, 8, 11, 17, 24, 27, 28]],
+      ["Snare", [9, 25]],
+      ["Clap", [9, 25]],
+      ["Hat", [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23], [25, 26, 27, 28, 29, 30, 31, 32]],
+      ["Open hat", [15]],
+    ],
+    note: "Bar 2 answers bar 1 with an extra kick and a hat roll into the next phrase. Program the roll with Note Repeat at 1/32 for the classic wave stutter." },
   { id: "phonk", family: "phonk", name: "Drift phonk", bpm: "About 130 BPM", tempo: 130,
     rows: [["Kick", [1, 7, 11]], ["Clap", BACKBEAT], ["Hat", EIGHTHS]],
     note: "Layer two claps, and let the distorted 808 follow the kick. The cowbell melody goes on its own track." },
@@ -96,13 +163,19 @@ export const PATTERNS: Pattern[] = [
   { id: "house", family: "house", name: "Classic house", bpm: "120–126 BPM", tempo: 124,
     rows: [["Kick", FOUR], ["Clap", BACKBEAT], ["Open hat", OFFBEATS], ["Hat", without(ALL16, [...OFFBEATS])]],
     note: "The open hat on every offbeat is the whole groove. Keep the closed hats low and let them breathe." },
-  { id: "deep", family: "house", name: "Deep house", bpm: "118–122 BPM", tempo: 120, swing: 0.15,
+  { id: "deep", family: "deephouse", name: "Deep house", bpm: "118–122 BPM", tempo: 120, swing: 0.15,
     rows: [["Kick", FOUR], ["Clap", BACKBEAT], ["Rim", [8, 15], [4, 11]], ["Hat", OFFBEATS], ["Shaker", ALL16]],
     note: "Softer and swung. The rimshots fill the gaps around the clap; pull their velocity down until they almost disappear." },
-  { id: "tech-house", family: "house", name: "Tech house", bpm: "124–128 BPM", tempo: 126,
+  { id: "tech-house", family: "techhouse", name: "Tech house", bpm: "124–128 BPM", tempo: 126,
     rows: [["Kick", FOUR], ["Clap", BACKBEAT], ["Open hat", OFFBEATS], ["Hat", EVEN16, [1, 5, 9, 13]], ["Rim", [4, 7, 12], [15]]],
     note: "Busier percussion than classic house. The rim syncopation is what makes it bounce; nudge one or two hits late." },
-  { id: "afro", family: "world", name: "Afro house", bpm: "120–124 BPM", tempo: 122, swing: 0.1,
+  { id: "disco-house", family: "discohouse", name: "Disco house", bpm: "120–124 BPM", tempo: 122,
+    rows: [["Kick", FOUR], ["Clap", BACKBEAT], ["Open hat", OFFBEATS], ["Shaker", ALL16, []], ["Tom", [], [14, 16]]],
+    note: "Bright and bouncy: offbeat open hats and a constant shaker like a tambourine. Filter a disco loop or chords on top and automate the cutoff." },
+  { id: "bass-house", family: "basshouse", name: "Bass house", bpm: "124–128 BPM", tempo: 126,
+    rows: [["Kick", FOUR], ["Clap", BACKBEAT], ["Hat", [3, 4, 7, 8, 11, 12, 15, 16]], ["Snare", [], [8, 15]], ["Rim", [6, 14]]],
+    note: "Punchy and tight, leaving room for a growling bass between the kicks. Sidechain the bass hard and keep the hats short." },
+  { id: "afro", family: "afrohouse", name: "Afro house", bpm: "120–124 BPM", tempo: 122, swing: 0.1,
     rows: [["Kick", FOUR], ["Clap", BACKBEAT], ["Shaker", EVEN16, EIGHTHS], ["Tom", [4, 7, 11, 14]], ["Rim", [3, 10, 15]]],
     note: "Toms and rims stand in for congas and bongos. Pan them apart and keep the shaker running underneath." },
 
@@ -110,9 +183,12 @@ export const PATTERNS: Pattern[] = [
   { id: "techno", family: "techno", name: "Techno", bpm: "128–138 BPM", tempo: 132,
     rows: [["Kick", FOUR], ["Open hat", OFFBEATS], ["Hat", without(ALL16, OFFBEATS), FOUR], ["Clap", [13]], ["Ride", EIGHTHS]],
     note: "Relentless kick and offbeat hat. Most of the movement comes from automating filters and decay, not new hits." },
-  { id: "minimal", family: "techno", name: "Minimal techno", bpm: "124–128 BPM", tempo: 126, swing: 0.12,
+  { id: "minimal", family: "minimal", name: "Minimal techno", bpm: "124–128 BPM", tempo: 126, swing: 0.12,
     rows: [["Kick", FOUR], ["Rim", [4, 11], [7, 14]], ["Hat", OFFBEATS], ["Clap", [13]]],
     note: "Space is the point. Change one hit every 8 bars and let tiny timing shifts carry the groove." },
+  { id: "hard-techno", family: "hardtechno", name: "Hard techno (rumble)", bpm: "140–155 BPM", tempo: 148,
+    rows: [["Kick", FOUR], ["Open hat", OFFBEATS], ["Hat", ALL16, []], ["Clap", [5, 13]], ["Ride", EIGHTHS]],
+    note: "Fast and relentless. The 'rumble' is the kick sent to a reverb, distorted and low-passed, then sidechained to the dry kick so it fills the gaps." },
   { id: "dub-techno", family: "dubtechno", name: "Dub techno pulse", bpm: "118–124 BPM", tempo: 120,
     rows: [["Kick", FOUR], ["Hat", OFFBEATS, []], ["Shaker", [], EVEN16], ["Rim", [8], [15]]],
     note: "A soft, round kick and very little else. The chords and their echoes are the groove, so keep the drums dark and quiet." },
@@ -128,7 +204,7 @@ export const PATTERNS: Pattern[] = [
   { id: "trance", family: "trance", name: "Trance", bpm: "136–140 BPM", tempo: 138,
     rows: [["Kick", FOUR], ["Clap", BACKBEAT], ["Open hat", OFFBEATS], ["Hat", ALL16]],
     note: "Rolling 16th hats under a big offbeat open hat. Pull the kick out entirely for the breakdown, then bring it back for the drop." },
-  { id: "hardstyle", family: "trance", name: "Hardstyle", bpm: "150 BPM", tempo: 150,
+  { id: "hardstyle", family: "hardstyle", name: "Hardstyle", bpm: "150 BPM", tempo: 150,
     rows: [["Kick", FOUR], ["Clap", BACKBEAT], ["Open hat", OFFBEATS]],
     note: "The distorted, pitched kick is the lead instrument. Keep the rest sparse so it has room." },
   { id: "trance-classic", family: "trance", name: "Classic trance (late 90s)", bpm: "136–140 BPM", tempo: 138,
@@ -143,27 +219,43 @@ export const PATTERNS: Pattern[] = [
     note: "Snares go from quarters to 8ths to 16ths as the build climbs. In a real build, stretch this over 8 or 16 bars and filter it open as it goes." },
 
   // Bass music
-  { id: "dnb", family: "bass", name: "Drum and bass", bpm: "170–175 BPM", tempo: 174,
+  { id: "dnb", family: "dnb", name: "Drum and bass", bpm: "170–175 BPM", tempo: 174,
     rows: [["Kick", [1, 11]], ["Snare", BACKBEAT, [8, 15]], ["Hat", EIGHTHS], ["Shaker", EVEN16]],
     note: "The two-step: kick on 1 and the 'and' of 3, snare on 2 and 4. Ghost snares are what make it roll." },
-  { id: "jungle", family: "bass", name: "Jungle (Amen-style break)", bpm: "160–170 BPM", tempo: 165,
+  { id: "liquid-dnb", family: "dnb", name: "Liquid drum and bass", bpm: "170–175 BPM", tempo: 172, swing: 0.1, length: 32,
+    rows: [
+      ["Kick", [1, 11, 17, 27, 28]],
+      ["Snare", [5, 13, 21, 29], [8, 15, 24, 32]],
+      ["Hat", [3, 7, 11, 15, 19, 23, 27, 31], [2, 6, 10, 14, 18, 22, 26, 30]],
+      ["Ride", [], [1, 5, 9, 13, 17, 21, 25, 29]],
+      ["Shaker", [], EVEN16.concat(EVEN16.map((x) => x + 16))],
+    ],
+    note: "Smooth and rolling: lots of quiet ghost snares and hats, with a soft ride. Often built from a chopped break layered with clean samples." },
+  { id: "halftime-dnb", family: "dnb", name: "Half-time drum and bass", bpm: "170–175 BPM, half-time feel", tempo: 172, length: 32,
+    rows: [
+      ["Kick", [1, 4, 17, 20, 23]],
+      ["Snare", [9, 25], [15, 31]],
+      ["Hat", EIGHTHS.concat(EIGHTHS.map((x) => x + 16)), []],
+    ],
+    note: "Same tempo as drum and bass but the snare only on beat 3, so it feels half as fast and heavier. Common in the darker, bass-led side of the genre." },
+  { id: "jungle", family: "jungle", name: "Jungle (Amen-style break)", bpm: "160–170 BPM", tempo: 165,
     rows: [["Kick", [1, 3, 11, 12]], ["Snare", [5, 13], [8, 10, 15, 16]], ["Ride", EIGHTHS]],
     note: "A simplified Amen pattern. Better still, slice a real break in Simpler and re-sequence the slices on the pads." },
-  { id: "dubstep", family: "bass", name: "Dubstep", bpm: "140 BPM, half-time", tempo: 140,
+  { id: "dubstep", family: "dubstep", name: "Dubstep", bpm: "140 BPM, half-time", tempo: 140,
     rows: [["Kick", [1], [12]], ["Snare", [9]], ["Hat", EIGHTHS, EVEN16]],
     note: "One snare per bar on beat 3 gives the half-time weight. The bass does the rhythmic work between the hits." },
-  { id: "future-bass", family: "bass", name: "Future bass", bpm: "140–160 BPM, half-time", tempo: 150,
+  { id: "future-bass", family: "futurebass", name: "Future bass", bpm: "140–160 BPM, half-time", tempo: 150,
     rows: [["Kick", [1, 8, 11]], ["Clap", [9]], ["Hat", EIGHTHS], ["Snare", [16], [15]]],
     note: "Sidechain the big supersaw chords hard to the kick so they pump, and add a snare roll into each phrase." },
 
   // Breaks and garage
-  { id: "ukg", family: "breaks", name: "UK garage (2-step)", bpm: "130–135 BPM", tempo: 132, swing: 0.35,
+  { id: "ukg", family: "ukg", name: "UK garage (2-step)", bpm: "130–135 BPM", tempo: 132, swing: 0.35,
     rows: [["Kick", [1, 11]], ["Snare", BACKBEAT], ["Hat", [3, 7, 11, 15], [6, 14]], ["Rim", [8], [16]], ["Shaker", EVEN16]],
     note: "Heavy swing is essential: try 55–60% in Live's groove or the Swing knob. The kick skips beat 3, which gives the 2-step its lurch." },
-  { id: "breakbeat", family: "breaks", name: "Breakbeat", bpm: "125–135 BPM", tempo: 130,
+  { id: "breakbeat", family: "breakbeat", name: "Breakbeat", bpm: "125–135 BPM", tempo: 130,
     rows: [["Kick", [1, 3, 8, 11]], ["Snare", BACKBEAT, [10]], ["Hat", EIGHTHS], ["Open hat", [15]]],
     note: "Funky kick placement against a straight backbeat. Layer a chopped real break underneath for texture." },
-  { id: "electro", family: "world", name: "Electro (808)", bpm: "125–130 BPM", tempo: 128,
+  { id: "electro", family: "electro", name: "Electro (808)", bpm: "125–130 BPM", tempo: 128,
     rows: [["Kick", [1, 7, 11]], ["Clap", BACKBEAT], ["Hat", ALL16, []], ["Tom", [15]]],
     note: "Classic drum-machine funk: syncopated kicks, steady 16th hats and a tom fill. Keep everything dry and punchy." },
 
@@ -242,21 +334,21 @@ export const PATTERNS: Pattern[] = [
     note: "Everything is ghosted: a muffled kick and hats that sit under pads. Low-pass the drum bus around 2–4 kHz." },
 
   // Hip-hop and trap
-  { id: "trap", family: "hiphop", name: "Trap", bpm: "140 BPM, half-time", tempo: 140,
+  { id: "trap", family: "trap", name: "Trap", bpm: "140 BPM, half-time", tempo: 140,
     rows: [["Kick", [1, 4, 11]], ["Clap", [9]], ["Hat", ALL16], ["Open hat", [15]]],
     note: "Steady 16th hats with rolls and triplet flips (Note Repeat at 1/16t or 1/32). Let a long 808 follow the kick." },
-  { id: "boom-bap", family: "hiphop", name: "Boom bap", bpm: "85–95 BPM", tempo: 90, swing: 0.25,
+  { id: "boom-bap", family: "boombap", name: "Boom bap", bpm: "85–95 BPM", tempo: 90, swing: 0.25,
     rows: [["Kick", [1, 8, 11], [16]], ["Snare", BACKBEAT], ["Hat", EIGHTHS, EVEN16]],
     note: "Swing it and don't quantize too tightly. Layer the snare with a clap or rim from a sampled break." },
-  { id: "lofi", family: "hiphop", name: "Lo-fi hip-hop", bpm: "70–85 BPM", tempo: 78, swing: 0.3,
+  { id: "lofi", family: "lofi", name: "Lo-fi hip-hop", bpm: "70–85 BPM", tempo: 78, swing: 0.3,
     rows: [["Kick", [1, 11], [8]], ["Snare", BACKBEAT], ["Hat", EIGHTHS], ["Rim", [16]]],
     note: "Lazy and swung. Low-pass the whole drum bus a little and add vinyl noise for the classic sound." },
 
   // Latin and retro
-  { id: "reggaeton", family: "world", name: "Reggaeton (dembow)", bpm: "90–100 BPM", tempo: 95,
+  { id: "reggaeton", family: "reggaeton", name: "Reggaeton (dembow)", bpm: "90–100 BPM", tempo: 95,
     rows: [["Kick", FOUR], ["Snare", [4, 7, 12, 15]], ["Hat", EIGHTHS]],
     note: "The dembow rhythm: snare on the 'a' of 1 and the 'and' of 2 in every half bar, over a four-on-the-floor kick." },
-  { id: "synthwave", family: "world", name: "Synthwave", bpm: "100–118 BPM", tempo: 110,
+  { id: "synthwave", family: "synthwave", name: "Synthwave", bpm: "100–118 BPM", tempo: 110,
     rows: [["Kick", FOUR], ["Snare", BACKBEAT], ["Hat", EIGHTHS], ["Tom", [], [14, 15, 16]]],
     note: "Big, gated-reverb snare on 2 and 4 is the signature. Use Hybrid Reverb with a short gate, or a Gate after the reverb." },
 ]

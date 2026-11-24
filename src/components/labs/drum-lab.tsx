@@ -5,7 +5,7 @@ import { toggle } from "@/audio/playback"
 import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
-import { FAMILIES, normalizeFamily, PATTERNS, type Family, type Pattern } from "@/data/patterns"
+import { familyOptions, normalizeFamily, PATTERNS, type Family, type Pattern } from "@/data/patterns"
 import { usePref } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
@@ -84,7 +84,7 @@ export function DrumPatterns({ only }: { only?: Family }) {
   const list = PATTERNS.filter((p) => f === "all" || p.family === f)
   return (
     <div className="space-y-4">
-      {!only && <Seg label="Style" value={fam} onChange={setFam} options={FAMILIES} />}
+      {!only && <Seg label="Genre" value={fam} onChange={setFam} options={familyOptions((g) => PATTERNS.some((p) => p.family === g))} />}
       <Caption>Solid squares are the main hits, light ones are quiet ghost notes. Load any of these into the step sequencer to edit it and export MIDI.</Caption>
       <div className="grid gap-4 lg:grid-cols-2">{list.map((p) => <PatternView key={p.id} p={p} />)}</div>
     </div>

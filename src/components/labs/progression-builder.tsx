@@ -213,7 +213,7 @@ export function ProgressionBuilder() {
             <SelectTrigger id="pb-drums" size="sm" className="w-48"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">No drums</SelectItem>
-              {FAMILIES.filter(([f]) => f !== "all").map(([f, label]) => (
+              {FAMILIES.filter(([f]) => f !== "all" && PATTERNS.some((p) => p.family === f)).map(([f, label]) => (
                 <SelectGroup key={f}><SelectLabel>{label}</SelectLabel>{PATTERNS.filter((p) => p.family === f).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectGroup>
               ))}
             </SelectContent>

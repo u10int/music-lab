@@ -86,7 +86,31 @@ export const GENRE_SOUNDS: GenreSound[] = [
     patch: { layers: [{ wave: "sawtooth", voices: 6, detune: 25 }], filter: { cutoff: 4500, q: 0.8 }, amp: { a: 0.03, d: 0.3, s: 0.85, r: 0.4 }, level: 0.15, glide: 0.03 },
     fx: { reverb: 0.35, delay: { beats: 0.75, fb: 0.35, wet: 0.18 } },
     macros: [detune(25), cutoff(4500, 500, 9000), space(0.35)],
+  },  {
+    id: "wave-pluck", family: "wave", genre: "Wave", name: "Melancholic pluck arp", role: "Pluck",
+    what: "A soft, slightly detuned pluck walking through minor chord tones, washed in reverb and delay. Sits behind the lead in drops and carries the intro.",
+    use: ["wavetable"], alt: ["drift"],
+    steps: ["Saw-like wavetable, 2 unison voices, low-pass around 2 kHz.", "Short filter envelope and amp decay, no sustain.", "8th-note arpeggio over minor chords; leave the occasional gap.", "Long reverb and a dotted-8th delay, both filtered dark."],
+    chain: ["Delay", "Hybrid Reverb", "EQ Eight"],
+    tempo: 145, drums: "wave-rolls", oct: 3,
+    phrase: [0, 2, 4, 7, 4, 2, 0, 2, -2, 0, 2, 5, 2, 0, -2, 0].map((d, i): PhraseNote => [i * 2, 1.5, d]),
+    patch: { layers: [{ wave: "sawtooth", voices: 2, detune: 10 }, { wave: "triangle", level: 0.5 }], filter: { cutoff: 1200, q: 1.5, env: 2200, decay: 0.2 }, amp: { a: 0.003, d: 0.45, s: 0, r: 0.3 }, level: 0.16 },
+    fx: { reverb: 0.45, delay: { beats: 0.75, fb: 0.4, wet: 0.25 } },
+    macros: [envAmt(2200, 6000), decay(0.45, 1.2), space(0.45)],
   },
+  {
+    id: "wave-pad", family: "wave", genre: "Wave", name: "Cinematic dark pad", role: "Pad",
+    what: "A low, wide minor pad with a slow swell and sidechain breathing. The atmosphere wave intros and breakdowns sit on.",
+    use: ["wavetable"], alt: ["granulator", "meld"],
+    steps: ["A dark wavetable with lots of unison, plus a sub.", "Slow attack, long release, low-pass under 1.5 kHz.", "Gentle sidechain so it breathes with the kick.", "Huge reverb; layer a granular texture for movement."],
+    chain: ["Auto Filter", "Hybrid Reverb", "Compressor"],
+    tempo: 145, drums: "wave", oct: 2,
+    phrase: [[0, 16, TRIAD(0)], [16, 16, TRIAD(5).map((d) => d - 7)]],
+    patch: { layers: [{ wave: "sawtooth", voices: 5, detune: 18 }], sub: 0.2, filter: { cutoff: 1100, q: 1 }, amp: { a: 0.9, d: 1, s: 0.9, r: 1.6 }, lfo: { target: "cutoff", rate: 0.12, depth: 350 }, level: 0.08 },
+    fx: { reverb: 0.6, duck: 0.5 },
+    macros: [cutoff(1100, 250, 4000), pump(0.5), space(0.6)],
+  },
+
   {
     id: "phonk-808", family: "phonk", genre: "Phonk", name: "Distorted 808 with slides", role: "Bass",
     what: "A sine with a fast pitch drop, pushed hard into distortion so it reads on small speakers. Slides between notes.",
@@ -217,12 +241,73 @@ export const GENRE_SOUNDS: GenreSound[] = [
     patch: { layers: [{ wave: "sawtooth", voices: 3, detune: 15 }], filter: { cutoff: 2500, q: 1, env: 1200, decay: 0.3 }, amp: { a: 0.02, d: 0.4, s: 0.8, r: 0.4 }, glide: 0.05, level: 0.14 },
     fx: { reverb: 0.35, delay: { beats: 0.75, fb: 0.4, wet: 0.3 } },
     macros: [glide(0.05), cutoff(2500, 400, 8000), delayWet(0.3)],
+  },  // ---------- ODESZA-style melodic ----------
+  {
+    id: "odz-chords", family: "odesza", genre: "ODESZA-style melodic", name: "Bouncing saw chords", role: "Chords",
+    what: "Wide saw chords pulsed by an 8th-note volume LFO, which gives the chorus its bounce. Splice's breakdown of “Line of Sight” points to exactly this.",
+    use: ["wavetable"], alt: ["drift", "analog"],
+    steps: ["Saw wavetable with a few unison voices; a square layer for body.", "Filter low-passed in verses, opened up in the chorus.", "Auto Pan-Tremolo synced to 1/8 (or an LFO to volume) for the pulse.", "Lots of reverb, and sidechain to the kick."],
+    chain: ["Auto Pan-Tremolo", "Auto Filter", "Hybrid Reverb"],
+    tempo: 100, drums: "odz-clap", oct: 2,
+    phrase: [[0, 16, SEVENTH(0)], [16, 8, TRIAD(5).map((d) => d - 7)], [24, 8, TRIAD(3).map((d) => d - 7)]],
+    patch: { layers: [{ wave: "sawtooth", voices: 4, detune: 18 }, { wave: "square", level: 0.3 }], filter: { cutoff: 3500, q: 0.8 }, amp: { a: 0.02, d: 0.4, s: 0.9, r: 0.4 }, lfo: { target: "amp", beats: 0.5, depth: 0.7, shape: "triangle" }, level: 0.085 },
+    fx: { reverb: 0.4, duck: 0.4 },
+    macros: [{ id: "pulse", label: "8th pulse", min: 0, max: 1, step: 0.01, value: 0.7, fmt: pct, apply: (p, _f, v) => { if (p.lfo) p.lfo.depth = v } }, cutoff(3500, 300, 9000), space(0.4)],
   },
+  {
+    id: "odz-bass", family: "odesza", genre: "ODESZA-style melodic", name: "Gritty saw bass", role: "Bass",
+    what: "A heavy, low-passed saw bass under gentle vocals. Keep it filtered in the verse and open it up for the chorus.",
+    use: ["analog"], alt: ["drift", "wavetable"],
+    steps: ["Saw oscillator plus a sub, mono.", "Low-pass with some resonance; automate the cutoff up into the chorus.", "Saturator for grit.", "Follow the kick, with notes changing on chord roots."],
+    chain: ["Saturator", "Auto Filter", "Compressor"],
+    tempo: 100, drums: "odz-clap", oct: 1, mono: true,
+    phrase: [[0, 7, 0], [7, 3, 0], [10, 6, 0], [16, 7, 5, -1], [23, 4, 3, -1], [27, 5, 4, -1]],
+    patch: { layers: [{ wave: "sawtooth", voices: 2, detune: 8 }], sub: 0.5, filter: { cutoff: 500, q: 2 }, amp: { a: 0.005, d: 0.3, s: 0.85, r: 0.15 }, drive: 0.4, glide: 0.03, level: 0.2 },
+    fx: { duck: 0.3 },
+    macros: [cutoff(500, 120, 4000), drive(0.4), pump(0.3)],
+  },
+  {
+    id: "odz-vocal", family: "odesza", genre: "ODESZA-style melodic", name: "Syncopated vocal chop", role: "Lead",
+    what: "Bright, pitched vocal chops played as a hook, often starting a 16th after the downbeat. A synth stands in here; in Live, chop a real vocal.",
+    use: ["simpler"], alt: ["sampler"],
+    steps: ["Slice a vocal phrase in Simpler and map the best syllables to pads.", "Pitch chops up, and Warp in Complex Pro with Formants raised to keep them natural.", "Play a short, syncopated hook; start phrases just after the downbeat.", "Reverb, dotted-8th delay, and sidechain to the kick."],
+    chain: ["EQ Eight", "Delay", "Hybrid Reverb"],
+    tempo: 100, drums: "odz-clap", oct: 3, mono: true,
+    phrase: [[1, 1, 4], [3, 2, 4], [6, 1, 5], [7, 3, 4], [11, 2, 2], [17, 1, 4], [19, 2, 4], [22, 1, 7], [23, 3, 6], [27, 4, 4]],
+    patch: { layers: [{ wave: "sawtooth", voices: 2, detune: 8 }, { wave: "square", level: 0.3 }], filter: { type: "bandpass", cutoff: 1500, q: 3 }, amp: { a: 0.008, d: 0.2, s: 0.5, r: 0.3 }, lfo: { target: "pitch", rate: 5.5, depth: 10 }, glide: 0.03, level: 0.42 },
+    fx: { reverb: 0.4, delay: { beats: 0.75, fb: 0.35, wet: 0.25 }, duck: 0.3 },
+    macros: [{ id: "vowel", label: "Vowel", min: 400, max: 2500, step: 10, value: 1500, fmt: (v) => (v < 700 ? "oo" : v < 1100 ? "oh" : v < 1600 ? "ah" : "eh") + ` (${hz(v)})`, apply: (p, _f, v) => { p.filter.cutoff = v } }, delayWet(0.25), space(0.4)],
+  },
+  {
+    id: "odz-brass", family: "odesza", genre: "ODESZA-style melodic", name: "Synth brass swell", role: "Chords",
+    what: "Bold, warm brass-like chords whose filter opens on each hit, for big chorus moments.",
+    use: ["analog"], alt: ["wavetable", "sampler"],
+    steps: ["Two saws, slightly detuned, through a low-pass filter.", "Filter envelope with a slower attack (about 100 ms) so each chord swells open.", "Medium release; play full chords on the downbeats.", "Layer with real horn samples in Sampler for realism."],
+    chain: ["Chorus-Ensemble", "Reverb", "Glue Compressor"],
+    tempo: 110, drums: "odz-march", oct: 2,
+    phrase: [[0, 6, TRIAD(0)], [8, 6, TRIAD(0)], [16, 6, TRIAD(5).map((d) => d - 7)], [24, 6, TRIAD(4).map((d) => d - 7)]],
+    patch: { layers: [{ wave: "sawtooth", voices: 3, detune: 10 }], filter: { cutoff: 900, q: 1, env: 2200, decay: 0.5 }, amp: { a: 0.06, d: 0.5, s: 0.7, r: 0.3 }, level: 0.1 },
+    fx: { reverb: 0.3 },
+    macros: [envAmt(2200, 5000), attack(0.06), space(0.3)],
+  },
+  {
+    id: "odz-bells", family: "odesza", genre: "ODESZA-style melodic", name: "Sparkling bell arp", role: "Pluck",
+    what: "Glassy, bell-like 16th arps that shimmer above the chords, panned and echoed for width.",
+    use: ["operator"], alt: ["collision", "wavetable"],
+    steps: ["Operator with a sine carrier and a modulator at ratio 2 or 3.", "Short decay; velocity mapped to brightness.", "Arpeggiator at 1/16 over the chord, Up/Down.", "Ping Pong delay at 1/8 for width, then reverb."],
+    chain: ["Delay", "Reverb", "EQ Eight"],
+    tempo: 108, drums: "odz-toms", oct: 4,
+    phrase: Array.from({ length: 32 }, (_, i): PhraseNote => [i, 0.8, (i < 16 ? [0, 2, 4, 7, 4, 2] : [-2, 0, 2, 5, 2, 0])[i % 6]]),
+    patch: { layers: [{ wave: "sine" }, { wave: "sine", ratio: 3, level: 0.2 }, { wave: "triangle", ratio: 2, level: 0.15 }], filter: { cutoff: 8000 }, amp: { a: 0.002, d: 0.28, s: 0, r: 0.2 }, level: 0.16 },
+    fx: { delay: { beats: 0.5, fb: 0.35, wet: 0.3 }, reverb: 0.3 },
+    macros: [decay(0.28, 1), delayWet(0.3), space(0.3)],
+  },
+
 
 
   // ---------- House ----------
   {
-    id: "deep-stab", family: "house", genre: "Deep house", name: "Minor 7th chord stab", role: "Chords",
+    id: "deep-stab", family: "deephouse", genre: "Deep house", name: "Minor 7th chord stab", role: "Chords",
     what: "Short, warm organ-like chords on the offbeats. The classic deep house stab, often a minor 7th or 9th.",
     use: ["analog"], alt: ["drift", "electric"],
     steps: ["Two oscillators: a square and a saw, an octave apart.", "Low-pass around 2 kHz, a little filter envelope.", "Short decay and low sustain so chords are stabs.", "Play minor 7th chords on syncopated 16ths."],
@@ -246,7 +331,7 @@ export const GENRE_SOUNDS: GenreSound[] = [
     macros: [cutoff(420, 100, 2000), envAmt(900, 3000), glide(0.03)],
   },
   {
-    id: "tech-bass", family: "house", genre: "Tech house", name: "Plucky tech house bass", role: "Bass",
+    id: "tech-bass", family: "techhouse", genre: "Tech house", name: "Plucky tech house bass", role: "Bass",
     what: "Tight, resonant and slightly driven, with the groove coming from short notes and accents.",
     use: ["drift"], alt: ["analog", "operator"],
     steps: ["Saw plus a quiet square, low-pass with high resonance.", "Strong, very short filter envelope.", "A little drive for bite.", "Short notes, mostly off the kick, with one or two accents per bar."],
@@ -256,9 +341,33 @@ export const GENRE_SOUNDS: GenreSound[] = [
     patch: { layers: [{ wave: "sawtooth" }, { wave: "square", level: 0.4 }], filter: { cutoff: 300, q: 6, env: 1600, decay: 0.09 }, amp: { a: 0.002, d: 0.14, s: 0, r: 0.05 }, drive: 0.3, level: 0.3 },
     fx: { duck: 0.4 },
     macros: [reso(6), envAmt(1600, 4000), drive(0.3)],
+  },  {
+    id: "disco-chords", family: "discohouse", genre: "Disco house, French house", name: "Filtered disco chords", role: "Chords",
+    what: "Bright, choppy 7th chords run through a low-pass filter that sweeps open over the phrase. The filter house move.",
+    use: ["electric"], alt: ["analog", "simpler"],
+    steps: ["Electric piano or a sampled disco loop.", "Choppy 7th chords on offbeat 16ths.", "Auto Filter low-pass with a slow LFO or automation sweeping it open.", "Sidechain to the kick, and a little Phaser-Flanger."],
+    chain: ["Auto Filter", "Phaser-Flanger", "Compressor"],
+    tempo: 122, drums: "disco-house", oct: 2,
+    phrase: [[2, 1, SEVENTH(0)], [3, 1, SEVENTH(0)], [6, 2, SEVENTH(0)], [10, 1, SEVENTH(0)], [14, 2, SEVENTH(0)], [18, 1, SEVENTH(3).map((d) => d - 7)], [19, 1, SEVENTH(3).map((d) => d - 7)], [22, 2, SEVENTH(3).map((d) => d - 7)], [26, 1, SEVENTH(4).map((d) => d - 7)], [30, 2, SEVENTH(4).map((d) => d - 7)]],
+    patch: { layers: [{ wave: "triangle" }, { wave: "sawtooth", level: 0.4 }], filter: { cutoff: 1200, q: 3 }, amp: { a: 0.003, d: 0.25, s: 0.3, r: 0.1 }, lfo: { target: "cutoff", beats: 8, depth: 1000 }, level: 0.09 },
+    fx: { reverb: 0.15, duck: 0.45 },
+    macros: [cutoff(1200, 200, 6000), lfoDepth(1000, 3000), pump(0.45)],
   },
   {
-    id: "afro-log", family: "world", genre: "Afro house, amapiano", name: "Log drum bass", role: "Perc",
+    id: "bass-house-growl", family: "basshouse", genre: "Bass house", name: "Growl bass", role: "Bass",
+    what: "A talking, gnarly bass: a resonant filter swept fast on every note, with heavy distortion, filling the gaps between kicks.",
+    use: ["wavetable"], alt: ["operator", "drift"],
+    steps: ["Wavetable with a harmonically rich table; FM between oscillators for growl.", "Low-pass with high resonance, and a fast LFO or envelope to the cutoff.", "Roar for distortion, then Multiband Dynamics to keep it tight.", "Short notes off the kick, sidechained hard."],
+    chain: ["Roar", "Multiband Dynamics", "Compressor"],
+    tempo: 126, drums: "bass-house", oct: 1, mono: true,
+    phrase: [[2, 2, 0], [6, 1, 0], [7, 1, 0, 1], [10, 2, 0], [14, 2, 2], [18, 2, 0], [22, 1, 0], [23, 1, 3], [26, 2, 0], [30, 2, 4, -1]],
+    patch: { layers: [{ wave: "sawtooth", voices: 2, detune: 15 }, { wave: "square", level: 0.6 }], sub: 0.4, filter: { cutoff: 400, q: 9 }, amp: { a: 0.003, d: 0.2, s: 0.7, r: 0.05 }, lfo: { target: "cutoff", beats: 0.25, depth: 1400, shape: "sawtooth" }, drive: 0.7, level: 0.22 },
+    fx: { duck: 0.6 },
+    macros: [lfoRate(3), reso(9), drive(0.7)],
+  },
+
+  {
+    id: "afro-log", family: "afrohouse", genre: "Afro house, amapiano", name: "Log drum bass", role: "Perc",
     what: "A pitched, punchy sine hit with a quick pitch drop and drive. Plays rhythm and bassline at once.",
     use: ["operator"], alt: ["drift", "simpler"],
     steps: ["One sine oscillator with a fast downward pitch envelope.", "Short-to-medium decay, no sustain.", "Drive or saturate so it cuts through.", "Syncopated notes, sliding between a few pitches."],
@@ -282,7 +391,31 @@ export const GENRE_SOUNDS: GenreSound[] = [
     patch: { layers: [{ wave: "sawtooth" }], filter: { cutoff: 320, q: 14, env: 2400, decay: 0.16 }, amp: { a: 0.002, d: 0.2, s: 0.5, r: 0.04 }, glide: 0.05, drive: 0.4, level: 0.2 },
     fx: { delay: { beats: 0.75, fb: 0.3, wet: 0.12 } },
     macros: [cutoff(320, 100, 3000), reso(14), envAmt(2400, 5000)],
+  },  {
+    id: "techno-rumble", family: "hardtechno", genre: "Hard techno", name: "Rumble bass", role: "Bass",
+    what: "The low, smeared rumble between kicks: a pitched sub blurred by reverb and distortion, then ducked by the kick.",
+    use: ["operator"], alt: ["drift"],
+    steps: ["Send the kick (or a short sine hit) to a return track.", "On the return: Hybrid Reverb with a long, dark tail, then Roar or Saturator.", "Low-pass the result around 200 Hz and sidechain it hard to the dry kick.", "Tune the kick and reverb to the track's key."],
+    chain: ["Hybrid Reverb", "Roar", "Auto Filter", "Compressor"],
+    tempo: 148, drums: "hard-techno", oct: 1,
+    phrase: [[2, 2, 0], [6, 2, 0], [10, 2, 0], [14, 2, 0], [18, 2, 0], [22, 2, 0], [26, 2, -2], [30, 2, -2]],
+    patch: { layers: [{ wave: "sine" }, { wave: "triangle", level: 0.3 }], filter: { cutoff: 220, q: 1 }, amp: { a: 0.02, d: 0.3, s: 0.6, r: 0.25 }, pitch: { semis: 5, time: 0.05 }, drive: 0.6, level: 0.4 },
+    fx: { reverb: 0.5, duck: 0.85 },
+    macros: [drive(0.6), cutoff(220, 60, 800), pump(0.85)],
   },
+  {
+    id: "detroit-stab", family: "techno", genre: "Detroit techno", name: "Detroit chord stab", role: "Chords",
+    what: "Soulful minor 7th and 9th chord stabs on a string-machine-like patch, the melodic side of techno.",
+    use: ["analog"], alt: ["drift", "wavetable"],
+    steps: ["Saws with gentle detune and a soft attack, like a string machine.", "Minor 7th and 9th chords.", "Short-ish stabs on syncopated 16ths, with a filter envelope.", "Delay and reverb; ride the filter over long phrases."],
+    chain: ["Chorus-Ensemble", "Delay", "Reverb"],
+    tempo: 128, drums: "techno", oct: 2,
+    phrase: [[0, 3, SEVENTH(0)], [6, 2, SEVENTH(0)], [10, 3, SEVENTH(0)], [16, 3, SEVENTH(5).map((d) => d - 7)], [22, 2, SEVENTH(5).map((d) => d - 7)], [26, 4, SEVENTH(6).map((d) => d - 7)]],
+    patch: { layers: [{ wave: "sawtooth", voices: 3, detune: 12 }], filter: { cutoff: 1400, q: 1.5, env: 1500, decay: 0.25 }, amp: { a: 0.01, d: 0.5, s: 0.3, r: 0.4 }, level: 0.08 },
+    fx: { reverb: 0.3, delay: { beats: 0.75, fb: 0.35, wet: 0.2 } },
+    macros: [cutoff(1400, 300, 6000), decay(0.5, 1.5), delayWet(0.2)],
+  },
+
   {
     id: "dub-chord", family: "dubtechno", genre: "Dub techno", name: "Dub chord with echoes", role: "Chords",
     what: "One minor chord stab, filtered and fed into long delay feedback and reverb, so the echoes become the part.",
@@ -394,7 +527,7 @@ export const GENRE_SOUNDS: GenreSound[] = [
 
   // ---------- Bass music ----------
   {
-    id: "dubstep-wobble", family: "bass", genre: "Dubstep", name: "Wobble bass", role: "Bass",
+    id: "dubstep-wobble", family: "dubstep", genre: "Dubstep", name: "Wobble bass", role: "Bass",
     what: "A resonant low-pass swept by a tempo-synced LFO. Change the rate for different rhythms.",
     use: ["wavetable"], alt: ["drift", "analog"],
     steps: ["Saw plus square, Unison a little, mono.", "Low-pass with resonance around a third of the way up.", "LFO synced to 1/8 or 1/16 into the cutoff, with a large amount.", "Automate the LFO rate between bars for variation."],
@@ -406,7 +539,7 @@ export const GENRE_SOUNDS: GenreSound[] = [
     macros: [lfoRate(1), lfoDepth(1600, 3000), drive(0.45)],
   },
   {
-    id: "dnb-reese", family: "bass", genre: "Drum and bass", name: "Neuro reese", role: "Bass",
+    id: "dnb-reese", family: "dnb", genre: "Drum and bass", name: "Neuro reese", role: "Bass",
     what: "A darker, more distorted reese with a filter that moves in rhythm. Sits under fast breaks.",
     use: ["wavetable"], alt: ["drift"],
     steps: ["Two detuned saws, wide unison, mono.", "Low-pass with some resonance; LFO synced to 1/4 into cutoff.", "Heavy distortion, then EQ out the mud.", "Long notes on the root, changing every bar or two."],
@@ -416,9 +549,21 @@ export const GENRE_SOUNDS: GenreSound[] = [
     patch: { layers: [{ wave: "sawtooth", voices: 3, detune: 40 }], sub: 0.4, filter: { cutoff: 450, q: 4 }, amp: { a: 0.01, d: 0.3, s: 1, r: 0.15 }, lfo: { target: "cutoff", beats: 1, depth: 700, shape: "triangle" }, drive: 0.65, glide: 0.05, level: 0.2 },
     fx: { reverb: 0.08 },
     macros: [detune(40, 80), lfoDepth(700, 2000), drive(0.65)],
+  },  {
+    id: "liquid-keys", family: "dnb", genre: "Liquid drum and bass", name: "Liquid Rhodes chords", role: "Chords",
+    what: "Warm electric-piano 9th chords with a soft tremolo, floating over fast, light drums.",
+    use: ["electric"], alt: ["sampler"],
+    steps: ["Electric with a soft mallet, or a Rhodes multisample in Sampler.", "Lush 7th and 9th voicings, played at half speed against the drums.", "Auto Pan-Tremolo at a slow rate for the classic Rhodes wobble.", "Reverb, and a high-pass so it stays clear of the sub."],
+    chain: ["Auto Pan-Tremolo", "EQ Eight", "Reverb"],
+    tempo: 172, drums: "liquid-dnb", oct: 2,
+    phrase: [[0, 14, [0, 2, 4, 6, 8]], [16, 14, [-2, 0, 2, 4, 6]]],
+    patch: { layers: [{ wave: "triangle" }, { wave: "sine", ratio: 2, level: 0.25 }], filter: { cutoff: 2500 }, amp: { a: 0.005, d: 1.4, s: 0.35, r: 0.6 }, lfo: { target: "amp", rate: 4, depth: 0.35 }, level: 0.09 },
+    fx: { reverb: 0.35 },
+    macros: [{ id: "trem", label: "Tremolo", min: 0, max: 0.9, step: 0.01, value: 0.35, fmt: pct, apply: (p, _f, v) => { if (p.lfo) p.lfo.depth = v } }, decay(1.4, 3), space(0.35)],
   },
+
   {
-    id: "future-chords", family: "bass", genre: "Future bass", name: "Pumping supersaw chords", role: "Chords",
+    id: "future-chords", family: "futurebass", genre: "Future bass", name: "Pumping supersaw chords", role: "Chords",
     what: "Wide supersaw 7th chords ducked hard on every beat by the kick, so they swell and pump.",
     use: ["wavetable"], alt: ["meld"],
     steps: ["Supersaw with lots of unison voices, a little pitch modulation.", "Big 7th or 9th chord voicings.", "Sidechain to the kick, or use Auto Pan-Tremolo shaped like a duck.", "Hold chords for a bar each; add vocal chops on top."],
@@ -432,7 +577,7 @@ export const GENRE_SOUNDS: GenreSound[] = [
 
   // ---------- Breaks and garage ----------
   {
-    id: "ukg-bass", family: "breaks", genre: "UK garage, speed garage", name: "Warped garage bass", role: "Bass",
+    id: "ukg-bass", family: "ukg", genre: "UK garage, speed garage", name: "Warped garage bass", role: "Bass",
     what: "A square bass with a strong filter envelope and a little pitch dip, bouncing on a swung rhythm.",
     use: ["analog"], alt: ["drift", "operator"],
     steps: ["Square or pulse wave, plus a sine sub.", "Low-pass with a medium filter envelope and some resonance.", "A small downward pitch envelope on each note.", "Syncopated, swung notes; let some overlap."],
@@ -444,7 +589,7 @@ export const GENRE_SOUNDS: GenreSound[] = [
     macros: [cutoff(500, 120, 2500), envAmt(1800, 4000), drive(0.25)],
   },
   {
-    id: "electro-arp", family: "world", genre: "Electro, synthwave", name: "Octave arp bass", role: "Bass",
+    id: "electro-arp", family: "electro", genre: "Electro, synthwave", name: "Octave arp bass", role: "Bass",
     what: "Driving 16th-note saw bass that jumps between root and octave, with a short filter pluck.",
     use: ["analog"], alt: ["drift"],
     steps: ["One saw oscillator, low-pass around 800 Hz.", "Filter envelope with a quick decay.", "Program root–octave 16ths, changing root each bar.", "Add Delay synced to 1/8 for width."],
@@ -456,7 +601,7 @@ export const GENRE_SOUNDS: GenreSound[] = [
     macros: [cutoff(600, 150, 3000), envAmt(1500, 4000), delayWet(0.15)],
   },
   {
-    id: "synthwave-pad", family: "world", genre: "Synthwave", name: "Juno-style chorus pad", role: "Pad",
+    id: "synthwave-pad", family: "synthwave", genre: "Synthwave", name: "Juno-style chorus pad", role: "Pad",
     what: "Warm, slightly detuned saws with lush chorus and a big reverb, straight out of the 80s.",
     use: ["analog"], alt: ["drift", "wavetable"],
     steps: ["Two saws, gently detuned, and a sub.", "Low-pass around 2 kHz, medium attack and long release.", "Chorus-Ensemble in Ensemble mode does most of the work.", "Big reverb; long chords."],
@@ -466,7 +611,19 @@ export const GENRE_SOUNDS: GenreSound[] = [
     patch: { layers: [{ wave: "sawtooth", voices: 3, detune: 12 }], sub: 0.2, filter: { cutoff: 2000, q: 1 }, amp: { a: 0.35, d: 0.8, s: 0.8, r: 1.2 }, lfo: { target: "pitch", rate: 0.6, depth: 8 }, level: 0.075 },
     fx: { reverb: 0.5 },
     macros: [attack(0.35), cutoff(2000, 400, 6000), space(0.5)],
+  },  {
+    id: "outrun-lead", family: "synthwave", genre: "Synthwave, outrun", name: "Outrun saw lead", role: "Lead",
+    what: "A bright, slightly detuned saw lead with vibrato and a big delay, the sound of driving at night.",
+    use: ["analog"], alt: ["drift", "wavetable"],
+    steps: ["Two saws, gently detuned, a touch of glide.", "Delayed vibrato: an LFO to pitch that fades in.", "Filter fairly open with a little envelope.", "Ping Pong delay and a big reverb; double it an octave up for the chorus."],
+    chain: ["Chorus-Ensemble", "Delay", "Hybrid Reverb"],
+    tempo: 110, drums: "synthwave", oct: 3, mono: true,
+    phrase: [[0, 4, 4], [4, 2, 5], [6, 2, 4], [8, 6, 2], [16, 4, 0], [20, 2, 2], [22, 2, 4], [24, 8, 1]],
+    patch: { layers: [{ wave: "sawtooth", voices: 2, detune: 10 }], filter: { cutoff: 4000, q: 1, env: 1000, decay: 0.3 }, amp: { a: 0.01, d: 0.3, s: 0.85, r: 0.35 }, lfo: { target: "pitch", rate: 5.5, depth: 14 }, glide: 0.04, level: 0.14 },
+    fx: { reverb: 0.4, delay: { beats: 0.75, fb: 0.4, wet: 0.3 } },
+    macros: [{ id: "vib", label: "Vibrato", min: 0, max: 40, step: 1, value: 14, fmt: cents, apply: (p, _f, v) => { if (p.lfo) p.lfo.depth = v } }, cutoff(4000, 600, 9000), delayWet(0.3)],
   },
+
 
   // ---------- Future garage ----------
   {
@@ -632,7 +789,7 @@ export const GENRE_SOUNDS: GenreSound[] = [
 
   // ---------- Hip-hop and trap ----------
   {
-    id: "trap-bell", family: "hiphop", genre: "Trap", name: "Dark bell melody", role: "Lead",
+    id: "trap-bell", family: "trap", genre: "Trap", name: "Dark bell melody", role: "Lead",
     what: "A glassy, inharmonic bell playing a sparse minor melody, with lots of space around it.",
     use: ["operator"], alt: ["collision"],
     steps: ["Operator: a sine carrier with one modulator.", "Set the modulator's Coarse ratio to a non-whole number (try 3.5).", "Short decay on the modulator, longer on the carrier.", "Sparse melody in natural minor or harmonic minor."],
@@ -644,7 +801,7 @@ export const GENRE_SOUNDS: GenreSound[] = [
     macros: [decay(0.9, 2.5), { id: "metal", label: "Metallic", min: 0, max: 0.8, step: 0.01, value: 0.25, fmt: pct, apply: (p, _f, v) => { p.layers[1].level = v } }, space(0.4)],
   },
   {
-    id: "trap-808", family: "hiphop", genre: "Trap, drill", name: "Long 808 with glide", role: "Bass",
+    id: "trap-808", family: "trap", genre: "Trap, drill", name: "Long 808 with glide", role: "Bass",
     what: "Cleaner than the phonk 808: a long, booming sine that follows the kick and slides between notes.",
     use: ["simpler"], alt: ["operator", "drift"],
     steps: ["An 808 sample in Simpler, Classic mode, one voice with Glide on.", "Long release so notes ring into the next.", "Tune it to the key with Transpose.", "Overlap notes to slide; follow the kick rhythm."],
@@ -656,7 +813,7 @@ export const GENRE_SOUNDS: GenreSound[] = [
     macros: [glide(0.1), drive(0.2), decay(2, 3)],
   },
   {
-    id: "lofi-keys", family: "hiphop", genre: "Lo-fi hip-hop", name: "Wobbly lo-fi keys", role: "Chords",
+    id: "lofi-keys", family: "lofi", genre: "Lo-fi hip-hop", name: "Wobbly lo-fi keys", role: "Chords",
     what: "Soft electric-piano-like 7th chords with tape wobble, a dark filter and a little hiss.",
     use: ["electric"], alt: ["sampler"],
     steps: ["Electric with a soft mallet, or a Rhodes sample in Sampler.", "Play 7th and 9th chords, lazy timing.", "Slow pitch wobble (Chorus-Ensemble in Vibrato mode, or an LFO to pitch).", "Low-pass the bus and add Vinyl Distortion or noise."],
