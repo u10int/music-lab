@@ -39,7 +39,9 @@ const HIT: Partial<Record<ControlId, Box>> = {
 
 const BODY = "#262626", CTRL = "#3b3b3b", LIT = "#6b6b6b", INK = "#d4d4d4"
 const EX = Array.from({ length: 8 }, (_, i) => 421 + i * 78.5)
-const PAD_X = (c: number) => 385 + c * 78.5, PAD_Y = (r: number) => 516 + r * 59
+// Pads: 72 wide with a 6.5 gap both ways, filling 516–985 vertically, so rows and columns are spaced alike.
+const PAD_GAP = 6.5, PAD_W = 72, PAD_H = (469 - 7 * PAD_GAP) / 8
+const PAD_X = (c: number) => 385 + c * (PAD_W + PAD_GAP), PAD_Y = (r: number) => 516 + r * (PAD_H + PAD_GAP)
 const SCENES = ["1/32t", "1/32", "1/16t", "1/16", "1/8t", "1/8", "1/4t", "1/4"]
 
 export interface PadLook { fill: string; label?: string; ink?: string; aria: string; pressed?: boolean }
@@ -149,19 +151,19 @@ export function Push3({
           const r = Math.floor(i / 8), c = i % 8, p = pad?.(r, c)
           return (
             <g key={"p" + i}>
-              <rect x={PAD_X(c)} y={PAD_Y(r)} width={72} height={56} className="transition-[fill] duration-75"
+              <rect x={PAD_X(c)} y={PAD_Y(r)} width={PAD_W} height={PAD_H} className="transition-[fill] duration-75"
                 role={onPad ? "button" : undefined} tabIndex={onPad ? 0 : undefined} aria-label={p?.aria} aria-pressed={p?.pressed}
                 style={{ fill: p?.fill ?? CTRL, ...(onPad ? { cursor: "pointer", touchAction: "none" } : {}) }}
                 onPointerDown={onPad ? (e) => { if (e.pointerType !== "mouse" || e.button === 0) onPad(r, c) } : undefined}
                 onKeyDown={onPad ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPad(r, c) } } : undefined} />
-              {p?.label && <text x={PAD_X(c) + 36} y={PAD_Y(r) + 33} fontSize={14} textAnchor="middle" fill={p.ink ?? "#fff"} fontFamily="var(--font-sans)" pointerEvents="none">{p.label}</text>}
+              {p?.label && <text x={PAD_X(c) + 36} y={PAD_Y(r) + PAD_H / 2 + 5} fontSize={14} textAnchor="middle" fill={p.ink ?? "#fff"} fontFamily="var(--font-sans)" pointerEvents="none">{p.label}</text>}
             </g>
           )
         })}
 
         {/* Scene buttons */}
         {SCENES.map((s, i) => (
-          <g key={s}>{face(1035, 517 + i * 59, 33, 52)}{T(1040, 531 + i * 59, s, 7.5)}<path d={`M1041 ${538 + i * 59} l6 4 l-6 4 Z`} {...stroke} strokeWidth={1.1} /></g>
+          <g key={s}>{face(1035, PAD_Y(i), 33, PAD_H)}{T(1040, PAD_Y(i) + 14, s, 7.5)}<path d={`M1041 ${PAD_Y(i) + 21} l6 4 l-6 4 Z`} {...stroke} strokeWidth={1.1} /></g>
         ))}
 
         {/* Right column */}
@@ -227,7 +229,7 @@ function groupBox(id: ControlId): Box {
     case "volume": return B(209, 344, 66, 66)
     case "swing": return B(220, 518, 44, 44)
     case "jog": return B(1088, 325, 104, 104)
-    case "scenes": return B(1035, 517, 33, 465)
+    case "scenes": return B(1035, 516, 33, 469)
     case "pads": return B(385, 516, 622, 469)
     default: return HIT[id] ?? B(0, 0, 0, 0)
   }
