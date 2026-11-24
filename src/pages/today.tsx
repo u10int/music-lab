@@ -72,14 +72,14 @@ export function TodayPage() {
               <Link to={`/sprints/${s.n}`} className="font-medium hover:underline">Sprint {s.n}: {s.title}</Link>
               <span className="text-muted-foreground">· {slotName}</span>
             </p>
-            <h2 id="focus-h" className="font-display max-w-2xl text-2xl leading-tight font-bold text-balance sm:text-3xl">{s.weeks[weekInSprint][slot]}</h2>
+            <h2 id="focus-h" className="font-display max-w-2xl text-2xl leading-tight font-medium text-balance sm:text-3xl">{s.weeks[weekInSprint][slot]}</h2>
             {day === 0 && <p className="text-sm">It’s Sunday: export something, even 30 seconds, and <Link to="/exports" className="underline">log the export</Link>, then do your <Link to="/review" className="underline">weekly review</Link>.</p>}
             <div className="pt-2"><PracticeTimer onStop={(m) => { setMins(String(m)); requestAnimationFrame(() => minsRef.current?.focus()) }} /></div>
           </div>
           <div className="flex items-center gap-5 lg:flex-col lg:gap-3">
             <Ring value={minutes / plan} size={132} stroke={11} label={`${minutes} of ${plan} planned minutes today`}>
               <div className="leading-tight">
-                <p className="font-display text-2xl font-extrabold tabular-nums">{minutes}</p>
+                <p className="font-display text-2xl font-medium tabular-nums">{minutes}</p>
                 <p className="text-muted-foreground text-xs">of {plan} min</p>
               </div>
             </Ring>

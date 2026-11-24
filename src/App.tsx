@@ -71,7 +71,7 @@ function Layout() {
         <SidebarInset>
           <header className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b bg-background/90 px-4 backdrop-blur md:hidden">
             <SidebarTrigger aria-label="Open navigation" />
-            <span className="font-display font-extrabold">Music Lab</span>
+            <span className="font-display font-medium">Music Lab</span>
           </header>
           <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
             <Suspense fallback={<p className="text-muted-foreground text-sm">Loading…</p>}>

@@ -152,7 +152,7 @@ export function AppSidebar() {
             <SidebarMenuButton asChild size="lg">
               <NavLink to="/" onClick={() => setOpenMobile(false)}>
                 <Disc3 className="!size-5" />
-                <span className="font-display text-base font-extrabold">Music Lab</span>
+                <span className="font-display text-base font-medium">Music Lab</span>
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -19,7 +19,7 @@ function Stat({ label, value, sub, children, to }: { label: string; value: React
   const body = (
     <>
       <p className="text-muted-foreground text-sm">{label}</p>
-      <p className="font-display text-3xl leading-none font-extrabold tabular-nums">{value}</p>
+      <p className="font-display text-3xl leading-none font-medium tabular-nums">{value}</p>
       {children}
       {sub && <p className="text-muted-foreground text-sm">{sub}</p>}
     </>
@@ -64,7 +64,7 @@ export function Dashboard() {
           <div className="min-w-0 space-y-4">
             <p className="text-muted-foreground text-sm">{status}{inPlan ? ` · ${cur.week % 2 ? "First" : "Second"} week of Sprint ${s.n}` : ""}</p>
             <div className="space-y-2">
-              <h2 id="sprint-h" className="font-display flex items-center gap-3 text-2xl leading-tight font-bold sm:text-3xl">
+              <h2 id="sprint-h" className="font-display flex items-center gap-3 text-2xl leading-tight font-medium sm:text-3xl">
                 <span aria-hidden="true" className="size-3 shrink-0 rounded-full bg-[var(--c)]" />Sprint {s.n}: {s.title}
               </h2>
               <p className="max-w-2xl text-lg text-pretty">{s.goal}</p>
@@ -78,7 +78,7 @@ export function Dashboard() {
           <div className="flex items-center gap-5 lg:flex-col lg:gap-3">
             <Ring value={skillsDone / s.skills.length} size={132} stroke={11} label={`${skillsDone} of ${s.skills.length} sprint ${s.n} skills learned`}>
               <div className="leading-tight">
-                <p className="font-display text-2xl font-extrabold tabular-nums">{skillsDone}/{s.skills.length}</p>
+                <p className="font-display text-2xl font-medium tabular-nums">{skillsDone}/{s.skills.length}</p>
                 <p className="text-muted-foreground text-xs">skills</p>
               </div>
             </Ring>

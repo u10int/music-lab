@@ -85,23 +85,23 @@ export function ReviewPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="space-y-2.5 rounded-xl border bg-card p-5">
           <p className="text-muted-foreground text-sm">Practice</p>
-          <p className="font-display text-3xl leading-none font-extrabold tabular-nums">{fmtMinutes(minutes)}</p>
+          <p className="font-display text-3xl leading-none font-medium tabular-nums">{fmtMinutes(minutes)}</p>
           <Progress value={Math.min(100, (minutes / WEEKLY_GOAL_MIN) * 100)} aria-hidden="true" className="h-1.5 [&>div]:bg-[var(--s3)]" />
           <p className="text-muted-foreground text-sm">{practiced} of 7 days · goal {fmtMinutes(WEEKLY_GOAL_MIN)}</p>
         </div>
         <div className="space-y-2.5 rounded-xl border bg-card p-5">
           <p className="text-muted-foreground text-sm">Skills ticked off</p>
-          <p className="font-display text-3xl leading-none font-extrabold tabular-nums">{learned.length}</p>
+          <p className="font-display text-3xl leading-none font-medium tabular-nums">{learned.length}</p>
           <p className="text-muted-foreground text-sm">{learned.length ? "See the list below" : "None this week"}</p>
         </div>
         <div className="space-y-2.5 rounded-xl border bg-card p-5">
           <p className="text-muted-foreground text-sm">Ear training</p>
-          <p className="font-display text-3xl leading-none font-extrabold tabular-nums">{earTotal.total ? `${pct(earTotal)}%` : "–"}</p>
+          <p className="font-display text-3xl leading-none font-medium tabular-nums">{earTotal.total ? `${pct(earTotal)}%` : "–"}</p>
           <p className="text-muted-foreground text-sm">{earTotal.total ? `${earTotal.right} of ${earTotal.total} right` : "No questions answered"}</p>
         </div>
         <div className="space-y-2.5 rounded-xl border bg-card p-5">
           <p className="text-muted-foreground text-sm">Exports</p>
-          <p className="font-display text-3xl leading-none font-extrabold tabular-nums">{exports.length}</p>
+          <p className="font-display text-3xl leading-none font-medium tabular-nums">{exports.length}</p>
           <p className="text-muted-foreground text-sm">{exports.length ? exports.map((e) => e.note || "Untitled").join(", ") : <Link to="/exports" className="underline">Log an export</Link>}</p>
         </div>
       </div>

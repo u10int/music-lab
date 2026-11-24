@@ -222,7 +222,7 @@ export function LoopBuilder() {
       >
         <Field label="Genre" htmlFor="lb-genre">
           <Select value={loop.family} onValueChange={(f) => { setStored(defaultLoop(f)); setScale(genreInfo(f)!.scale) }}>
-            <SelectTrigger id="lb-genre" size="sm" className="w-44"><SelectValue /></SelectTrigger>
+            <SelectTrigger id="lb-genre" size="sm" className="w-36"><SelectValue /></SelectTrigger>
             <SelectContent>{GENRE_INFO.map((g) => <SelectItem key={g.id} value={g.id}>{famName(g.id)}</SelectItem>)}</SelectContent>
           </Select>
         </Field>

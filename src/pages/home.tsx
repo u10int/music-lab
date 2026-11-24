@@ -74,7 +74,7 @@ function HeroLoop() {
   }
 
   return (
-    <div className="rounded-2xl bg-[#121315] p-4 text-white shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)] ring-1 ring-white/10 sm:p-5" style={{ ["--s1" as string]: "#f0664f", ["--s2" as string]: "#f0aa33", ["--s4" as string]: "#2fb8ad", ["--s5" as string]: "#5b8ef0" }}>
+    <div className="bg-[#121315] p-4 text-white ring-1 ring-white/10 sm:p-5" style={{ ["--s1" as string]: "#f0664f", ["--s2" as string]: "#f0aa33", ["--s4" as string]: "#2fb8ad", ["--s5" as string]: "#5b8ef0" }}>
       <div className="mb-3 flex items-center justify-between gap-3 text-xs text-white/60">
         <span className="tabular-nums">{famName(genre)} · {loop.tempo} BPM · A {info.scale === "major" ? "major" : info.scale === "dorian" ? "Dorian" : info.scale === "phryg" ? "Phrygian" : "minor"}</span>
         <span className="tabular-nums" aria-hidden="true">Bar {bar + 1} of 4</span>
@@ -104,7 +104,7 @@ function HeroLoop() {
       <div className="mt-4 flex flex-wrap gap-1.5" role="group" aria-label="Genre">
         {HERO_GENRES.map((g) => (
           <button key={g} type="button" onClick={() => pick(g)} aria-pressed={g === genre}
-            className={cn("rounded-full px-3 py-1 text-xs font-medium transition-[background-color,color] duration-150", g === genre ? "bg-white text-[#121315]" : "bg-white/10 text-white/80 hover:bg-white/20")}>
+            className={cn("px-3 py-1 text-xs font-medium transition-[background-color,color] duration-150", g === genre ? "bg-white text-[#121315]" : "bg-white/10 text-white/80 hover:bg-white/20")}>
             {famName(g)}
           </button>
         ))}
@@ -172,9 +172,9 @@ const MORE: [string, string, string, React.ComponentType<{ className?: string }>
 export function HomePage() {
   return (
     <div className="space-y-20 pb-6">
-      <section className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-14">
+      <section className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-12">
         <div className="space-y-6">
-          <h1 className="font-display text-4xl leading-[1.04] font-extrabold tracking-tight text-balance sm:text-5xl xl:text-6xl">Learn Ableton Live, Push and music theory by making music</h1>
+          <h1 className="font-display text-5xl leading-[1.04] font-medium text-balance xl:text-6xl">Learn Ableton Live, Push and music theory by making music</h1>
           <p className="text-muted-foreground max-w-xl text-lg text-pretty">Playable labs for beats, melodies, sound design and mixing, with guides to 31 electronic genres from wave and phonk to trance and drum and bass. It all runs in your browser and can send MIDI straight into Live.</p>
           <div className="flex flex-wrap gap-3">
             <Button size="lg" asChild><Link to="/labs/loop-builder">Open the loop builder<ArrowRight /></Link></Button>
@@ -186,7 +186,7 @@ export function HomePage() {
 
       <section className="space-y-6" aria-labelledby="h-make">
         <div className="max-w-2xl space-y-2">
-          <h2 id="h-make" className="text-2xl font-bold sm:text-3xl">Make something in minutes</h2>
+          <h2 id="h-make" className="text-2xl font-medium sm:text-3xl">Make something in minutes</h2>
           <p className="text-muted-foreground text-pretty">Start from a genre, change what you like, and take it into Live as MIDI.</p>
         </div>
         <ul className="grid gap-4 md:grid-cols-3">
@@ -206,7 +206,7 @@ export function HomePage() {
 
       <section className="space-y-6" aria-labelledby="h-more">
         <div className="max-w-2xl space-y-2">
-          <h2 id="h-more" className="text-2xl font-bold sm:text-3xl">Train your ears, hands and theory</h2>
+          <h2 id="h-more" className="text-2xl font-medium sm:text-3xl">Train your ears, hands and theory</h2>
           <p className="text-muted-foreground text-pretty">Short, playable lessons that connect what you hear to what you do on Push.</p>
         </div>
         <ul className="grid gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -228,7 +228,7 @@ export function HomePage() {
       <section className="space-y-6" aria-labelledby="h-genres">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="max-w-2xl space-y-2">
-            <h2 id="h-genres" className="text-2xl font-bold sm:text-3xl">31 genres, each with its own sounds</h2>
+            <h2 id="h-genres" className="text-2xl font-medium sm:text-3xl">31 genres, each with its own sounds</h2>
             <p className="text-muted-foreground text-pretty">Tempo, drums, chord habits, structure and artists to study, plus playable drum patterns and sound recipes.</p>
           </div>
           <Button variant="outline" asChild><Link to="/genres">All genres<ArrowRight /></Link></Button>
@@ -236,7 +236,7 @@ export function HomePage() {
         <ul className="flex flex-wrap gap-2">
           {GENRE_INFO.map((g) => (
             <li key={g.id}>
-              <Link to={`/genres/${g.id}`} className="inline-flex items-baseline gap-2 rounded-full border bg-card px-3.5 py-1.5 text-sm transition-[background-color] duration-150 hover:bg-accent">
+              <Link to={`/genres/${g.id}`} className="inline-flex items-baseline gap-2 border bg-card px-3.5 py-1.5 text-sm transition-[background-color] duration-150 hover:bg-accent">
                 <span className="font-medium">{famName(g.id)}</span>
                 <span className="text-muted-foreground text-xs tabular-nums">{g.tempo[0]}–{g.tempo[1]}</span>
               </Link>
@@ -249,7 +249,7 @@ export function HomePage() {
         <div className="grid gap-10 p-6 sm:p-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="space-y-6">
             <div className="space-y-2">
-              <h2 id="h-account" className="text-2xl font-bold sm:text-3xl">Follow a plan, and see yourself improve</h2>
+              <h2 id="h-account" className="text-2xl font-medium sm:text-3xl">Follow a plan, and see yourself improve</h2>
               <p className="text-muted-foreground max-w-xl text-pretty">A free account turns the labs into a 12-week course: six two-week sprints from driving Live with Push to mixing and finishing a track.</p>
             </div>
             <ul className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">

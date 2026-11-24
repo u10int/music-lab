@@ -45,7 +45,7 @@ export function SprintPage() {
     <div className="space-y-10" style={{ ["--c" as string]: `var(${s.c})` }}>
       <header className="space-y-2">
         <p className="text-muted-foreground text-sm">Weeks {w1}–{w1 + 1}, {fmtDay.format(weekStart(p, w1))} to {fmtDay.format(end)}{isNow ? " · Current sprint" : ""}</p>
-        <h1 className="flex items-center gap-3 text-3xl font-extrabold"><span aria-hidden="true" className="size-3 rounded-full bg-[var(--c)]" />Sprint {s.n}: {s.title}</h1>
+        <h1 className="flex items-center gap-3 text-4xl leading-[1.1] font-medium sm:text-5xl"><span aria-hidden="true" className="size-3 rounded-full bg-[var(--c)]" />Sprint {s.n}: {s.title}</h1>
         <p className="max-w-2xl text-lg text-pretty">{s.goal}</p>
       </header>
 
@@ -96,8 +96,8 @@ export function SprintPage() {
         </div>
       </Block>
 
-      <Card><CardContent className="space-y-6"><h2 className="text-xl font-bold">{LAB[s.id][0]}</h2>{LAB[s.id][1]()}</CardContent></Card>
-      {s.id === "s2" && <Card><CardContent className="space-y-4"><h2 className="text-xl font-bold">Ear training</h2><EarTraining /></CardContent></Card>}
+      <Card><CardContent className="space-y-6"><h2 className="text-xl font-medium">{LAB[s.id][0]}</h2>{LAB[s.id][1]()}</CardContent></Card>
+      {s.id === "s2" && <Card><CardContent className="space-y-4"><h2 className="text-xl font-medium">Ear training</h2><EarTraining /></CardContent></Card>}
       <SprintShortcuts sprintId={s.id} />
       <References s={s} />
       <Resources s={s} />

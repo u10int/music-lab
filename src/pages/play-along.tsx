@@ -32,7 +32,7 @@ function Readout() {
   const sub = !sorted.length ? "Hold notes to see what they are." : chord ? `${chord.quality[0].toUpperCase() + chord.quality.slice(1)}${chord.inversion ? ", inverted" : ""} · ${sorted.map(noteName).join(" ")}` : sorted.map(noteName).join(" ")
   return (
     <div className="space-y-1" aria-live="polite">
-      <p className={cn("font-display text-4xl font-extrabold tabular-nums", !sorted.length && "text-muted-foreground/60")}>{text}</p>
+      <p className={cn("font-display text-4xl font-medium tabular-nums", !sorted.length && "text-muted-foreground/60")}>{text}</p>
       <p className="text-muted-foreground text-sm">{sub}</p>
     </div>
   )
@@ -102,7 +102,7 @@ function ChordDrill() {
     <div className="space-y-4">
       <Caption>Hold all three notes of the chord at once. Any inversion and any octave count. Needs a controller, since a mouse can only press one pad.</Caption>
       <div className="flex flex-wrap items-baseline gap-4">
-        <p className="font-display text-4xl font-extrabold">{ch.name}</p>
+        <p className="font-display text-4xl font-medium">{ch.name}</p>
         <p className="text-muted-foreground">{ch.roman} in {T.names[0]} {T.sc.name.toLowerCase()} · {ch.notes.join(" ")}</p>
       </div>
       <p className="text-sm tabular-nums" role="status">{solved ? "Got it." : `${score} found`}</p>

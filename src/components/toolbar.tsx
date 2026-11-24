@@ -25,7 +25,7 @@ export function Toolbar({ transport, children, actions, className }: { transport
   }, [])
   return (
     <div ref={ref} role="group" aria-label="Playback and settings"
-      className={cn("z-20 rounded-xl border bg-card/95 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/85 md:sticky md:top-3 sm:p-4", className)}>
+      className={cn("z-20 border bg-card/95 p-3 backdrop-blur supports-[backdrop-filter]:bg-card/90 md:sticky md:top-3 sm:p-4", className)}>
       <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
         <div className="flex [&_[data-transport]]:h-[3.625rem]">{transport}</div>
         {children}

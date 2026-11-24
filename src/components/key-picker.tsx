@@ -16,13 +16,13 @@ export function KeyPicker({ idPrefix = "k" }: { idPrefix?: string }) {
     <>
       <Field label="Key" htmlFor={`${idPrefix}-root`}>
         <Select value={String(root)} onValueChange={(v) => setRoot(+v)}>
-          <SelectTrigger id={`${idPrefix}-root`} size="sm" className="w-32"><SelectValue /></SelectTrigger>
+          <SelectTrigger id={`${idPrefix}-root`} size="sm" className="w-24"><SelectValue /></SelectTrigger>
           <SelectContent>{ROOTS.map((n, i) => <SelectItem key={i} value={String(i)}>{n}</SelectItem>)}</SelectContent>
         </Select>
       </Field>
       <Field label="Scale" htmlFor={`${idPrefix}-scale`}>
         <Select value={scale} onValueChange={setScale}>
-          <SelectTrigger id={`${idPrefix}-scale`} size="sm" className="w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger id={`${idPrefix}-scale`} size="sm" className="w-36"><SelectValue /></SelectTrigger>
           <SelectContent>{SCALES.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
         </Select>
       </Field>

@@ -17,7 +17,7 @@ export function PracticeTimer({ onStop }: { onStop: (minutes: number) => void })
   const mmss = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`
   return (
     <div className="flex flex-wrap items-center gap-4">
-      <span className="font-display text-4xl font-extrabold tabular-nums" aria-live="off">{mmss}</span>
+      <span className="font-display text-4xl font-medium tabular-nums" aria-live="off">{mmss}</span>
       {start ? (
         <Button onClick={() => { onStop(Math.max(1, Math.round(secs / 60))); setStart(null) }}><Pause className="fill-current" />Stop and log</Button>
       ) : (

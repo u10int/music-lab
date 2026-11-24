@@ -17,7 +17,7 @@ const recipeCount = (id: string) => RECIPES.filter((r) => r.use.includes(id) || 
 function Tags({ tags, label }: { tags: string[]; label: string }) {
   return (
     <ul aria-label={label} className="flex flex-wrap gap-1.5">
-      {tags.map((t) => <li key={t} className="rounded-full bg-muted px-2 py-0.5 text-xs">{t}</li>)}
+      {tags.map((t) => <li key={t} className="bg-muted px-2 py-0.5 text-xs">{t}</li>)}
     </ul>
   )
 }

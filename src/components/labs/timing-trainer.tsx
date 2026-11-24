@@ -133,7 +133,7 @@ export function TimingTrainer() {
             ["Spread", n > 1 ? `±${Math.round(sd)} ms` : "–"],
             ["Within 20 ms", n ? `${tight}%` : "–"],
           ].map(([k, v]) => (
-            <div key={k}><dt className="text-muted-foreground text-sm">{k}</dt><dd className="font-display text-2xl font-bold tabular-nums">{v}</dd></div>
+            <div key={k}><dt className="text-muted-foreground text-sm">{k}</dt><dd className="font-display text-2xl font-medium tabular-nums">{v}</dd></div>
           ))}
         </dl>
         <div className="flex flex-wrap items-center gap-3">

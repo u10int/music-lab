@@ -10,7 +10,7 @@ export function InstLink({ id, chip, primary }: { id: string; chip?: boolean; pr
     <Link
       to={`/instruments?tab=instruments#inst-${id}`}
       className={cn(
-        chip ? "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium no-underline hover:bg-accent" : "underline",
+        chip ? "inline-flex items-center border px-2.5 py-0.5 text-xs font-medium no-underline hover:bg-accent" : "underline",
         chip && primary && "border-foreground",
       )}
     >
