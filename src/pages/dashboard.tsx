@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Check } from "lucide-react"
 import { Link } from "react-router"
 import { Block, PageHeader } from "@/components/page"
 import { ProgressBoard } from "@/components/progress-board"
@@ -10,8 +10,10 @@ import { Progress } from "@/components/ui/progress"
 import { SKILL_GUIDES } from "@/data/skill-guides"
 import { SPRINTS } from "@/data/sprints"
 import { dueCards } from "@/lib/cards"
-import { countDone, currentWeek, fmtDay, fmtMinutes, minutesThisWeek, sprintForWeek, startDate, streaks, TOTAL, update, useProgress, weekOf, WEEKLY_GOAL_MIN } from "@/lib/store"
+import { countDone, currentWeek, fmtDay, fmtMinutes, minutesByDay, minutesThisWeek, sprintForWeek, todayISO, startDate, streaks, TOTAL, update, useProgress, weekOf, WEEKLY_GOAL_MIN } from "@/lib/store"
 import { cn } from "@/lib/utils"
+import { dayDone } from "@/pages/today"
+import { useTimer } from "@/components/practice-timer"
 
 const DAY_SLOT: Record<number, ["mon" | "mid" | "fri" | "wknd", string]> = { 1: ["mon", "Monday"], 2: ["mid", "Tuesday to Thursday"], 3: ["mid", "Tuesday to Thursday"], 4: ["mid", "Tuesday to Thursday"], 5: ["fri", "Friday"], 6: ["wknd", "Weekend"], 0: ["wknd", "Weekend"] }
 
@@ -30,6 +32,9 @@ function Stat({ label, value, sub, children, to }: { label: string; value: React
 
 export function Dashboard() {
   const p = useProgress()
+  const timer = useTimer()
+  const todayMins = minutesByDay(p), todayDone = dayDone(p, todayISO(), todayMins)
+  const started = timer.running || (todayMins.get(todayISO()) ?? 0) > 0
   const cur = currentWeek(p)
   const si = sprintForWeek(cur.week), s = SPRINTS[si]
   const done = countDone(p)
@@ -71,7 +76,14 @@ export function Dashboard() {
             </div>
             {slot && inPlan && <p className="max-w-2xl text-sm text-pretty"><span className="font-semibold">{slot[1]}:</span> {s.weeks[weekInSprint][slot[0]]}</p>}
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Button asChild><Link to="/today">Start today’s session</Link></Button>
+              {todayDone ? (
+                <>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium"><Check className="size-4" />Today’s session is done</span>
+                  <Button variant="outline" asChild><Link to="/today">Review today</Link></Button>
+                </>
+              ) : (
+                <Button asChild><Link to="/today">{started ? "Continue today’s session" : "Start today’s session"}</Link></Button>
+              )}
               <Button variant="outline" asChild><Link to={`/sprints/${s.n}`}>Open sprint {s.n}<ArrowRight /></Link></Button>
             </div>
           </div>

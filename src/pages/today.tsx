@@ -15,11 +15,12 @@ import { SPRINTS } from "@/data/sprints"
 import { currentWeek, fmtMinutes, isoOf, minutesByDay, minutesThisWeek, sprintForWeek, streaks, todayISO, uid, update, usePref, useProgress, weekOf, weekStart, WEEKLY_GOAL_MIN, type Progress as Prog } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
-const SLOT: Record<number, ["mon" | "mid" | "fri" | "wknd", string]> = { 1: ["mon", "Monday: learn"], 2: ["mid", "Practice day"], 3: ["mid", "Practice day"], 4: ["mid", "Practice day"], 5: ["fri", "Friday: reference"], 6: ["wknd", "Weekend: build"], 0: ["wknd", "Weekend: build"] }
-const PLAN_MIN: Record<string, number> = { mon: 60, mid: 60, fri: 60, wknd: 150 }
+export const SLOT: Record<number, ["mon" | "mid" | "fri" | "wknd", string]> = { 1: ["mon", "Monday: learn"], 2: ["mid", "Practice day"], 3: ["mid", "Practice day"], 4: ["mid", "Practice day"], 5: ["fri", "Friday: reference"], 6: ["wknd", "Weekend: build"], 0: ["wknd", "Weekend: build"] }
+export const PLAN_MIN: Record<string, number> = { mon: 60, mid: 60, fri: 60, wknd: 150 }
 
 const longDay = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" })
-const dayDone = (p: Prog, iso: string, mins: Map<string, number>) => !!p.daysDone?.[iso] || (mins.get(iso) ?? 0) >= PLAN_MIN[SLOT[new Date(iso + "T00:00:00").getDay()][0]]
+/** A plan day is done once its planned minutes are logged, or it's marked done by hand. */
+export const dayDone = (p: Prog, iso: string, mins: Map<string, number>) => !!p.daysDone?.[iso] || (mins.get(iso) ?? 0) >= PLAN_MIN[SLOT[new Date(iso + "T00:00:00").getDay()][0]]
 
 /** The current sprint's 14 days: done, missed or still to come. Past days open so you can catch up. */
 function SprintDays({ p, w1, sel, onPick }: { p: Prog; w1: number; sel: string; onPick: (iso: string) => void }) {
@@ -110,7 +111,14 @@ export function TodayPage() {
   const weekInSprint = inPlan ? (week - 1) % 2 : 0
   const plan = dayPlan(s.id, (weekInSprint + 1) as 1 | 2, slot, slot === "mid" ? day - 2 : 0)
   const [checks, setChecks] = usePref<Record<string, boolean>>("today-" + sel, {})
-  const tick = (k: string, v: boolean) => setChecks({ ...checks, [k]: v })
+  const sprintDay = ((week - 1) % 2) * 7 + ((day + 6) % 7) + 1
+  const tick = (k: string, v: boolean) => {
+    const next = { ...checks, [k]: v }
+    setChecks(next)
+    // Checking off the last session step finishes the day.
+    const n = plan?.steps.length ?? 0
+    if (v && k.startsWith("s") && n && Array.from({ length: n }, (_, i) => next["s" + i]).every(Boolean) && !p.daysDone?.[sel]) update((d) => { d.daysDone ??= {}; d.daysDone[sel] = true })
+  }
   const minutes = minutesByDay(p).get(sel) ?? 0
   const markedDone = !!p.daysDone?.[sel]
   const { current } = streaks(p)
@@ -171,7 +179,7 @@ export function TodayPage() {
             )}
             {!future && (
               <div className="flex flex-wrap items-center gap-3 pt-1">
-                <PracticeTimer label={`Sprint ${s.n} · ${slotName}, ${selDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}`} onStop={(m) => { setMins(String(m)); requestAnimationFrame(() => minsRef.current?.focus()) }} />
+                <PracticeTimer label={inPlan ? `Sprint ${s.n} · Day ${sprintDay} of 14` : "Practice session"} onStop={(m) => { setMins(String(m)); requestAnimationFrame(() => minsRef.current?.focus()) }} />
                 <Button variant={markedDone ? "default" : allSteps ? "default" : "outline"} size="sm" aria-pressed={markedDone} onClick={() => update((d) => { d.daysDone ??= {}; d.daysDone[sel] = !markedDone })}>
                   <Check />{markedDone ? "Day marked done" : "Mark this day done"}
                 </Button>
