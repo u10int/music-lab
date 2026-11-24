@@ -44,7 +44,7 @@ export function SoundDesignLab() {
   return (
     <div className="space-y-12">
       <PageHeader title="Sound design">Signature sounds from each genre you can play and tweak, then a small synth with the same oscillator, filter and envelope as Drift to learn how the controls work.</PageHeader>
-      <Block title="Genre sounds" description={`${GENRE_SOUNDS.length} sounds across wave, phonk, house, techno, bass music, future garage and more.`}><GenreSounds /></Block>
+      <Block title="Genre sounds" description={`${GENRE_SOUNDS.length} sounds across wave, phonk, house, techno, bass music, future garage, hardwave and more.`}><GenreSounds /></Block>
       <Block title="Synth playground" description="Change a control, play it, and watch the shape change."><SynthLab /></Block>
       <More to="/instruments?tab=modulation">the modulation guide</More>
     </div>

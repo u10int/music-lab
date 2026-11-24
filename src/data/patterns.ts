@@ -3,7 +3,7 @@
  * beats 2–4). Each row is [lane, steps, ghost steps]. Ghost steps play quietly.
  * These are starting points: the defining hits of each style, not transcriptions.
  */
-export type Family = "yours" | "house" | "techno" | "bass" | "breaks" | "futuregarage" | "hiphop" | "world"
+export type Family = "yours" | "house" | "techno" | "bass" | "breaks" | "futuregarage" | "hardwave" | "hiphop" | "world"
 export type Lane = "Kick" | "Snare" | "Clap" | "Rim" | "Hat" | "Open hat" | "Shaker" | "Tom" | "Ride"
 export interface Pattern {
   id: string
@@ -27,6 +27,7 @@ export const FAMILIES: [Family | "all", string][] = [
   ["bass", "Drum and bass, dubstep"],
   ["breaks", "Breaks and garage"],
   ["futuregarage", "Future garage"],
+  ["hardwave", "Hardwave"],
   ["hiphop", "Hip-hop and trap"],
   ["world", "Afro, Latin, retro"],
 ]
@@ -142,6 +143,29 @@ export const PATTERNS: Pattern[] = [
       ["Shaker", [], [4, 8, 12, 16, 20, 24, 28, 32]],
     ],
     note: "Denser and bouncier, for the melodic end of the genre. Heavy swing on the hats, and let the open hat breathe into the next bar." },
+
+  // Hardwave: wave melodies with club and hard dance drums; drops usually four-on-the-floor, with half-time sections
+  { id: "hw-drop", family: "hardwave", name: "Hardwave drop", bpm: "145–155 BPM", tempo: 150, length: 32,
+    rows: [
+      ["Kick", [1, 5, 9, 13, 17, 21, 25, 29]],
+      ["Clap", [5, 13, 21, 29]],
+      ["Open hat", [3, 7, 11, 15, 19, 23, 27]],
+      ["Hat", [1, 5, 9, 13, 17, 21, 25], [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26]],
+      ["Snare", [29, 30, 31, 32], [28]],
+    ],
+    note: "Driving kick under offbeat hats, with a snare roll into the next phrase. Sidechain everything to the kick hard; the pumping is part of the sound." },
+  { id: "hw-halftime", family: "hardwave", name: "Hardwave half-time", bpm: "145–155 BPM, half-time feel", tempo: 150, length: 32,
+    rows: [
+      ["Kick", [1, 8, 11, 17, 27], [24]],
+      ["Snare", [9, 25]],
+      ["Hat", [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25], [26, 27, 28, 29, 30, 31, 32]],
+      ["Open hat", [15]],
+      ["Clap", [], [31]],
+    ],
+    note: "Trap-style hats with a roll at the end of bar 2 (use Note Repeat at 1/16 or 1/32). Use this for intros and breakdowns, then switch to the four-on-the-floor drop." },
+  { id: "hw-drive", family: "hardwave", name: "Hard dance drive", bpm: "150 BPM", tempo: 150,
+    rows: [["Kick", FOUR], ["Clap", BACKBEAT], ["Ride", OFFBEATS], ["Shaker", EVEN16, EIGHTHS], ["Rim", [8, 15]]],
+    note: "Borrowed from hardstyle and hard trance: a long, distorted kick with a pitched tail carries the low end, so keep the bass off the kick." },
 
   // Hip-hop and trap
   { id: "trap", family: "hiphop", name: "Trap", bpm: "140 BPM, half-time", tempo: 140,
