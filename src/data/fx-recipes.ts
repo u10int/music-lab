@@ -34,6 +34,8 @@ export interface FxRecipe {
   drumsOn?: (step: number, p: Record<string, number>) => boolean
   params: FxParam[]
   render: (r: FxRender) => void
+  /** A reference track where you can hear this, with a timestamp. */
+  ref?: { track: string; at: string }
 }
 
 const pct = (v: number) => Math.round(v * 100) + "%"
@@ -75,6 +77,46 @@ function impact(c: BaseAudioContext, out: AudioNode, t: number, size = 0.6, leve
 function stab(c: BaseAudioContext, out: AudioNode, t: number, len: number, root: number, iv: number[], deg = 0, oct = 3, level = 0.12) {
   for (const d of [deg, deg + 2, deg + 4]) saws(c, out, t, len, degree(root, iv, d, oct), { voices: 3, detune: 14, cutoff: [2200, 900], level })
 }
+
+
+/** A punchy kick whose tail sweeps down slowly, distorted: the wave and phonk kick. */
+function tailKick(c: BaseAudioContext, out: AudioNode, t: number, tail = 0.45, level = 0.36) {
+  const o = c.createOscillator(), g = gain(c, 0)
+  o.frequency.setValueAtTime(320, t)
+  o.frequency.exponentialRampToValueAtTime(48, t + 0.16)
+  ramp(g.gain, t, [[0, 0.0001], [0.003, level], [tail, 0.0001]], "exp")
+  chain(o, shaper(c, 0.55), g, out)
+  o.start(t); o.stop(t + tail + 0.05)
+}
+/** A distorted, slightly detuned bass note with a sub underneath. Returns the gain so callers can duck it. */
+function bassNote(c: BaseAudioContext, out: AudioNode, t: number, dur: number, midi: number, o: { dive?: number; diveAt?: number; drive?: number; level?: number } = {}) {
+  const g = gain(c, 0), lp = filter(c, "lowpass", 900, 1.2), lvl = (o.level ?? 0.12) * 0.6
+  ramp(g.gain, t, [[0, 0], [0.01, lvl], [dur - 0.02, lvl], [dur, 0]])
+  chain(lp, shaper(c, o.drive ?? 0.5), g, out)
+  const f = 440 * Math.pow(2, (midi - 69) / 12)
+  for (const [type, det, mul, lv] of [["sawtooth", -12, 1, 0.5], ["sawtooth", 12, 1, 0.5], ["sine", 0, 0.5, 0.9]] as const) {
+    const s = c.createOscillator(), sg = gain(c, lv)
+    s.type = type
+    s.detune.value = det
+    s.frequency.setValueAtTime(f * mul, t)
+    if (o.dive) {
+      s.frequency.setValueAtTime(f * mul, t + (o.diveAt ?? dur * 0.7))
+      s.frequency.exponentialRampToValueAtTime(f * mul * Math.pow(2, -o.dive / 12), t + dur)
+    }
+    chain(s, sg, lp)
+    s.start(t); s.stop(t + dur + 0.02)
+  }
+  return g
+}
+/** Duck a bass gain on each kick time, like sidechain compression. */
+function duck(g: GainNode, times: number[], lvl: number, depth = 0.8) {
+  for (const k of times) {
+    g.gain.setValueAtTime(lvl * (1 - depth), k)
+    g.gain.setTargetAtTime(lvl, k + 0.02, 0.08)
+  }
+}
+
+const REFTRACK = "Claudia Valentina, “When I’m High” (ROUDS Remix)"
 
 export const FX_RECIPES: FxRecipe[] = [
   /* ================= Atmospheres ================= */
@@ -949,6 +991,187 @@ export const FX_RECIPES: FxRecipe[] = [
       ramp(g.gain, t + B * 2, [[0, 0.001], [len - B * 2 - 0.01, 0.2], [len - B * 2, 0.0001]], "exp")
       chain(noise(c, t + B * 2, t + len, "white"), hp, g, out)
       impact(c, out, t, 0.5, 0.45)
+    },
+  },
+
+  {
+    id: "bass-dive-gap", kind: "Transition", name: "Bass dive and stutter gap", families: ["wave", "phonk", "hardwave", "trap", "futurebass"],
+    what: "Instead of a riser, the build’s bass dives down in pitch, a sub rumble hangs underneath, the top end closes, and a held vocal note stutters before half a beat of silence. Then the drop lands with a big kick.",
+    listen: "Energy goes down before the drop instead of up. The pitch dive and the stutter pull you in, and the silence makes the first kick hit twice as hard.",
+    use: ["wavetable"], alt: ["simpler"],
+    steps: [
+      "On the bass in the last bar of the build, automate Transpose (or a pitch envelope) diving down an octave or more over the last beat or two.",
+      "Leave a sine sub ringing underneath, or send the bass to a long, dark reverb so a rumble carries on.",
+      "Put Auto Filter on the music group and close the low-pass from fully open to about 2 kHz over the same bar.",
+      "Chop the vocal’s last held note into three short repeats with Simpler or Beat Repeat, then leave half a beat of total silence before the drop’s first kick.",
+    ],
+    chain: ["Auto Filter", "Beat Repeat", "Hybrid Reverb"],
+    tempo: 123, drums: "wave-123", bars: 4, drumsOn: (s) => s < 32,
+    params: [P("dive", "Dive", 5, 36, 1, 19, (v) => "−" + v + " st"), P("stutters", "Vocal stutters", 0, 5, 1, 3, String), P("gap", "Silence", 0, 1, 0.5, 0.5, (v) => (v ? v + " beat" : "None"))],
+    ref: { track: REFTRACK, at: "0:29" },
+    render: ({ c, out, t, tempo, root, iv, p }) => {
+      const B = BAR(tempo), beat = 60 / tempo, r = 36 + root
+      const kicks = [0, 6, 14, 20].map((s) => t + s * (B / 16))
+      kicks.forEach((k) => tailKick(c, out, k))
+      duck(bassNote(c, out, t, B, r), kicks.slice(0, 3), 0.072)
+      duck(bassNote(c, out, t + B, B, r + iv[5] - 12), kicks.slice(3), 0.072)
+      bassNote(c, out, t + 2 * B, B, r + iv[3])
+      const end = t + 4 * B - p.gap * beat, rumbleAt = t + 3 * B + beat * 1.5
+      bassNote(c, out, t + 3 * B, beat * 2, r, { dive: p.dive, diveAt: beat * 0.8, level: 0.13 })
+      const sub = c.createOscillator(), sg = gain(c, 0)
+      sub.frequency.value = 440 * Math.pow(2, (r - 12 - 69) / 12)
+      ramp(sg.gain, rumbleAt, [[0, 0], [0.1, 0.25], [end - rumbleAt - 0.02, 0.15], [end - rumbleAt, 0]])
+      chain(sub, sg, out); sub.start(rumbleAt); sub.stop(end + 0.02)
+      chain(noise(c, rumbleAt, end, "brown"), filter(c, "lowpass", 180), gain(c, 0.35), sg)
+      const lp = filter(c, "lowpass", 9000), rv = reverb(c, out, 0.3, 2.5, 0.5)
+      lp.frequency.setValueAtTime(9000, t + 3 * B); lp.frequency.exponentialRampToValueAtTime(1800, end)
+      lp.connect(out); lp.connect(rv)
+      for (let b = 0; b < 4; b++) {
+        const chord = [0, 5, 3, 0][b], len = b === 3 ? end - (t + 3 * B) : B
+        for (const d of [chord, chord + 2, chord + 4]) saws(c, lp, t + b * B, len, degree(root, iv, d, 4), { voices: 3, detune: 18, cutoff: [3000, 3000], level: 0.035, attack: 0.05 })
+      }
+      const vAt = t + 3 * B + beat * 1.2, note = degree(root, iv, 4, 4)
+      sing(c, lp, vAt, note, beat * 0.9, "a", { vibrato: 15, level: 0.35, release: 0.03 })
+      for (let k = 0; k < p.stutters; k++) sing(c, lp, vAt + beat + k * (beat / 4), note, beat / 8, "a", { attack: 0.003, release: 0.01, level: 0.32 })
+      impact(c, out, t, 0.4, 0.35)
+    },
+  },
+  {
+    id: "breakdown-cut", kind: "Transition", name: "Hard cut into a filtered breakdown", families: ["wave", "phonk", "hardwave", "futurebass", "dubstep", "trap", "futuregarage"],
+    what: "On the bar line, the kick and bass vanish. The chords and vocal keep going, but a low-pass slowly closes over them and they spread wider, so the breakdown feels distant and dreamy until the drums return.",
+    listen: "No downlifter, just a cut: the low end disappears instantly while the top end fades away gradually over several bars.",
+    use: ["drumrack"],
+    steps: [
+      "At the end of the drop, cut the kick and bass clips exactly on the bar line.",
+      "Group the chords, pads and vocal and add Auto Filter: automate the low-pass from fully open down to 3 to 4 kHz across the breakdown.",
+      "Widen the group with Utility (Width above 100%) or more reverb, so the breakdown is wider than the mono-heavy drop.",
+      "Open the filter and bring the drums back on the next section’s downbeat.",
+    ],
+    chain: ["Auto Filter", "Utility", "Hybrid Reverb"],
+    tempo: 123, drums: "wave-123", bars: 4, drumsOn: (s) => s < 16,
+    params: [P("close", "Closes to", 800, 6000, 10, 2500, hz), P("width", "Width", 0, 1, 0.01, 0.7, pct)],
+    ref: { track: REFTRACK, at: "1:03" },
+    render: ({ c, out, t, tempo, root, iv, p }) => {
+      const B = BAR(tempo), r = 36 + root
+      const kicks = [0, 6, 14].map((s) => t + s * (B / 16))
+      kicks.forEach((k) => tailKick(c, out, k))
+      duck(bassNote(c, out, t, B, r), kicks, 0.072)
+      const lp = filter(c, "lowpass", 10000), rv = reverb(c, out, 0.25 + p.width * 0.3, 3, 0.5)
+      lp.frequency.setValueAtTime(10000, t + B); lp.frequency.exponentialRampToValueAtTime(p.close, t + 4 * B)
+      lp.connect(out); lp.connect(rv)
+      for (let b = 0; b < 4; b++) {
+        const chord = [0, 5, 3, 4][b]
+        ;[chord, chord + 2, chord + 4].forEach((d, k) => {
+          const pan = panner(c, b === 0 ? 0 : (k - 1) * p.width)
+          pan.connect(lp)
+          saws(c, pan, t + b * B, B, degree(root, iv, d, 4), { voices: 3, detune: 18, cutoff: [3500, 3500], level: 0.035, attack: 0.05 })
+        })
+      }
+      const mel: [number, number, number][] = [[16, 6, 4], [24, 6, 2], [32, 4, 4], [38, 8, 5], [48, 12, 4]]
+      for (const [s, l, d] of mel) sing(c, lp, t + s * (B / 16), degree(root, iv, d, 4), l * (B / 16), "a", { to: "o", vibrato: 14, level: 0.3, release: 0.1 })
+    },
+  },
+  {
+    id: "low-gap", kind: "Transition", name: "Low-end dropout before the drop", families: ["wave", "phonk", "hardwave", "dubstep", "trap", "futurebass", "basshouse"],
+    what: "For the last few beats before the drop, only the kick and bass disappear. The vocal and chords carry on with the top end shaved off, so the drop’s low end hits like it was switched back on.",
+    listen: "Not total silence: the music keeps moving, but without weight. The sudden return of the sub is the impact.",
+    use: ["drumrack"],
+    steps: [
+      "Delete the kick and bass for the last two to four beats before the drop.",
+      "Or put EQ Eight on the drum and bass group and automate a steep high-pass up to 300 Hz for those beats.",
+      "Shave the very top of the music with a low-pass at the same time, so the drop also opens up in the highs.",
+      "Land the drop with the kick, sub and an impact together.",
+    ],
+    chain: ["EQ Eight", "Auto Filter"],
+    tempo: 123, drums: "wave-123", bars: 4, drumsOn: (s, p) => s < 64 - p.gap * 4,
+    params: [P("gap", "Dropout", 1, 4, 1, 3, (v) => v + (v === 1 ? " beat" : " beats")), P("top", "Top cut", 2000, 12000, 100, 4500, hz)],
+    ref: { track: REFTRACK, at: "1:49" },
+    render: ({ c, out, t, tempo, root, iv, p }) => {
+      const B = BAR(tempo), beat = 60 / tempo, r = 36 + root, cut = t + 4 * B - p.gap * beat
+      const kicks = [0, 6, 14, 20, 32, 38, 46, 52].map((s) => t + s * (B / 16)).filter((k) => k < cut)
+      kicks.forEach((k) => tailKick(c, out, k))
+      ;[0, 5, 3, 4].forEach((ch, b) => {
+        const st = t + b * B, len = Math.min(B, cut - st)
+        if (len > 0.05) duck(bassNote(c, out, st, len, r + iv[ch] - (iv[ch] > 6 ? 12 : 0)), kicks.filter((k) => k >= st && k < st + B), 0.072)
+      })
+      const lp = filter(c, "lowpass", 12000)
+      lp.frequency.setValueAtTime(12000, cut - 0.01); lp.frequency.linearRampToValueAtTime(p.top, cut + 0.05)
+      lp.connect(out)
+      for (let b = 0; b < 4; b++) {
+        const chord = [0, 5, 3, 4][b]
+        for (const d of [chord, chord + 2, chord + 4]) saws(c, lp, t + b * B, B, degree(root, iv, d, 4), { voices: 3, detune: 18, cutoff: [3500, 3500], level: 0.03 })
+      }
+      sing(c, lp, cut - beat * 0.5, degree(root, iv, 4, 4), p.gap * beat + beat * 0.4, "a", { to: "e", vibrato: 18, level: 0.35, release: 0.05 })
+      impact(c, out, t, 0.4, 0.35)
+    },
+  },
+  {
+    id: "filter-outro", kind: "Transition", name: "Four-on-the-floor filter outro", families: ["wave", "phonk", "hardwave", "house", "techhouse", "futurebass"],
+    what: "For the ending, the half-time groove switches to a kick on every beat while a low-pass slowly closes over the whole track until only the kick’s thud is left, then it stops.",
+    listen: "The switch to straight kicks makes the ending drive forward even as the filter darkens everything. It also makes the track easy to mix out of.",
+    use: ["drumrack"],
+    steps: [
+      "For the last 8 or 16 bars, program the kick on every beat. Keep the bass ducking to each one.",
+      "Put Auto Filter on the master or a group of everything and automate the low-pass from fully open down to about 300 Hz.",
+      "Keep the resonance low so the sweep stays smooth, and let the volume fall a little at the very end.",
+      "End on a downbeat with the reverb tail cut.",
+    ],
+    chain: ["Auto Filter", "Utility"],
+    tempo: 123, drums: "wave-123", bars: (p) => p.len, drumsOn: () => false,
+    params: [P("len", "Length", 4, 8, 4, 4, (v) => v + " bars"), P("end", "Closes to", 150, 2000, 10, 300, hz)],
+    ref: { track: REFTRACK, at: "2:37" },
+    render: ({ c, out, t, tempo, root, iv, p }) => {
+      const B = BAR(tempo), beat = 60 / tempo, r = 36 + root, len = B * p.len
+      const lp = filter(c, "lowpass", 14000, 0.8), g = gain(c, 1)
+      lp.frequency.setValueAtTime(14000, t); lp.frequency.exponentialRampToValueAtTime(p.end, t + len - 0.05)
+      g.gain.setValueAtTime(1, t + len - B); g.gain.linearRampToValueAtTime(0.4, t + len - 0.05)
+      chain(lp, g, out)
+      const kicks = Array.from({ length: p.len * 4 }, (_, k) => t + k * beat)
+      kicks.forEach((k) => tailKick(c, lp, k, 0.42, 0.45))
+      for (let b = 0; b < p.len; b++) {
+        const ch = [0, 5, 3, 4][b % 4], st = t + b * B
+        duck(bassNote(c, lp, st, B, r + iv[ch] - (iv[ch] > 6 ? 12 : 0)), kicks.filter((k) => k >= st && k < st + B), 0.072, 0.9)
+        for (let k = 0; k < 4; k++) drum(c, lp, st + k * beat + beat / 2, "hat", 0.25)
+        for (const d of [ch, ch + 2, ch + 4]) saws(c, lp, st, B, degree(root, iv, d, 4), { voices: 3, detune: 18, cutoff: [3500, 3500], level: 0.025 })
+      }
+    },
+  },
+  {
+    id: "filter-intro", kind: "Transition", name: "Low-pass opening intro", families: ["wave", "phonk", "futuregarage", "prog", "odesza", "deephouse", "trance"],
+    what: "The track starts muffled, as if heard through a wall, and a low-pass slowly opens over the chords and vocal until the bass and drums arrive at full brightness.",
+    listen: "No drums at all: the only movement is the brightness rising. It sets up the drums and bass as the first big change.",
+    use: ["drumrack"],
+    steps: [
+      "Put Auto Filter on a group with the intro’s chords, pads and vocal.",
+      "Start the low-pass around 400 to 800 Hz and automate it fully open over the intro (8 or 16 bars).",
+      "Use a gentle slope (12 dB) and a little resonance so the sweep is smooth and audible.",
+      "Bring the bass and drums in exactly when the filter is fully open.",
+    ],
+    chain: ["Auto Filter", "Hybrid Reverb"],
+    tempo: 123, drums: "wave-123", bars: 6, drumsOn: (s) => s >= 64,
+    params: [P("from", "Starts at", 200, 2000, 10, 500, hz), P("res", "Resonance", 0.5, 8, 0.1, 2, (v) => v.toFixed(1))],
+    ref: { track: REFTRACK, at: "0:00" },
+    render: ({ c, out, t, tempo, root, iv, p }) => {
+      const B = BAR(tempo), lp = filter(c, "lowpass", p.from, p.res), rv = reverb(c, out, 0.3, 3, 0.5)
+      lp.frequency.setValueAtTime(p.from, t); lp.frequency.exponentialRampToValueAtTime(14000, t + 4 * B)
+      lp.connect(out); lp.connect(rv)
+      for (let b = 0; b < 6; b++) {
+        const ch = [0, 5, 3, 4][b % 4]
+        for (const d of [ch, ch + 2, ch + 4, ch + 7]) {
+          const o = c.createOscillator(), g = gain(c, 0)
+          o.type = "triangle"
+          o.frequency.value = 440 * Math.pow(2, (degree(root, iv, d, 3) - 69) / 12)
+          ramp(g.gain, t + b * B, [[0, 0], [0.01, 0.06], [B - 0.05, 0.035], [B, 0]])
+          chain(o, g, lp); o.start(t + b * B); o.stop(t + (b + 1) * B + 0.02)
+        }
+        if (b >= 4) {
+          const ks = [0, 6, 14].map((s) => t + b * B + s * (B / 16))
+          ks.forEach((k) => tailKick(c, out, k))
+          duck(bassNote(c, out, t + b * B, B, 36 + root + iv[ch] - (iv[ch] > 6 ? 12 : 0)), ks, 0.072)
+        }
+      }
+      const mel: [number, number, number][] = [[4, 6, 4], [12, 4, 5], [16, 8, 4], [28, 4, 2], [36, 8, 4], [48, 6, 2], [56, 6, 0]]
+      for (const [s, l, d] of mel) sing(c, lp, t + s * (B / 16), degree(root, iv, d, 4), l * (B / 16), "a", { to: "o", vibrato: 16, scoop: -1, level: 0.3, release: 0.1 })
     },
   },
 

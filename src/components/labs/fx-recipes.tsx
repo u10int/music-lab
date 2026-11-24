@@ -38,7 +38,9 @@ export function FxCard({ r, family }: { r: FxRecipe; family?: Family }) {
   const [withDrums, setWithDrums] = usePref<boolean>("fx-drums", true)
   const [pos, setPos] = useState(-1)
   const id = "fx-" + r.id
-  const pattern = (family && PATTERNS.find((p) => p.family === family)) || PATTERNS.find((p) => p.id === r.drums)
+  // A recipe's own groove wins when it belongs to the genre on screen; otherwise use that genre's first pattern.
+  const own = PATTERNS.find((p) => p.id === r.drums)
+  const pattern = (family && own?.family !== family && PATTERNS.find((p) => p.family === family)) || own
   const tempo = family && pattern ? pattern.tempo : r.tempo
   const live = useRef({ vals, withDrums, root, iv })
   useEffect(() => {
@@ -112,6 +114,7 @@ export function FxCard({ r, family }: { r: FxRecipe; family?: Family }) {
       </div>
 
       <p className="text-sm text-pretty"><span className="font-semibold">Listen for: </span>{r.listen}</p>
+      {r.ref && <p className="text-muted-foreground text-sm text-pretty">Hear it in {r.ref.track} at <span className="tabular-nums">{r.ref.at}</span>.</p>}
 
       <div className="grid gap-4 sm:grid-cols-3">
         {r.params.map((m) => (

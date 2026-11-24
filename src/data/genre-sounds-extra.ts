@@ -9,6 +9,32 @@ const pitchDrop = (value: number) => ({ id: "pitch", label: "Pitch drop", min: 0
 const wobble = (value: number) => ({ id: "wobble", label: "Wobble", min: 0, max: 40, step: 1, value, fmt: cents, apply: (p: GenreSound["patch"], _f: GenreSound["fx"], v: number) => { if (p.lfo) p.lfo.depth = v } })
 
 export const EXTRA_SOUNDS: GenreSound[] = [
+  /* ---------- Wave, from ROUDS’s “When I’m High” remix ---------- */
+  {
+    id: "wave-tail-kick", family: "wave", genre: "Wave", name: "Long-tail distorted kick", role: "Perc",
+    what: "A kick whose pitch sweeps down slowly from a click into a long, distorted boom, so the kick itself carries low end between bass notes. The kick in ROUDS’s “When I’m High” remix works like this.",
+    use: ["operator"], alt: ["drumsampler"],
+    steps: ["Operator: one sine, with a pitch envelope starting about 2 octaves up and falling over 120 to 180 ms.", "Amp decay around 400 to 500 ms so the tail rings.", "Roar or Saturator to distort the tail; tune the tail to the key’s root.", "Program it on 1, the “and” of 2 and the “and” of 4, then beat 2 of the next bar."],
+    chain: ["Roar", "EQ Eight", "Utility"],
+    tempo: 123, drums: "wave-123", oct: 1, mono: true,
+    phrase: [[0, 4, 0], [6, 4, 0], [14, 4, 0], [20, 4, 0]],
+    patch: { layers: [{ wave: "sine" }], filter: { cutoff: 3000 }, amp: { a: 0.002, d: 0.45, s: 0, r: 0.08 }, pitch: { semis: 26, time: 0.15 }, drive: 0.6, level: 0.36 },
+    fx: {},
+    macros: [pitchDrop(26), decay(0.45, 1), drive(0.6)],
+  },
+  {
+    id: "wave-duck-bass", family: "wave", genre: "Wave", name: "Ducking distorted bass", role: "Bass",
+    what: "A detuned, distorted bass that holds one note per bar and ducks hard under every kick, so the two take turns. The low end of the drops in ROUDS’s “When I’m High” remix.",
+    use: ["wavetable"], alt: ["drift"],
+    steps: ["Wavetable: two saws detuned about ±12 cents plus the sub, voices set to Mono.", "Low-pass around 900 Hz, then Roar or Saturator for grit.", "One long note per bar, following the chord roots.", "Compressor sidechained from the kick, fast attack and a release of about 100 ms, so it ducks deeply and pumps back."],
+    chain: ["Roar", "Compressor", "EQ Eight"],
+    tempo: 123, drums: "wave-123", oct: 1, mono: true,
+    phrase: [[0, 16, 0], [16, 16, 5, -1]],
+    patch: { layers: [{ wave: "sawtooth", voices: 2, detune: 12 }], sub: 0.6, filter: { cutoff: 900, q: 1.2 }, amp: { a: 0.01, d: 0.3, s: 1, r: 0.1 }, drive: 0.5, level: 0.17 },
+    fx: { duck: 0.75 },
+    macros: [pump(0.75), cutoff(900, 200, 3000), drive(0.5)],
+  },
+
   /* ---------- House family ---------- */
   {
     id: "house-organ", family: "house", genre: "House", name: "Organ bass stab", role: "Bass",
