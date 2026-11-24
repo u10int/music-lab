@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react"
+import { allNotesOff } from "@/midi/midi-out"
 import { audio, masterBus } from "./engine"
 
 /**
@@ -18,6 +19,7 @@ export function stop() {
   playing = null
   clearTimeout(p.timer)
   cancelAnimationFrame(p.raf)
+  allNotesOff()
   try {
     const c = audio()!
     p.bus.gain.setTargetAtTime(0, c.currentTime, 0.02)

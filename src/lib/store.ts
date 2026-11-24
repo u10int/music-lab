@@ -8,6 +8,21 @@ export interface PlanSection { id: string; name: string; bars: number; energy: n
 export interface PlanLane { id: string; name: string; fx?: boolean; cells: Record<string, string> }
 export interface TrackPlan { title: string; tempo: number; sections: PlanSection[]; lanes: PlanLane[] }
 export interface Session { id: string; date: string; minutes: number; focus: string; note: string }
+export type LoopPart = "drums" | "bass" | "chords" | "lead"
+export interface LoopState {
+  family: string
+  drums: string
+  sounds: { bass: string; chords: string; lead: string }
+  prog: number[]
+  tempo: number
+  swing: number
+  follow: boolean
+  mix: Record<LoopPart, { vol: number; mute: boolean }>
+  solo: LoopPart | null
+}
+export interface SavedLoop { id: string; name: string; date: string; root: number; scale: string; loop: LoopState }
+export interface RefMarker { id: string; t: number; label: string; energy: number; note: string }
+export interface RefNote { id: string; title: string; artist: string; url: string; tempo: number; date: string; notes: string; markers: RefMarker[] }
 export interface Progress {
   start: string
   done: Record<string, boolean>
@@ -23,6 +38,10 @@ export interface Progress {
   cards: Record<string, { box: number; due: string; intro?: string }>
   /** The person's own track plan (see the Track planner). */
   plan: TrackPlan | null
+  /** Loops saved from the loop builder. */
+  loops: SavedLoop[]
+  /** Reference track notebook. */
+  notebook: RefNote[]
 }
 
 const KEY = "music-lab-progress-v1"
@@ -34,7 +53,7 @@ function nextMonday() {
   d.setDate(d.getDate() + ((8 - d.getDay()) % 7))
   return isoDate(d)
 }
-const blank = (): Progress => ({ start: nextMonday(), done: {}, shipped: {}, log: {}, genre: "all", refs: {}, exports: [], ear: {}, push: "p3", sessions: [], cards: {}, plan: null })
+const blank = (): Progress => ({ start: nextMonday(), done: {}, shipped: {}, log: {}, genre: "all", refs: {}, exports: [], ear: {}, push: "p3", sessions: [], cards: {}, plan: null, loops: [], notebook: [] })
 
 function load(): Progress {
   try {

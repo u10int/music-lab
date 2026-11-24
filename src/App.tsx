@@ -21,6 +21,8 @@ const MixingLab = lazy(() => labs().then((m) => ({ default: m.MixingLab })))
 const SequencerLab = lazy(() => labs().then((m) => ({ default: m.SequencerLab })))
 const TimingLab = lazy(() => labs().then((m) => ({ default: m.TimingLab })))
 const ProgressionLab = lazy(() => labs().then((m) => ({ default: m.ProgressionLab })))
+const LoopLab = lazy(() => labs().then((m) => ({ default: m.LoopLab })))
+const SamplerLab = lazy(() => labs().then((m) => ({ default: m.SamplerLab })))
 
 const SprintPage = lazy(() => import("@/pages/sprint").then((m) => ({ default: m.SprintPage })))
 const ExportsPage = lazy(() => import("@/pages/exports").then((m) => ({ default: m.ExportsPage })))
@@ -30,6 +32,9 @@ const PlayAlongPage = lazy(() => import("@/pages/play-along").then((m) => ({ def
 const PracticePage = lazy(() => import("@/pages/practice").then((m) => ({ default: m.PracticePage })))
 const TodayPage = lazy(() => import("@/pages/today").then((m) => ({ default: m.TodayPage })))
 const FlashcardsPage = lazy(() => import("@/pages/flashcards").then((m) => ({ default: m.FlashcardsPage })))
+const GenresPage = lazy(() => import("@/pages/genres").then((m) => ({ default: m.GenresPage })))
+const GenrePage = lazy(() => import("@/pages/genres").then((m) => ({ default: m.GenrePage })))
+const NotebookPage = lazy(() => import("@/pages/notebook").then((m) => ({ default: m.NotebookPage })))
 const PlannerPage = lazy(() => import("@/pages/planner").then((m) => ({ default: m.PlannerPage })))
 function Layout() {
   useTheme()
@@ -91,6 +96,7 @@ const router = createBrowserRouter([
       { path: "/flashcards", element: <FlashcardsPage /> },
       { path: "/plan", element: <PlanPage /> },
       { path: "/planner", element: <PlannerPage /> },
+      { path: "/notebook", element: <NotebookPage /> },
       { path: "/labs/theory", element: <TheoryLab /> },
       { path: "/labs/ear", element: <EarLab /> },
       { path: "/labs/play-along", element: <PlayAlongPage /> },
@@ -101,6 +107,10 @@ const router = createBrowserRouter([
       { path: "/labs/sequencer", element: <SequencerLab /> },
       { path: "/labs/timing", element: <TimingLab /> },
       { path: "/labs/progressions", element: <ProgressionLab /> },
+      { path: "/labs/loop-builder", element: <LoopLab /> },
+      { path: "/labs/sampler", element: <SamplerLab /> },
+      { path: "/genres", element: <GenresPage /> },
+      { path: "/genres/:id", element: <GenrePage /> },
       { path: "/instruments", element: <InstrumentsPage /> },
       { path: "/push", element: <PushPage /> },
       { path: "/settings", element: <SettingsPage /> },

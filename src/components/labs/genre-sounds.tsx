@@ -36,7 +36,7 @@ function resolve(s: GenreSound, vals: Record<string, number>) {
   return { patch, fx }
 }
 
-function SoundCard({ s }: { s: GenreSound }) {
+export function SoundCard({ s }: { s: GenreSound }) {
   const { root, scale } = useKey()
   const iv = (SCALES.find((x) => x.id === scale) ?? SCALES[0]).iv
   const initial = useMemo(() => Object.fromEntries(s.macros.map((m) => [m.id, m.value])), [s])

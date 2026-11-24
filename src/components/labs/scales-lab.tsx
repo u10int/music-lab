@@ -58,7 +58,7 @@ function pushCells(T: Theory, chordIdx: number, layout: Layout): Pad[][] {
 const chordOpts = { wave: "triangle" as const, env: { a: 0.01, d: 0.6, s: 0.5, r: 0.4 }, cutoff: 3000, level: 0.16 }
 const bassOpts = { wave: "sine" as const, env: { a: 0.01, d: 0.5, s: 0.7, r: 0.3 }, cutoff: 4000, level: 0.3 }
 
-export function ScalesLab() {
+export function ScalesLab({ hideKey = false }: { hideKey?: boolean }) {
   const { root, scale } = useKey()
   const [layout, setLayout] = usePref<Layout>("layout", "key")
   const [chord, setChord] = useState(0)
@@ -105,7 +105,7 @@ export function ScalesLab() {
   return (
     <div className="space-y-6" style={{ ["--c" as string]: "var(--s2)" }}>
       <div className="flex flex-wrap items-end gap-3">
-        <KeyPicker idPrefix="sl" />
+        {!hideKey && <KeyPicker idPrefix="sl" />}
         <Seg label="Push layout" value={layout} onChange={setLayout} options={[["key", "In Key"], ["chr", "Chromatic"]]} />
         <PlayButton id="scale" label="Play scale" onPlay={playScale} />
       </div>

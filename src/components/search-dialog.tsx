@@ -2,9 +2,10 @@ import { useMemo } from "react"
 import { useNavigate } from "react-router"
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { FX, GLOSS, INSTR, RECIPES } from "@/data/guide"
-import { PATTERNS } from "@/data/patterns"
+import { FAMILIES, PATTERNS } from "@/data/patterns"
 import { GENRE_SOUNDS } from "@/data/genre-sounds"
 import { SHORT } from "@/data/push"
+import { GENRE_INFO } from "@/data/genres"
 import { SPRINTS } from "@/data/sprints"
 import { slug } from "@/lib/utils"
 
@@ -13,6 +14,8 @@ const PAGES: [string, string][] = [
   ["Rules and rhythm", "/plan"], ["Track planner", "/planner"], ["Scales and chords", "/labs/theory"], ["Chord progressions", "/labs/progressions"],
   ["Play along", "/labs/play-along"], ["Sound design", "/labs/sound-design"], ["Drums and sampling", "/labs/drums"], ["Step sequencer", "/labs/sequencer"],
   ["Arrangement", "/labs/arrangement"], ["Mixing", "/labs/mixing"], ["Ear training", "/labs/ear"], ["Timing trainer", "/labs/timing"],
+  ["Loop builder", "/labs/loop-builder"], ["Sampler", "/labs/sampler"], ["Reference notebook", "/notebook"], ["Genres", "/genres"],
+  ["Circle of fifths", "/labs/theory?tab=circle"], ["Modes", "/labs/theory?tab=modes"], ["Borrowed chords", "/labs/theory?tab=borrowed"], ["Find the key", "/labs/theory?tab=find"],
   ["Live instruments and effects", "/instruments"], ["Push 3 guide", "/push"], ["Settings and data", "/settings"],
 ]
 /** Plain substring matching, ranked: label start, then label, then description. */
@@ -42,6 +45,7 @@ export default function SearchDialog({ open, setOpen }: { open: boolean; setOpen
     { heading: "Effects", items: FX.map((f) => ({ label: f.n, hint: f.tags.join(", "), to: `/instruments?tab=effects#fx-${slug(f.n)}` })) },
     { heading: "Glossary", items: GLOSS.map(([id, term, , def]) => ({ label: term, hint: def, to: `/instruments?tab=glossary#gl-${id}` })) },
     { heading: "Push 3 shortcuts", items: SHORT.map(([combo, effect]) => ({ label: combo, hint: effect, to: "/push?tab=shortcuts" })) },
+    { heading: "Genres", items: GENRE_INFO.map((g) => ({ label: FAMILIES.find(([f]) => f === g.id)?.[1] ?? g.id, hint: `${g.tempo[0]}–${g.tempo[1]} BPM`, to: `/genres/${g.id}` })) },
     { heading: "Genre sounds", items: GENRE_SOUNDS.map((g) => ({ label: g.name, hint: g.genre, to: `/labs/sound-design#sound-${g.id}` })) },
     { heading: "Drum patterns", items: PATTERNS.map((p) => ({ label: p.name, hint: p.bpm, to: `/labs/drums#pat-${p.id}` })) },
   ], [])

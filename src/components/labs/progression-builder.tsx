@@ -12,11 +12,13 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
-import { FAMILIES, PATTERNS } from "@/data/patterns"
+import { FAMILIES, LANE_NOTE, PATTERNS } from "@/data/patterns"
 import { downloadFile, TICKS_PER_16TH, writeMidi, type MidiNote } from "@/lib/midi-file"
 import { usePref } from "@/lib/store"
 import { theory, type Theory } from "@/lib/theory"
 import { cn } from "@/lib/utils"
+import { MidiOutPicker } from "@/components/midi-out-picker"
+import { browserSound, sendNote } from "@/midi/midi-out"
 
 type Sound = "keys" | "pad" | "pluck"
 type Rhythm = "held" | "eighths" | "stabs"
@@ -100,18 +102,26 @@ export function ProgressionBuilder() {
         const sixteenth = 60 / s.tempo / 4
         const pat = PATTERNS.find((p) => p.id === s.pattern)
         const swing = (pat?.swing ?? 0) * sixteenth
+        const local = browserSound()
         while (next < c.currentTime + 0.15) {
           const b = Math.floor(k / 16) % s.chords.length, i = k % 16, at = next + (i % 2 ? swing : 0), ps = (k % (pat?.length ?? 16)) + 1
           const v = vs[b], d = s.chords[b]
           if (pat) for (const [name, steps, ghost = []] of pat.rows) {
-            if (steps.includes(ps)) drum(c, bus, at, KIND_OF[name], 0.8)
-            else if (ghost.includes(ps)) drum(c, bus, at, KIND_OF[name], 0.32)
+            const vel = steps.includes(ps) ? 0.8 : ghost.includes(ps) ? 0.32 : 0
+            if (!vel) continue
+            if (local) drum(c, bus, at, KIND_OF[name], vel)
+            sendNote(c, at, LANE_NOTE[name], vel * 130, sixteenth * 0.5, 9)
           }
           const hitChord = s.rhythm === "held" ? i === 0 : s.rhythm === "eighths" ? i % 2 === 0 : [3, 6, 11, 14].includes(i)
           const len = s.rhythm === "held" ? sixteenth * 15.5 : s.rhythm === "eighths" ? sixteenth * 1.6 : sixteenth * 1.2
-          if (hitChord && v) v.forEach((n) => tone(c, bus, at, n, len, SOUNDS[s.sound]))
-          if (i === 0) tone(c, bus, at, bassOf(th, d), sixteenth * 7.5, BASS)
-          if (i === 8) tone(c, bus, at, bassOf(th, d), sixteenth * 7.5, BASS)
+          if (hitChord && v) v.forEach((n) => {
+            if (local) tone(c, bus, at, n, len, SOUNDS[s.sound])
+            sendNote(c, at, n, 90, len * 0.95, 2)
+          })
+          if (i === 0 || i === 8) {
+            if (local) tone(c, bus, at, bassOf(th, d), sixteenth * 7.5, BASS)
+            sendNote(c, at, bassOf(th, d), 100, sixteenth * 7.2, 1)
+          }
           if (i === 0) queue.push({ bar: b, at: at - t0 })
           next += sixteenth
           k++
@@ -235,6 +245,11 @@ export function ProgressionBuilder() {
           <Caption>Voiced as {voiced[current].map((n) => ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"][n % 12] + (Math.floor(n / 12) - 2)).join(" ")}, with the bass on {T.names[T.chords[curD].d]}.</Caption>
         </div>
       )}
+
+      <div className="space-y-3 border-t pt-6">
+        <h3 className="font-semibold">Play it on your instruments in Live</h3>
+        <MidiOutPicker idPrefix="pb" channels={<>Bass goes out on channel 2, chords on 3 and drums on 10. Make a MIDI track for each and set its input channel to match.</>} />
+      </div>
     </div>
   )
 }

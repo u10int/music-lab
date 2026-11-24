@@ -15,6 +15,8 @@ import { downloadFile, TICKS_PER_16TH, writeMidi } from "@/lib/midi-file"
 import { usePref } from "@/lib/store"
 import { noteName, theory } from "@/lib/theory"
 import { cn } from "@/lib/utils"
+import { MidiOutPicker } from "@/components/midi-out-picker"
+import { browserSound, sendNote } from "@/midi/midi-out"
 
 const MAX_STEPS = 32
 /** Drum Rack pad notes: C1 is the first pad, matching General MIDI drum notes. */
@@ -71,11 +73,18 @@ export function Sequencer() {
         const sixteenth = 60 / s.tempo / 4
         while (next < c.currentTime + 0.12) {
           const i = k % ((s.bars ?? 1) * 16), at = next + (i % 2 ? s.swing * sixteenth : 0)
-          for (const l of LANES) { const v = s.drums[l.id]?.[i] ?? 0; if (v) drum(c, bus, at, l.id, v === 2 ? 1 : 0.45) }
+          const local = browserSound()
+          for (const l of LANES) {
+            const v = s.drums[l.id]?.[i] ?? 0
+            if (!v) continue
+            if (local) drum(c, bus, at, l.id, v === 2 ? 1 : 0.45)
+            sendNote(c, at, l.note, VEL[v], sixteenth * 0.5, 9)
+          }
           const deg = s.melody[i]
           if (deg !== null && deg !== undefined) {
             const m = 48 + th.pc + (deg === 7 ? 12 : th.sc.iv[deg]) + SOUND[s.sound].oct * 12 - (th.pc > 7 ? 12 : 0)
-            tone(c, bus, at, m, sixteenth * 0.9, SOUND[s.sound].o)
+            if (local) tone(c, bus, at, m, sixteenth * 0.9, SOUND[s.sound].o)
+            sendNote(c, at, m, 100, sixteenth * 0.9, 0)
           }
           queue.push({ step: i, at: at - t0 })
           next += sixteenth
@@ -236,6 +245,11 @@ export function Sequencer() {
           </div>
         </div>
         <Caption>One note per step, from the key you pick. Rows are the scale from the root up to the octave. Change the key and the melody follows.</Caption>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="font-semibold">Play it on your instruments in Live</h3>
+        <MidiOutPicker idPrefix="sq" channels={<>The melody goes out on channel 1 and drums on channel 10, using Drum Rack pad notes. Make a MIDI track for each and set its input channel to match.</>} />
       </section>
     </div>
   )

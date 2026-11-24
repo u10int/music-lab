@@ -12,6 +12,13 @@ import { PATTERNS } from "@/data/patterns"
 import { Sequencer } from "@/components/labs/sequencer"
 import { TimingTrainer } from "@/components/labs/timing-trainer"
 import { ProgressionBuilder } from "@/components/labs/progression-builder"
+import { LoopBuilder } from "@/components/labs/loop-builder"
+import { Sampler } from "@/components/labs/sampler"
+import { MixEar } from "@/components/labs/mix-ear"
+import { MatchSound } from "@/components/labs/match-sound"
+import { BorrowedChords, CircleOfFifths, FindKey, ModesExplorer } from "@/components/labs/theory-tools"
+import { KeyPicker } from "@/components/key-picker"
+import { UrlTabs } from "@/components/url-tabs"
 import { Block, PageHeader } from "@/components/page"
 import { DrumLayouts, NoteRepeat } from "@/components/push/drum-layouts"
 import { PlayableGrid } from "@/components/push/notes-lab"
@@ -22,11 +29,16 @@ const More = ({ to, children }: { to: string; children: React.ReactNode }) => (
 
 export function TheoryLab() {
   return (
-    <div className="space-y-12">
-      <PageHeader title="Scales and chords">Pick a key once and every lab uses it. Hear the chords in the key, see their shapes on the Push grid and play the pads yourself.</PageHeader>
-      <Block title="Chords in a key"><ScalesLab /></Block>
-      <Block title="Play the grid"><PlayableGrid /></Block>
-      <Block title="Ear training"><EarTraining /></Block>
+    <div className="space-y-10">
+      <PageHeader title="Scales and chords" actions={<div className="flex flex-wrap items-end gap-3"><KeyPicker idPrefix="th" /></div>}>Pick a key once and every lab uses it. Hear the chords in a key, find keys on the circle of fifths, explore modes and borrowed chords, and work out the key of something you hear.</PageHeader>
+      <UrlTabs label="Theory topics" tabs={[
+        ["chords", "Chords in a key", <div key="chords" className="space-y-12"><Block title="Chords in a key"><ScalesLab hideKey /></Block><Block title="Play the grid"><PlayableGrid /></Block></div>],
+        ["circle", "Circle of fifths", <Block key="circle" title="Circle of fifths"><CircleOfFifths /></Block>],
+        ["modes", "Modes", <Block key="modes" title="Modes"><ModesExplorer /></Block>],
+        ["borrowed", "Borrowed chords", <Block key="borrowed" title="Borrowed chords"><BorrowedChords /></Block>],
+        ["find", "Find the key", <Block key="find" title="Find the key"><FindKey /></Block>],
+      ]} />
+      <More to="/labs/ear">ear training</More>
     </div>
   )
 }
@@ -34,8 +46,9 @@ export function TheoryLab() {
 export function EarLab() {
   return (
     <div className="space-y-10">
-      <PageHeader title="Ear training">Name chord qualities and intervals by ear. Your score is saved with your progress.</PageHeader>
-      <EarTraining />
+      <PageHeader title="Ear training">Train your ears for theory and for mixing. Scores are saved with your progress.</PageHeader>
+      <Block title="Notes and chords" description="Chord qualities, intervals, progressions, scale degrees and keys."><EarTraining /></Block>
+      <Block title="Mixing ears" description="Hear EQ, compression and sidechain the way you will in your own mixes."><MixEar /></Block>
     </div>
   )
 }
@@ -43,8 +56,9 @@ export function EarLab() {
 export function SoundDesignLab() {
   return (
     <div className="space-y-12">
-      <PageHeader title="Sound design">Signature sounds from each genre you can play and tweak, then a small synth with the same oscillator, filter and envelope as Drift to learn how the controls work.</PageHeader>
+      <PageHeader title="Sound design">Signature sounds from each genre you can play and tweak, a game to train your ear for synth controls, and a small synth with the same oscillator, filter and envelope as Drift to learn how the controls work.</PageHeader>
       <Block title="Genre sounds" description={`${GENRE_SOUNDS.length} sounds across ${new Set(GENRE_SOUNDS.map((x) => x.family)).size} genres, from wave, phonk and hardwave to ODESZA-style, trance, dub techno and ambient.`}><GenreSounds /></Block>
+      <Block title="Match the sound" description="Hear a sound, then find the knob settings that made it. The fastest way to learn what each control does."><MatchSound /></Block>
       <Block title="Synth playground" description="Change a control, play it, and watch the shape change."><SynthLab /></Block>
       <More to="/instruments?tab=modulation">the modulation guide</More>
     </div>
@@ -59,6 +73,7 @@ export function DrumsLab() {
       <DrumLayouts />
       <NoteRepeat />
       <Block title="Slicing a loop"><SliceLab /></Block>
+      <More to="/labs/sampler">the sampler, where you can slice your own audio</More>
     </div>
   )
 }
@@ -78,6 +93,7 @@ export function MixingLab() {
       <PageHeader title="Mixing">Where each part sits in the frequency range, and what sidechain ducking does to the bass.</PageHeader>
       <Block title="Where each part sits"><FrequencyMap /></Block>
       <Block title="Sidechain: the kick ducks the bass"><SidechainLab /></Block>
+      <Block title="Train your mixing ears" description="Guess the boosted EQ band, and spot compression and sidechain by ear."><MixEar /></Block>
       <More to="/instruments?tab=effects">the effects guide</More>
     </div>
   )
@@ -106,6 +122,24 @@ export function ProgressionLab() {
     <div className="space-y-10">
       <PageHeader title="Chord progressions">Build a progression from the chords in your key, hear it loop over any drum pattern, and export the chords and bassline as MIDI clips for Live.</PageHeader>
       <ProgressionBuilder />
+    </div>
+  )
+}
+
+export function LoopLab() {
+  return (
+    <div className="space-y-10">
+      <PageHeader title="Loop builder">Pick a genre and get a four-bar loop with drums, bass, chords and a lead in your key. Swap any part, change the chords, mute and solo, then save it, export it as MIDI or play it on your own instruments in Live.</PageHeader>
+      <LoopBuilder />
+    </div>
+  )
+}
+
+export function SamplerLab() {
+  return (
+    <div className="space-y-10">
+      <PageHeader title="Sampler">Load a drum loop, a vocal or any sound and slice it onto 16 pads, the way Simpler does on Push. Play the pads from your keyboard or controller, pitch and reverse slices, and shuffle them into new grooves.</PageHeader>
+      <Sampler />
     </div>
   )
 }

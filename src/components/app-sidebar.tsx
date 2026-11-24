@@ -1,4 +1,4 @@
-import { AudioWaveform, BookOpen, CalendarCheck, Columns3, Disc3, Drum, Ear, Grid2x2, Grid3x3, Layers, LayoutDashboard, ListMusic, Metronome, Music2, PencilRuler, Piano, Settings, SlidersHorizontal, Sun, Timer, Upload } from "lucide-react"
+import { AudioWaveform, Library, NotebookPen, Repeat, Scissors, BookOpen, CalendarCheck, Columns3, Disc3, Drum, Ear, Grid2x2, Grid3x3, Layers, LayoutDashboard, ListMusic, Metronome, Music2, PencilRuler, Piano, Settings, SlidersHorizontal, Sun, Timer, Upload } from "lucide-react"
 import { NavLink, useLocation } from "react-router"
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader,
@@ -20,19 +20,23 @@ const PLAN: Item[] = [
   { to: "/plan", label: "Rules and rhythm", icon: CalendarCheck },
 ]
 const LABS: Item[] = [
+  { to: "/labs/loop-builder", label: "Loop builder", icon: Repeat },
   { to: "/labs/theory", label: "Scales and chords", icon: Music2 },
   { to: "/labs/progressions", label: "Chord progressions", icon: ListMusic },
   { to: "/labs/play-along", label: "Play along", icon: Piano },
   { to: "/labs/sound-design", label: "Sound design", icon: AudioWaveform },
   { to: "/labs/drums", label: "Drums and sampling", icon: Drum },
+  { to: "/labs/sampler", label: "Sampler", icon: Scissors },
   { to: "/labs/sequencer", label: "Step sequencer", icon: Grid2x2 },
   { to: "/labs/arrangement", label: "Arrangement", icon: Columns3 },
   { to: "/planner", label: "Track planner", icon: PencilRuler },
+  { to: "/notebook", label: "Reference notebook", icon: NotebookPen },
   { to: "/labs/mixing", label: "Mixing", icon: SlidersHorizontal },
   { to: "/labs/ear", label: "Ear training", icon: Ear },
   { to: "/labs/timing", label: "Timing trainer", icon: Metronome },
 ]
 const GUIDES: Item[] = [
+  { to: "/genres", label: "Genres", icon: Library },
   { to: "/instruments", label: "Live instruments and effects", icon: BookOpen },
   { to: "/push", label: "Push 3", icon: Grid3x3 },
 ]

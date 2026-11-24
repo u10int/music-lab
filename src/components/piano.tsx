@@ -22,14 +22,15 @@ export function Piano({ scale, names, root, chord = [], held = [], label, onPlay
       heldPcs.includes(pc) && "bg-[var(--s5)] text-white font-semibold",
       onPlay && "cursor-pointer",
     )
-    const props = { key: `${o}-${pc}`, className: cls, style: left !== undefined ? { left: `${left}%` } : undefined }
+    const k = `${o}-${pc}`
+    const props = { className: cls, style: left !== undefined ? { left: `${left}%` } : undefined }
     const midi = 60 + o * 12 + pc
     return onPlay ? (
-      <button type="button" {...props} aria-label={`Play ${lab(pc) || pc}`} onPointerDown={() => onPlay(midi)}>
+      <button key={k} type="button" {...props} aria-label={`Play ${lab(pc) || pc}`} onPointerDown={() => onPlay(midi)}>
         {lab(pc)}
       </button>
     ) : (
-      <span {...props}>{lab(pc)}</span>
+      <span key={k} {...props}>{lab(pc)}</span>
     )
   }
   return (
