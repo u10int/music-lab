@@ -207,10 +207,10 @@ export function Push3({
         {!onPad && hit("pads", groupBox("pads"))}
 
       </svg>
-      {hover && (
+      {mark && (
         <div role="tooltip" className="bg-popover text-popover-foreground pointer-events-none absolute z-20 w-64 max-w-[70%] border border-foreground p-3 shadow-md" style={tipStyle}>
-          <p className="text-sm font-medium">{PUSH3_INFO[hover][0]}</p>
-          <p className="text-muted-foreground mt-0.5 text-xs leading-snug text-pretty">{PUSH3_INFO[hover][1]}</p>
+          <p className="text-sm font-medium">{PUSH3_INFO[mark][0]}</p>
+          <p className="text-muted-foreground mt-0.5 text-xs leading-snug text-pretty">{PUSH3_INFO[mark][1]}</p>
         </div>
       )}
     </div>
