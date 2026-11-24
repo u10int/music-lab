@@ -1,6 +1,6 @@
 /** Small Web Audio engine shared by every interactive part of the app. */
 export type OscType = OscillatorType
-export type DrumKind = "kick" | "snare" | "clap" | "hat" | "ohat" | "shaker" | "rim" | "tom" | "ride"
+export type DrumKind = "kick" | "snare" | "clap" | "hat" | "ohat" | "shaker" | "rim" | "tom" | "ride" | "cowbell"
 export interface ToneOptions {
   wave?: OscType
   env?: { a: number; d: number; s: number; r: number }
@@ -145,6 +145,23 @@ export function drum(c: BaseAudioContext, out: AudioNode, t: number, kind: DrumK
     decay(0.35, 0.04)
     o.start(t)
     o.stop(t + 0.06)
+  } else if (kind === "cowbell") {
+    // TR-808 style: two square waves at 540 and 800 Hz through a band-pass.
+    const bp = c.createBiquadFilter()
+    bp.type = "bandpass"
+    bp.frequency.value = 1100
+    bp.Q.value = 1.4
+    for (const f of [540, 800]) {
+      const o = c.createOscillator()
+      o.type = "square"
+      o.frequency.value = f
+      o.connect(bp)
+      o.start(t)
+      o.stop(t + 0.35)
+    }
+    bp.connect(g)
+    g.gain.setValueAtTime(0.28 * vel, t)
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3)
   } else if (kind === "tom") {
     const o = c.createOscillator()
     o.type = "sine"
@@ -181,7 +198,7 @@ export function drum(c: BaseAudioContext, out: AudioNode, t: number, kind: DrumK
     decay(kind === "shaker" ? 0.14 : 0.22, len)
   }
 }
-export const KIND_OF: Record<string, DrumKind> = { Kick: "kick", Clap: "clap", Snare: "snare", Hat: "hat", "Open hat": "ohat", Shaker: "shaker", Rim: "rim", Tom: "tom", Ride: "ride" }
+export const KIND_OF: Record<string, DrumKind> = { Kick: "kick", Clap: "clap", Snare: "snare", Hat: "hat", "Open hat": "ohat", Shaker: "shaker", Rim: "rim", Tom: "tom", Ride: "ride", Cowbell: "cowbell" }
 
 /** Play a single note right now, for pads and keys. */
 export function playNote(midi: number, o: ToneOptions = {}, gate = 0.35) {

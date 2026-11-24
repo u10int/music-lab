@@ -28,6 +28,7 @@ const LANES: { id: DrumKind; name: string; note: number }[] = [
   { id: "rim", name: "Rim", note: 37 },
   { id: "tom", name: "Tom", note: 45 },
   { id: "ride", name: "Ride", note: 51 },
+  { id: "cowbell", name: "Cowbell", note: 56 },
 ]
 type Sound = "pluck" | "bass" | "lead"
 const SOUND: Record<Sound, { oct: number; o: Parameters<typeof tone>[5] }> = {

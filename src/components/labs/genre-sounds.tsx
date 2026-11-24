@@ -18,7 +18,7 @@ import { Switch } from "@/components/ui/switch"
 import { FX } from "@/data/guide"
 import { GENRE_SOUNDS, type GenreSound } from "@/data/genre-sounds"
 import { SCALES } from "@/data/labs"
-import { FAMILIES, PATTERNS, type Family } from "@/data/patterns"
+import { FAMILIES, normalizeFamily, PATTERNS, type Family } from "@/data/patterns"
 import { usePref } from "@/lib/store"
 import { cn, slug } from "@/lib/utils"
 
@@ -176,7 +176,8 @@ function SoundCard({ s }: { s: GenreSound }) {
 }
 
 export function GenreSounds() {
-  const [fam, setFam] = usePref<Family | "all">("genre-sound-family", "yours")
+  const [storedFam, setFam] = usePref<Family | "all">("genre-sound-family", "wave")
+  const fam = normalizeFamily(storedFam)
   const { hash } = useLocation()
   useEffect(() => {
     const target = hash.startsWith("#sound-") && GENRE_SOUNDS.find((x) => "#sound-" + x.id === hash)

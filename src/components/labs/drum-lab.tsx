@@ -5,7 +5,7 @@ import { toggle } from "@/audio/playback"
 import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
-import { FAMILIES, PATTERNS, type Family, type Pattern } from "@/data/patterns"
+import { FAMILIES, normalizeFamily, PATTERNS, type Family, type Pattern } from "@/data/patterns"
 import { usePref } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
@@ -72,7 +72,8 @@ export function PatternView({ p }: { p: Pattern }) {
 }
 
 export function DrumPatterns({ only }: { only?: Family }) {
-  const [fam, setFam] = usePref<Family | "all">("pattern-family", "all")
+  const [storedFam, setFam] = usePref<Family | "all">("pattern-family", "all")
+  const fam = normalizeFamily(storedFam)
   const { hash } = useLocation()
   useEffect(() => {
     const id = hash.startsWith("#pat-") ? hash.slice(5) : null
