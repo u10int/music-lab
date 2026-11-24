@@ -5,7 +5,6 @@ export interface Sprint {
   goal: string; done: string; mouse: string; skills: string[]; weeks: SprintWeek[]
 }
 export interface Resource { k: "Watch" | "Read" | "Try"; t: string; u?: string; links?: [string, string][]; n: string }
-export interface Pattern { g: Genre; name: string; bpm: string; tempo: number; rows: [string, number[]][]; note: string }
 export interface StuckItem { g: Genre | "any"; t: string; src: string; u: string; n: string }
 
 export const SPRINTS: Sprint[] = [
@@ -122,17 +121,7 @@ export const GNAME: Record<Genre, string> = { wave: "Wave", phonk: "Phonk", prog
 
 export const ALL16: number[] = Array.from({ length: 16 }, (_, i) => i + 1);
 
-export const PATTERNS: Pattern[] = [
-  { g: "prog", name: "Progressive house", bpm: "124 BPM", tempo: 124,
-    rows: [["Kick", [1, 5, 9, 13]], ["Clap", [5, 13]], ["Open hat", [3, 7, 11, 15]], ["Shaker", ALL16]],
-    note: "Keep the shaker quiet and vary its velocity so the offbeats lean forward." },
-  { g: "wave", name: "Wave", bpm: "140–150 BPM, half-time feel", tempo: 145,
-    rows: [["Kick", [1, 8, 11]], ["Snare", [9]], ["Hat", [1, 3, 5, 7, 9, 11, 13, 15]]],
-    note: "Add a 32nd-note hat roll into the snare with Note Repeat, then let the reese carry the low end." },
-  { g: "phonk", name: "Drift phonk", bpm: "About 130 BPM", tempo: 130,
-    rows: [["Kick", [1, 7, 11]], ["Clap", [5, 13]], ["Hat", [1, 3, 5, 7, 9, 11, 13, 15]]],
-    note: "Layer two claps, and let the distorted 808 follow the kick. The cowbell melody goes on its own track." }
-];
+
 
 export const AT = "https://www.attackmagazine.com/technique/beat-dissected/";
 

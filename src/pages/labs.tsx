@@ -48,8 +48,8 @@ export function SoundDesignLab() {
 export function DrumsLab() {
   return (
     <div className="space-y-12">
-      <PageHeader title="Drums and sampling">Starter patterns for each genre, the Push drum layouts, and how Simpler slices a loop onto pads.</PageHeader>
-      <Block title="Starter patterns" description="One bar of 16 steps each. Play one, then copy it onto the step sequencer."><DrumPatterns /></Block>
+      <PageHeader title="Drums and sampling">Drum patterns from house to drum and bass, the Push drum layouts, and how Simpler slices a loop onto pads.</PageHeader>
+      <Block title="Drum pattern library" description="23 one-bar patterns across electronic styles, 16 steps each. Play one, then program it on Push or load it into the step sequencer."><DrumPatterns /></Block>
       <DrumLayouts />
       <NoteRepeat />
       <Block title="Slicing a loop"><SliceLab /></Block>

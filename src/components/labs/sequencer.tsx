@@ -8,9 +8,9 @@ import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { PATTERNS } from "@/data/sprints"
+import { FAMILIES, PATTERNS } from "@/data/patterns"
 import { downloadFile, TICKS_PER_16TH, writeMidi } from "@/lib/midi-file"
 import { usePref } from "@/lib/store"
 import { noteName, theory } from "@/lib/theory"
@@ -25,6 +25,9 @@ const LANES: { id: DrumKind; name: string; note: number }[] = [
   { id: "hat", name: "Closed hat", note: 42 },
   { id: "ohat", name: "Open hat", note: 46 },
   { id: "shaker", name: "Shaker", note: 70 },
+  { id: "rim", name: "Rim", note: 37 },
+  { id: "tom", name: "Tom", note: 45 },
+  { id: "ride", name: "Ride", note: 51 },
 ]
 type Sound = "pluck" | "bass" | "lead"
 const SOUND: Record<Sound, { oct: number; o: Parameters<typeof tone>[5] }> = {
@@ -35,7 +38,7 @@ const SOUND: Record<Sound, { oct: number; o: Parameters<typeof tone>[5] }> = {
 /** 0 = off, 1 = on, 2 = accent. */
 type Seq = { tempo: number; swing: number; drums: Record<string, number[]>; melody: (number | null)[]; sound: Sound }
 const empty = (): Seq => ({ tempo: 124, swing: 0, drums: Object.fromEntries(LANES.map((l) => [l.id, Array(STEPS).fill(0)])), melody: Array(STEPS).fill(null), sound: "pluck" })
-const VEL = [0, 96, 127]
+const VEL = [0, 60, 120]
 
 export function Sequencer() {
   const { root, scale } = useKey()
@@ -60,7 +63,7 @@ export function Sequencer() {
         const sixteenth = 60 / s.tempo / 4
         while (next < c.currentTime + 0.12) {
           const i = k % STEPS, at = next + (i % 2 ? s.swing * sixteenth : 0)
-          for (const l of LANES) { const v = s.drums[l.id]?.[i] ?? 0; if (v) drum(c, bus, at, l.id, v === 2 ? 1 : 0.7) }
+          for (const l of LANES) { const v = s.drums[l.id]?.[i] ?? 0; if (v) drum(c, bus, at, l.id, v === 2 ? 1 : 0.45) }
           const deg = s.melody[i]
           if (deg !== null && deg !== undefined) {
             const m = 48 + th.pc + (deg === 7 ? 12 : th.sc.iv[deg]) + SOUND[s.sound].oct * 12 - (th.pc > 7 ? 12 : 0)
@@ -84,17 +87,17 @@ export function Sequencer() {
     })
   }
 
-  const cycle = (lane: string, i: number) => setSeq({ ...seq, drums: { ...seq.drums, [lane]: seq.drums[lane].map((v, j) => (j === i ? (v + 1) % 3 : v)) } })
+  const cycle = (lane: string, i: number) => setSeq({ ...seq, drums: { ...seq.drums, [lane]: (seq.drums[lane] ?? Array(STEPS).fill(0)).map((v: number, j: number) => (j === i ? (v + 1) % 3 : v)) } })
   const setNote = (deg: number, i: number) => setSeq({ ...seq, melody: seq.melody.map((v, j) => (j === i ? (v === deg ? null : deg) : v)) })
-  const loadPreset = (g: string) => {
-    const p = PATTERNS.find((x) => x.g === g)
+  const loadPreset = (id: string) => {
+    const p = PATTERNS.find((x) => x.id === id)
     if (!p) return
     const drums = empty().drums
-    for (const [name, steps] of p.rows) {
-      const id = KIND_OF[name]
-      if (id) drums[id] = Array.from({ length: STEPS }, (_, i) => (steps.includes(i + 1) ? 1 : 0))
+    for (const [name, steps, ghost = []] of p.rows) {
+      const lane = KIND_OF[name]
+      if (lane) drums[lane] = Array.from({ length: STEPS }, (_, i) => (steps.includes(i + 1) ? 2 : ghost.includes(i + 1) ? 1 : 0))
     }
-    setSeq({ ...seq, drums, tempo: p.tempo })
+    setSeq({ ...seq, drums, tempo: p.tempo, swing: p.swing ?? 0 })
   }
   const exportMidi = (what: "drums" | "melody") => {
     const bars = 1, notes = []
@@ -102,7 +105,7 @@ export function Sequencer() {
       for (let i = 0; i < STEPS; i++) {
         const tick = (b * STEPS + i) * TICKS_PER_16TH + (i % 2 ? Math.round(seq.swing * TICKS_PER_16TH) : 0)
         if (what === "drums") {
-          for (const l of LANES) { const v = seq.drums[l.id][i]; if (v) notes.push({ tick, note: l.note, velocity: VEL[v], duration: TICKS_PER_16TH / 2, channel: 9 }) }
+          for (const l of LANES) { const v = seq.drums[l.id]?.[i] ?? 0; if (v) notes.push({ tick, note: l.note, velocity: VEL[v], duration: TICKS_PER_16TH / 2, channel: 9 }) }
         } else {
           const d = seq.melody[i]
           if (d !== null) notes.push({ tick, note: midiFor(d), velocity: 100, duration: TICKS_PER_16TH - 2 })
@@ -143,7 +146,14 @@ export function Sequencer() {
           <Label htmlFor="preset">Start from</Label>
           <Select value="" onValueChange={loadPreset}>
             <SelectTrigger id="preset" size="sm" className="w-48"><SelectValue placeholder="A genre pattern" /></SelectTrigger>
-            <SelectContent>{PATTERNS.map((p) => <SelectItem key={p.g} value={p.g}>{p.name}</SelectItem>)}</SelectContent>
+            <SelectContent>
+              {FAMILIES.filter(([f]) => f !== "all").map(([f, label]) => (
+                <SelectGroup key={f}>
+                  <SelectLabel>{label}</SelectLabel>
+                  {PATTERNS.filter((p) => p.family === f).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                </SelectGroup>
+              ))}
+            </SelectContent>
           </Select>
         </div>
         <Button variant="ghost" size="sm" onClick={() => setSeq({ ...empty(), tempo: seq.tempo, swing: seq.swing, sound: seq.sound })}><Eraser />Clear</Button>
@@ -164,15 +174,15 @@ export function Sequencer() {
                 {cells((i) => {
                   const v = seq.drums[l.id]?.[i] ?? 0
                   return (
-                    <button key={i} type="button" aria-label={`${l.name}, step ${i + 1}: ${["off", "on", "accent"][v]}`} aria-pressed={v > 0} onClick={() => cycle(l.id, i)}
-                      className={cn(cellCls(v > 0, i), v === 1 && "bg-[color-mix(in_oklab,var(--s1)_55%,var(--card))]", v === 2 && "bg-[var(--s1)]")} />
+                    <button key={i} type="button" aria-label={`${l.name}, step ${i + 1}: ${["off", "quiet", "full"][v]}`} aria-pressed={v > 0} onClick={() => cycle(l.id, i)}
+                      className={cn(cellCls(v > 0, i), v === 1 && "bg-[color-mix(in_oklab,var(--s1)_35%,var(--card))]", v === 2 && "bg-[var(--s1)]")} />
                   )
                 })}
               </div>
             ))}
           </div>
         </div>
-        <Caption>Click a step to turn it on, again for an accent, again to clear. Exported drums use Drum Rack pad notes, so kick lands on C1.</Caption>
+        <Caption>Click a step for a quiet hit, again for a full hit, again to clear. Exported drums use Drum Rack pad notes, so kick lands on C1.</Caption>
       </section>
 
       <section className="space-y-3">

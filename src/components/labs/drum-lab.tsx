@@ -4,18 +4,25 @@ import { toggle } from "@/audio/playback"
 import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
-import { GENRES, PATTERNS, type Pattern } from "@/data/sprints"
+import { FAMILIES, PATTERNS, type Family, type Pattern } from "@/data/patterns"
+import { usePref } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
-/** One bar of 16 steps per row, with a moving playhead while it plays. */
+/** One bar of 16 steps per row, with a moving playhead while it plays. Ghost notes show lighter. */
 export function PatternView({ p }: { p: Pattern }) {
   const [now, setNow] = useState(-1)
+  const id = "pat-" + p.id
   const play = () => {
-    const step = 60 / p.tempo / 4, bars = 4
+    const step = 60 / p.tempo / 4, bars = 4, swing = (p.swing ?? 0) * step
     let last = -1
-    toggle("pat-" + p.g, bars * 16 * step, (c, bus, t) => {
-      for (let k = 0; k < bars * 16; k++)
-        for (const [name, steps] of p.rows) if (steps.includes((k % 16) + 1)) drum(c, bus, t + k * step, KIND_OF[name], name === "Shaker" ? (k % 2 ? 0.9 : 0.45) : 1)
+    toggle(id, bars * 16 * step, (c, bus, t) => {
+      for (let k = 0; k < bars * 16; k++) {
+        const s = (k % 16) + 1, at = t + k * step + (k % 2 ? swing : 0)
+        for (const [name, steps, ghost = []] of p.rows) {
+          if (steps.includes(s)) drum(c, bus, at, KIND_OF[name], 1)
+          else if (ghost.includes(s)) drum(c, bus, at, KIND_OF[name], 0.4)
+        }
+      }
     }, (el) => {
       const s = Math.floor(el / step) % 16
       if (s !== last && el >= 0) {
@@ -26,16 +33,14 @@ export function PatternView({ p }: { p: Pattern }) {
   }
   const steps = (fn: (i: number) => React.ReactNode) => (
     <div className="grid grid-cols-4 gap-2">
-      {[0, 1, 2, 3].map((b) => (
-        <span key={b} className="grid grid-cols-4 gap-1">{[0, 1, 2, 3].map((k) => fn(b * 4 + k))}</span>
-      ))}
+      {[0, 1, 2, 3].map((b) => <span key={b} className="grid grid-cols-4 gap-1">{[0, 1, 2, 3].map((k) => fn(b * 4 + k))}</span>)}
     </div>
   )
   return (
     <figure className="min-w-0 space-y-3 rounded-xl border bg-card p-4">
       <figcaption className="flex flex-wrap items-center justify-between gap-2">
-        <span><span className="font-semibold">{p.name}</span> <span className="text-muted-foreground text-sm">{p.bpm}</span></span>
-        <PlayButton id={"pat-" + p.g} label="Play" onPlay={play} />
+        <span><span className="font-semibold">{p.name}</span> <span className="text-muted-foreground text-sm">{p.bpm}{p.swing ? ", swung" : ""}</span></span>
+        <PlayButton id={id} label="Play" onPlay={play} />
       </figcaption>
       <div className="overflow-x-auto">
         <div className="grid min-w-[420px] gap-1.5">
@@ -43,12 +48,12 @@ export function PatternView({ p }: { p: Pattern }) {
             <span />
             {steps((i) => <span key={i} className="text-muted-foreground text-xs">{i % 4 === 0 ? i / 4 + 1 : ""}</span>)}
           </div>
-          {p.rows.map(([name, on]) => (
+          {p.rows.map(([name, on, ghost = []]) => (
             <div key={name} className="grid grid-cols-[72px_minmax(0,1fr)] items-center gap-2 text-sm">
               <span>{name}</span>
-              <div role="img" aria-label={`${name}: ${on.length === 16 ? "every step" : "steps " + on.join(", ")}`}>
+              <div role="img" aria-label={`${name}: ${on.length === 16 ? "every step" : on.length ? "steps " + on.join(", ") : "no main hits"}${ghost.length ? `; quiet on ${ghost.join(", ")}` : ""}`}>
                 {steps((i) => (
-                  <i key={i} className={cn("block aspect-square rounded-[3px] border-[1.5px] border-pad-edge", on.includes(i + 1) && "border-transparent bg-[var(--s1)]", now === i && "outline-2 outline-offset-1 outline-foreground")} />
+                  <i key={i} className={cn("block aspect-square rounded-[3px] border-[1.5px] border-pad-edge", on.includes(i + 1) && "border-transparent bg-[var(--s1)]", ghost.includes(i + 1) && "border-transparent bg-[color-mix(in_oklab,var(--s1)_35%,var(--card))]", now === i && "outline-2 outline-offset-1 outline-foreground")} />
                 ))}
               </div>
             </div>
@@ -60,13 +65,15 @@ export function PatternView({ p }: { p: Pattern }) {
   )
 }
 
-export function DrumPatterns() {
-  const [g, setG] = useState<string>("all")
-  const list = PATTERNS.filter((p) => g === "all" || p.g === g)
+export function DrumPatterns({ only }: { only?: Family }) {
+  const [fam, setFam] = usePref<Family | "all">("pattern-family", "all")
+  const f = only ?? fam
+  const list = PATTERNS.filter((p) => f === "all" || p.family === f)
   return (
     <div className="space-y-4">
-      <Seg label="Genre" value={g} onChange={setG} options={GENRES as [string, string][]} />
-      <div className="grid gap-4 lg:grid-cols-2">{list.map((p) => <PatternView key={p.g} p={p} />)}</div>
+      {!only && <Seg label="Style" value={fam} onChange={setFam} options={FAMILIES} />}
+      <Caption>Solid squares are the main hits, light ones are quiet ghost notes. Load any of these into the step sequencer to edit it and export MIDI.</Caption>
+      <div className="grid gap-4 lg:grid-cols-2">{list.map((p) => <PatternView key={p.id} p={p} />)}</div>
     </div>
   )
 }

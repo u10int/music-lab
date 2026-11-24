@@ -1,6 +1,6 @@
 /** Small Web Audio engine shared by every interactive part of the app. */
 export type OscType = OscillatorType
-export type DrumKind = "kick" | "snare" | "clap" | "hat" | "ohat" | "shaker"
+export type DrumKind = "kick" | "snare" | "clap" | "hat" | "ohat" | "shaker" | "rim" | "tom" | "ride"
 export interface ToneOptions {
   wave?: OscType
   env?: { a: number; d: number; s: number; r: number }
@@ -132,6 +132,45 @@ export function drum(c: BaseAudioContext, out: AudioNode, t: number, kind: DrumK
       tn.start(t)
       tn.stop(t + 0.12)
     }
+  } else if (kind === "rim") {
+    const o = c.createOscillator(), bp = c.createBiquadFilter(), n = noiseSrc(c, t, 0.03)
+    o.type = "triangle"
+    o.frequency.value = 1700
+    bp.type = "bandpass"
+    bp.frequency.value = 2500
+    bp.Q.value = 3
+    o.connect(g)
+    n.connect(bp)
+    bp.connect(g)
+    decay(0.35, 0.04)
+    o.start(t)
+    o.stop(t + 0.06)
+  } else if (kind === "tom") {
+    const o = c.createOscillator()
+    o.type = "sine"
+    o.frequency.setValueAtTime(170, t)
+    o.frequency.exponentialRampToValueAtTime(95, t + 0.25)
+    o.connect(g)
+    decay(0.7, 0.35)
+    o.start(t)
+    o.stop(t + 0.4)
+  } else if (kind === "ride") {
+    const n = noiseSrc(c, t, 0.7), hp = c.createBiquadFilter(), bell = c.createGain()
+    hp.type = "highpass"
+    hp.frequency.value = 5000
+    n.connect(hp)
+    hp.connect(g)
+    for (const f of [3200, 4650, 5900]) {
+      const o = c.createOscillator()
+      o.type = "square"
+      o.frequency.value = f
+      o.connect(bell)
+      o.start(t)
+      o.stop(t + 0.7)
+    }
+    bell.gain.value = 0.04
+    bell.connect(g)
+    decay(0.16, 0.6)
   } else {
     const len = kind === "ohat" ? 0.28 : kind === "shaker" ? 0.06 : 0.05
     const n = noiseSrc(c, t, len + 0.05), hp = c.createBiquadFilter()
@@ -142,7 +181,7 @@ export function drum(c: BaseAudioContext, out: AudioNode, t: number, kind: DrumK
     decay(kind === "shaker" ? 0.14 : 0.22, len)
   }
 }
-export const KIND_OF: Record<string, DrumKind> = { Kick: "kick", Clap: "clap", Snare: "snare", Hat: "hat", "Open hat": "ohat", Shaker: "shaker" }
+export const KIND_OF: Record<string, DrumKind> = { Kick: "kick", Clap: "clap", Snare: "snare", Hat: "hat", "Open hat": "ohat", Shaker: "shaker", Rim: "rim", Tom: "tom", Ride: "ride" }
 
 /** Play a single note right now, for pads and keys. */
 export function playNote(midi: number, o: ToneOptions = {}, gate = 0.35) {
