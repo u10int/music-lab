@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link } from "react-router"
-import { EnvelopeExplainer, LfoExplainer } from "@/components/diagrams"
+import { EnvelopeEditor, LfoEditor } from "@/components/mod-editors"
 import { Block, Caption, Steps, SECTION_TITLE } from "@/components/page"
 import { Flow } from "@/components/push/recording"
 import { Seg } from "@/components/seg"
@@ -109,8 +109,8 @@ export function Modulation() {
     <div className="space-y-10">
       <Caption>Modulation is what makes a sound move instead of sitting still. Every Live synth has envelopes and LFOs, and Drift, Wavetable and Meld have a modulation matrix to route them anywhere.</Caption>
       <div className="grid gap-8 md:grid-cols-2" style={{ ["--c" as string]: "var(--foreground)" }}>
-        <figure className="space-y-2"><h2 className={SECTION_TITLE}>Envelopes shape each note</h2><EnvelopeExplainer /><figcaption className="text-muted-foreground text-sm">Plays once per note. On volume it decides pluck versus pad. On the filter it makes a sound open and close as it plays.</figcaption></figure>
-        <figure className="space-y-2"><h2 className={SECTION_TITLE}>LFOs keep things moving</h2><LfoExplainer /><figcaption className="text-muted-foreground text-sm">A slow repeating wave. Sync it to the tempo (1 bar, 1/4) for movement that locks to the groove.</figcaption></figure>
+        <figure className="space-y-3"><h2 className={SECTION_TITLE}>Envelopes shape each note</h2><figcaption className="text-muted-foreground text-sm">Plays once per note. On volume it decides pluck versus pad. On the filter it makes a sound open and close as it plays. Drag the points, then hold the button to hear it; let go to hear the release.</figcaption><EnvelopeEditor /></figure>
+        <figure className="space-y-3"><h2 className={SECTION_TITLE}>LFOs keep things moving</h2><figcaption className="text-muted-foreground text-sm">A slow repeating wave. Sync it to the tempo (1 bar, 1/4) for movement that locks to the groove. Press play, then drag the wave: left and right for rate, up and down for amount.</figcaption><LfoEditor /></figure>
       </div>
       <Block title="The modulation matrix: source, destination, amount" description="Start with small amounts. Positive and negative amounts move the destination in opposite directions.">
         <Table>

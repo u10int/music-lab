@@ -54,6 +54,8 @@ export interface Progress {
   doneAt: Record<string, string>
   /** Weekly review notes, keyed by the week's Monday. */
   reviews: Record<string, { well: string; hard: string; goal: string }>
+  /** Plan days marked done by hand, keyed by date. A day also counts as done once its planned minutes are logged. */
+  daysDone?: Record<string, boolean>
 }
 export interface Score { right: number; total: number }
 
