@@ -4,6 +4,7 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { FX, GLOSS, INSTR, RECIPES } from "@/data/guide"
 import { FAMILIES, PATTERNS } from "@/data/patterns"
 import { GENRE_SOUNDS } from "@/data/genre-sounds"
+import { FX_RECIPES } from "@/data/fx-recipes"
 import { SHORT } from "@/data/push"
 import { GENRE_INFO } from "@/data/genres"
 import { SPRINTS } from "@/data/sprints"
@@ -48,6 +49,7 @@ export default function SearchDialog({ open, setOpen }: { open: boolean; setOpen
     { heading: "Push 3 shortcuts", items: SHORT.map(([combo, effect]) => ({ label: combo, hint: effect, to: "/push?tab=shortcuts" })) },
     { heading: "Genres", items: GENRE_INFO.map((g) => ({ label: FAMILIES.find(([f]) => f === g.id)?.[1] ?? g.id, hint: `${g.tempo[0]}–${g.tempo[1]} BPM`, to: `/genres/${g.id}` })) },
     { heading: "Genre sounds", items: GENRE_SOUNDS.map((g) => ({ label: g.name, hint: g.genre, to: `/labs/sound-design#sound-${g.id}` })) },
+    { heading: "Effect recipes", items: FX_RECIPES.map((r) => ({ label: r.name, hint: r.kind, to: `/labs/sound-design#fx-${r.id}` })) },
     { heading: "Drum patterns", items: PATTERNS.map((p) => ({ label: p.name, hint: p.bpm, to: `/labs/drums#pat-${p.id}` })) },
   ], [])
   return (

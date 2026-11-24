@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { Link, useNavigate, useParams } from "react-router"
 import { DrumPatterns } from "@/components/labs/drum-lab"
 import { SoundCard } from "@/components/labs/genre-sounds"
+import { FxLibrary } from "@/components/labs/fx-recipes"
 import { Block, Caption, PageHeader, SECTION_TITLE } from "@/components/page"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -370,6 +371,7 @@ export function GenrePage() {
           <div className="grid gap-4 lg:grid-cols-2">{sounds.map((s) => <SoundCard key={s.id} s={s} />)}</div>
         </Block>
       ) : null}
+      <Block title="Atmospheres, transitions and vocal effects" description={`The effects ${famName(g.id).toLowerCase()} producers use between and around the notes, over ${famName(g.id).toLowerCase()} drums.`}><FxLibrary only={g.id} /></Block>
       <Block title="Related genres">
         <ul className="grid border-t border-l sm:grid-cols-2 xl:grid-cols-3">{g.near.map((n) => <GenreCard key={n} id={n} />)}</ul>
         <Caption>The loop builder borrows sounds from these when {famName(g.id).toLowerCase()} has none for a part.</Caption>

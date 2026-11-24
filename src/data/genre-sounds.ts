@@ -1,5 +1,9 @@
 import type { FxSettings, Patch } from "@/audio/patch"
-import type { Family } from "./patterns"
+import { FAMILIES, type Family } from "./patterns"
+import { hz, pct, cents, cutoff, reso, drive, space, detune, envAmt, decay, attack, delayWet, glide, lfoDepth, lfoRate, pump, TRIAD, SEVENTH } from "./sound-macros"
+import { EXTRA_SOUNDS } from "./genre-sounds-extra"
+
+const FAMILY_ORDER = FAMILIES.map((f) => f[0] as string)
 
 /** A note in a two-bar phrase: [start step, length in 16ths, scale degree or chord degrees, octave shift]. */
 export type PhraseNote = [number, number, number | number[], number?]
@@ -36,32 +40,7 @@ export interface GenreSound {
   macros: Macro[]
 }
 
-const hz = (v: number) => (v >= 1000 ? (v / 1000).toFixed(1) + " kHz" : Math.round(v) + " Hz")
-const pct = (v: number) => Math.round(v * 100) + "%"
-const ms = (v: number) => (v < 1 ? Math.round(v * 1000) + " ms" : v.toFixed(1) + " s")
-const cents = (v: number) => Math.round(v) + " cents"
-
-// Reusable macros
-const cutoff = (value: number, min = 150, max = 6000): Macro => ({ id: "cutoff", label: "Cutoff", min, max, step: 1, value, fmt: hz, apply: (p, _f, v) => { p.filter.cutoff = v } })
-const reso = (value: number): Macro => ({ id: "reso", label: "Resonance", min: 0.5, max: 18, step: 0.1, value, fmt: (v) => v.toFixed(1), apply: (p, _f, v) => { p.filter.q = v } })
-const drive = (value: number): Macro => ({ id: "drive", label: "Drive", min: 0, max: 1, step: 0.01, value, fmt: pct, apply: (p, _f, v) => { p.drive = v } })
-const space = (value: number): Macro => ({ id: "space", label: "Reverb", min: 0, max: 0.8, step: 0.01, value, fmt: pct, apply: (_p, f, v) => { f.reverb = v } })
-const detune = (value: number, max = 60): Macro => ({ id: "detune", label: "Detune", min: 0, max, step: 1, value, fmt: cents, apply: (p, _f, v) => { p.layers.forEach((l) => { if ((l.voices ?? 1) > 1) l.detune = v }) } })
-const envAmt = (value: number, max = 6000): Macro => ({ id: "env", label: "Filter envelope", min: 0, max, step: 10, value, fmt: hz, apply: (p, _f, v) => { p.filter.env = v } })
-const decay = (value: number, max = 1.5): Macro => ({ id: "decay", label: "Decay", min: 0.05, max, step: 0.01, value, fmt: ms, apply: (p, _f, v) => { p.amp.d = v; p.filter.decay = v } })
-const attack = (value: number): Macro => ({ id: "attack", label: "Attack", min: 0.003, max: 2, step: 0.005, value, fmt: ms, apply: (p, _f, v) => { p.amp.a = v } })
-const delayWet = (value: number): Macro => ({ id: "delay", label: "Delay", min: 0, max: 0.7, step: 0.01, value, fmt: pct, apply: (_p, f, v) => { if (f.delay) f.delay.wet = v } })
-const glide = (value: number): Macro => ({ id: "glide", label: "Glide", min: 0, max: 0.3, step: 0.005, value, fmt: ms, apply: (p, _f, v) => { p.glide = v } })
-const lfoDepth = (value: number, max = 3000): Macro => ({ id: "lfo", label: "LFO depth", min: 0, max, step: 10, value, fmt: hz, apply: (p, _f, v) => { if (p.lfo) p.lfo.depth = v } })
-const RATES = [1, 0.5, 1 / 3, 0.25, 1 / 6, 0.125]
-const RATE_NAMES = ["1/4", "1/8", "1/8t", "1/16", "1/16t", "1/32"]
-const lfoRate = (value: number): Macro => ({ id: "rate", label: "Wobble rate", min: 0, max: 5, step: 1, value, fmt: (v) => RATE_NAMES[v], apply: (p, _f, v) => { if (p.lfo) p.lfo.beats = RATES[v] } })
-const pump = (value: number): Macro => ({ id: "pump", label: "Sidechain pump", min: 0, max: 0.95, step: 0.01, value, fmt: pct, apply: (_p, f, v) => { f.duck = v } })
-
-const TRIAD = (r: number) => [r, r + 2, r + 4]
-const SEVENTH = (r: number) => [r, r + 2, r + 4, r + 6]
-
-export const GENRE_SOUNDS: GenreSound[] = [
+const BASE_SOUNDS: GenreSound[] = [
   // ---------- Wave, phonk, progressive house ----------
   {
     id: "wave-reese", family: "wave", genre: "Wave", name: "Moving reese bass", role: "Bass",
@@ -825,3 +804,7 @@ export const GENRE_SOUNDS: GenreSound[] = [
     macros: [{ id: "wobble", label: "Tape wobble", min: 0, max: 40, step: 1, value: 14, fmt: cents, apply: (p, _f, v) => { if (p.lfo) p.lfo.depth = v } }, cutoff(1500, 300, 5000), { id: "hiss", label: "Hiss", min: 0, max: 0.05, step: 0.001, value: 0.012, fmt: (v) => pct(v * 20), apply: (p, _f, v) => { p.noise = v } }],
   },
 ]
+
+/** Every sound, grouped in genre order. */
+export const GENRE_SOUNDS: GenreSound[] = [...BASE_SOUNDS, ...EXTRA_SOUNDS].map((x, i) => [x, i] as const)
+  .sort((a, b) => FAMILY_ORDER.indexOf(a[0].family) - FAMILY_ORDER.indexOf(b[0].family) || a[1] - b[1]).map(([x]) => x)

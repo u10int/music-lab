@@ -12,6 +12,8 @@ import { ScalesLab } from "@/components/labs/scales-lab"
 import { SliceLab } from "@/components/labs/slice-lab"
 import { SynthLab } from "@/components/labs/synth-lab"
 import { GenreSounds } from "@/components/labs/genre-sounds"
+import { FxLibrary } from "@/components/labs/fx-recipes"
+import { FX_RECIPES } from "@/data/fx-recipes"
 import { GENRE_SOUNDS } from "@/data/genre-sounds"
 import { PATTERNS } from "@/data/patterns"
 import { Sequencer } from "@/components/labs/sequencer"
@@ -73,8 +75,9 @@ export function EarLab() {
 export function SoundDesignLab() {
   return (
     <div className="space-y-10">
-      <PageHeader title="Sound design">Signature sounds from each genre you can play and tweak, a game to train your ear for synth controls, and a small synth with the same oscillator, filter and envelope as Drift to learn how the controls work.</PageHeader>
+      <PageHeader title="Sound design">Signature sounds from each genre you can play and tweak, recipes for atmospheres, transitions and vocal effects, a game to train your ear for synth controls, and a small synth with the same oscillator, filter and envelope as Drift to learn how the controls work.</PageHeader>
       <Block title="Genre sounds" description={`${GENRE_SOUNDS.length} sounds across ${new Set(GENRE_SOUNDS.map((x) => x.family)).size} genres, from wave, phonk and hardwave to ODESZA-style, trance, dub techno and ambient.`}><GenreSounds /></Block>
+      <Block title="Atmospheres, transitions and vocal effects" description={`${FX_RECIPES.length} recipes for the sounds between the notes: crackle, rain and tape, risers, impacts and tape stops, and vocal chops, throws and formant shifts.`}><FxLibrary /></Block>
       <Block title="Match the sound" description="Hear a sound, then find the knob settings that made it. The fastest way to learn what each control does."><MatchSound /></Block>
       <Block title="Synth playground" description="Change a control, play it, and watch the shape change."><SynthLab /></Block>
       <More to="/instruments?tab=modulation">the modulation guide</More>
