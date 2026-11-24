@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/archivo";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(0.967 0.002 106);
+  --foreground: oklch(0.21 0.005 265);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.21 0.005 265);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.935 0.003 106);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.935 0.003 106);
+  --muted-foreground: oklch(0.5 0.01 265);
+  --accent: oklch(0.935 0.003 106);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(0.52 0.19 27);
+  --border: oklch(0.885 0.004 106);
+  --input: oklch(0.885 0.004 106);
+  --ring: oklch(0.55 0.17 260);
+  --sidebar: oklch(0.985 0.001 106);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.935 0.003 106);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  /* Music Lab tokens */
+  --s1: #e2553f; --s2: #e39a1f; --s3: #4fa548; --s4: #1f9e95; --s5: #3b74d6; --s6: #8a5ad1;
+  --on-accent: #141517;
+  --pad-empty: #e7e7e3;
+  --pad-edge: #8e9096;
+  --key-black: #1c1d1f;
+  --key-black-fg: #ffffff;
+}
+
+.dark {
+  --background: oklch(0.19 0.004 265);
+  --foreground: oklch(0.94 0.003 106);
+  --card: oklch(0.225 0.004 265);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.225 0.004 265);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.94 0.003 106);
+  --primary-foreground: oklch(0.21 0.005 265);
+  --secondary: oklch(0.27 0.005 265);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.27 0.005 265);
+  --muted-foreground: oklch(0.7 0.01 265);
+  --accent: oklch(0.27 0.005 265);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(0.75 0.14 25);
+  --border: oklch(0.3 0.005 265);
+  --input: oklch(0.34 0.005 265);
+  --ring: oklch(0.72 0.12 260);
+  --sidebar: oklch(0.205 0.004 265);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.27 0.005 265);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  --s1: #f0664f; --s2: #f0aa33; --s3: #63bd5b; --s4: #2fb8ad; --s5: #5b8ef0; --s6: #a275ec;
+  --pad-empty: #1a1b1e;
+  --pad-edge: #6a6c73;
+  --key-black: #0b0c0d;
+  --key-black-fg: #ececea;
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-display: "Archivo Variable", "Inter Variable", sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-pad-empty: var(--pad-empty);
+  --color-pad-edge: var(--pad-edge);
+  --color-s1: var(--s1);
+  --color-s2: var(--s2);
+  --color-s3: var(--s3);
+  --color-s4: var(--s4);
+  --color-s5: var(--s5);
+  --color-s6: var(--s6);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body { @apply bg-background text-foreground; font-feature-settings: "cv11"; }
+  h1, h2 { font-family: var(--font-display); text-wrap: balance; letter-spacing: -0.01em; }
+  a { text-underline-offset: 3px; }
+}
+
+/* ---------- Diagrams (SVG classes shared by labs and guides) ---------- */
+.vsvg { width: 100%; height: auto; display: block; overflow: visible; --c: var(--foreground); }
+.vsvg.wide { height: 120px; }
+.vgrid { stroke: var(--border); stroke-width: 1; }
+.varea { fill: color-mix(in oklab, var(--c) 14%, transparent); }
+.vline { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.vmark { stroke: var(--muted-foreground); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.vtext { fill: var(--muted-foreground); font-size: 12px; font-family: var(--font-sans); }
+.vwave { fill: var(--muted-foreground); opacity: 0.5; }
+.vsel { fill: var(--c); opacity: 0.25; }
+
+/* Instrument thumbnails */
+.z1 { fill: none; stroke: var(--foreground); stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.z2 { fill: none; stroke: var(--muted-foreground); stroke-width: 1.5; stroke-linecap: round; opacity: 0.7; }
+.zf { fill: var(--foreground); }
+.zd1 { fill: var(--foreground); }
+.zd2 { fill: var(--muted-foreground); opacity: 0.7; }
+
+/* Push hardware map */
+.hw-body { fill: var(--muted); stroke: var(--border); }
+.hw-k { fill: var(--card); stroke: var(--pad-edge); stroke-width: 1.5; }
+.hw-btn, .hw-btn rect { fill: var(--card); stroke: var(--pad-edge); stroke-width: 1; }
+.hw-pad { fill: var(--pad-empty); stroke: var(--pad-edge); stroke-width: 1; }
+.hw-disp { fill: var(--key-black); }
+.hw-n circle { fill: var(--foreground); }
+.hw-n text { fill: var(--background); font-size: 13px; font-weight: 600; font-family: var(--font-sans); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
+}
