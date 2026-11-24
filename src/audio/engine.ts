@@ -14,26 +14,70 @@ export interface ToneOptions {
 
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
+let comp: DynamicsCompressorNode | null = null
+let probe: AnalyserNode | null = null
 let noise: AudioBuffer | null = null
+const probeBuf = new Float32Array(256)
+
+/** master gain -> compressor -> speakers, with an analyser to spot a broken compressor. */
+function buildOutput(c: AudioContext) {
+  comp?.disconnect()
+  comp = c.createDynamicsCompressor()
+  comp.threshold.value = -14
+  comp.ratio.value = 4
+  probe = c.createAnalyser()
+  probe.fftSize = 256
+  master?.disconnect()
+  master!.connect(comp)
+  comp.connect(c.destination)
+  comp.connect(probe)
+}
+
+/**
+ * A single NaN or infinite sample (an unstable filter, say) puts a compressor
+ * into a state it never leaves, and everything after it goes silent until the
+ * page reloads. If the output has gone bad, rebuild it.
+ */
+function heal() {
+  if (!ctx || !probe) return
+  probe.getFloatTimeDomainData(probeBuf)
+  for (let i = 0; i < probeBuf.length; i++) {
+    if (!Number.isFinite(probeBuf[i])) {
+      console.warn("Audio output went bad; rebuilding it")
+      buildOutput(ctx)
+      return
+    }
+  }
+}
+
+/** Resume a context the browser suspended or interrupted (sleep, a headphone switch, a phone call). */
+function wake() {
+  if (ctx && ctx.state !== "running" && ctx.state !== "closed") void ctx.resume().catch(() => {})
+}
 
 /** Lazily create (and resume) the shared AudioContext. Call from a user gesture. */
 export function audio(): AudioContext | null {
   if (!ctx) {
     const C = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!C) return null
-    ctx = new C()
-    const comp = ctx.createDynamicsCompressor()
-    comp.threshold.value = -14
-    comp.ratio.value = 4
+    ctx = new C({ latencyHint: "interactive" })
     master = ctx.createGain()
     master.gain.value = 0.55
-    master.connect(comp)
-    comp.connect(ctx.destination)
+    buildOutput(ctx)
     noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate)
     const d = noise.getChannelData(0)
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
+    // Keep the context running: retry when the page comes back, and on any click or key.
+    ctx.addEventListener("statechange", wake)
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) wake() })
+    window.addEventListener("pointerdown", wake, { capture: true, passive: true })
+    window.addEventListener("keydown", wake, { capture: true, passive: true })
+    navigator.mediaDevices?.addEventListener?.("devicechange", () => setTimeout(wake, 300))
+    // Check the output once a second, so a loop that's already playing recovers too.
+    window.setInterval(heal, 1000)
   }
-  if (ctx.state === "suspended") void ctx.resume()
+  wake()
+  heal()
   return ctx
 }
 export const masterBus = () => master!

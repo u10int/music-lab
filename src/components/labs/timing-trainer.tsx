@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { horizon, startClock, stopClock } from "@/audio/clock"
 import { audio } from "@/audio/engine"
 import { stop, toggle, usePlayingId } from "@/audio/playback"
 import { Caption } from "@/components/page"
@@ -53,16 +54,16 @@ export function TimingTrainer() {
       grid.current = { t0, step }
       let next = t0, k = 0
       const tick = () => {
-        while (next < c.currentTime + 0.12) {
+        while (next < horizon(c)) {
           click(c, bus, next, k % (per * 4) === 0, k % per === 0)
           next += step
           k++
         }
       }
       tick()
-      timer = window.setInterval(tick, 25)
+      timer = startClock(tick)
     }, undefined, () => {
-      clearInterval(timer)
+      stopClock(timer)
       grid.current = null
     })
   }

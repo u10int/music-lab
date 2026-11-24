@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { horizon, startClock, stopClock } from "@/audio/clock"
 import { Download, RotateCcw, Save, Shuffle, Trash2 } from "lucide-react"
 import { Link, useSearchParams } from "react-router"
 import { drum } from "@/audio/engine"
@@ -91,7 +92,7 @@ export function LoopBuilder() {
         })) as Record<SynthPart, (ReturnType<typeof resolveSound> & { s: NonNullable<ReturnType<typeof soundById>> }) | null>
         for (const p of PARTS) gains[p].gain.setTargetAtTime(audible(l, p) ? l.mix[p].vol : 0, c.currentTime, 0.02)
         for (const p of SYNTH_PARTS) if (sounds[p]) chains[p].set(sounds[p]!.fx, l.tempo)
-        while (next < c.currentTime + 0.15) {
+        while (next < horizon(c)) {
           const i = k % LOOP_STEPS, at = next + (i % 2 ? l.swing * sixteenth : 0)
           for (const h of ev.hits) {
             if (h.step !== i || !audible(l, "drums")) continue
@@ -121,13 +122,13 @@ export function LoopBuilder() {
         while (queue.length > 64) queue.shift()
       }
       tick()
-      timer = window.setInterval(tick, 25)
+      timer = startClock(tick)
     }, (el) => {
       let cur = -1
       for (const q of queue) if (q.at <= el) cur = q.step
       setStep(cur)
     }, () => {
-      clearInterval(timer)
+      stopClock(timer)
       setStep(-1)
     })
   }

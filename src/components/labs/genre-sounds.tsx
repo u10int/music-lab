@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { horizon, startClock, stopClock } from "@/audio/clock"
 import { ChevronDown, RotateCcw } from "lucide-react"
 import { Link, useLocation } from "react-router"
 import { drum, KIND_OF } from "@/audio/engine"
@@ -62,7 +63,7 @@ export function SoundCard({ s }: { s: GenreSound }) {
         const { vals: v, withDrums: dr, root: r, iv: scaleIv } = live.current
         const { patch, fx } = resolve(s, v)
         chain.set(fx, s.tempo)
-        while (next < c.currentTime + 0.15) {
+        while (next < horizon(c)) {
           const i = k % 32, at = next + (i % 2 ? swing : 0)
           if (dr && pattern) for (const [name, steps, ghost = []] of pattern.rows) {
             const st = (i % (pattern.length ?? 16)) + 1
@@ -89,13 +90,13 @@ export function SoundCard({ s }: { s: GenreSound }) {
         while (queue.length > 64) queue.shift()
       }
       tick()
-      timer = window.setInterval(tick, 25)
+      timer = startClock(tick)
     }, (el) => {
       let cur = -1
       for (const q of queue) if (q.at <= el) cur = q.step
       setStep(cur)
     }, () => {
-      clearInterval(timer)
+      stopClock(timer)
       setStep(-1)
     })
   }

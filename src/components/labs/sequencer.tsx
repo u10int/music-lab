@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { horizon, startClock, stopClock } from "@/audio/clock"
 import { Download, Eraser } from "lucide-react"
 import { audio, drum, KIND_OF, masterBus, tone, type DrumKind } from "@/audio/engine"
 import { toggle, usePlayingId } from "@/audio/playback"
@@ -71,7 +72,7 @@ export function Sequencer() {
       const tick = () => {
         const { seq: s, T: th } = ref.current
         const sixteenth = 60 / s.tempo / 4
-        while (next < c.currentTime + 0.12) {
+        while (next < horizon(c)) {
           const i = k % ((s.bars ?? 1) * 16), at = next + (i % 2 ? s.swing * sixteenth : 0)
           const local = browserSound()
           for (const l of LANES) {
@@ -93,13 +94,13 @@ export function Sequencer() {
         while (queue.length > 64) queue.shift()
       }
       tick()
-      timer = window.setInterval(tick, 25)
+      timer = startClock(tick)
     }, (el) => {
       let cur = -1
       for (const q of queue) if (q.at <= el) cur = q.step
       setStep(cur)
     }, () => {
-      clearInterval(timer)
+      stopClock(timer)
       setStep(-1)
     })
   }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { horizon, startClock, stopClock } from "@/audio/clock"
 import { FileAudio, Shuffle, Sparkles } from "lucide-react"
 import { audio, drum, masterBus, type DrumKind } from "@/audio/engine"
 import { toggle, usePlayingId } from "@/audio/playback"
@@ -204,7 +205,7 @@ export function Sampler() {
         for (;;) {
           if (j >= sl.length) { j = 0; loopStart += L }
           const at = loopStart + sl[j].start * scale
-          if (at >= c.currentTime + 0.15) break
+          if (at >= horizon(c)) break
           const slotLen = ((sl[j + 1]?.start ?? l.buf.duration) - sl[j].start) * scale
           const slice = order[j] ?? j
           if (at >= c.currentTime - 0.01) {
@@ -217,13 +218,13 @@ export function Sampler() {
         while (queue.length > 64) queue.shift()
       }
       tick()
-      timer = window.setInterval(tick, 25)
+      timer = startClock(tick)
     }, (el) => {
       let cur = -1
       for (const q of queue) if (q.at <= el) cur = q.step
       setStep(cur)
     }, () => {
-      clearInterval(timer)
+      stopClock(timer)
       setStep(-1)
     })
   }

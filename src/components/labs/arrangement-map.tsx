@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { horizon, startClock, stopClock } from "@/audio/clock"
 import { ArrowLeft, ArrowRight, Copy, PencilRuler, Plus, RotateCcw, Trash2 } from "lucide-react"
 import { Link, useNavigate } from "react-router"
 import { drum, noiseBuffer } from "@/audio/engine"
@@ -145,7 +146,7 @@ export function ArrangementMap() {
         for (const p of ["bass", "chords", "lead"] as SynthPart[]) if (sounds[p]) chains[p].set(sounds[p]!.fx, a.tempo)
         const st0 = a.sections.map((_, i) => a.sections.slice(0, i).reduce((x, s) => x + s.bars, 0))
         const tot = a.sections.reduce((x, s) => x + s.bars, 0)
-        while (next < c.currentTime + 0.15) {
+        while (next < horizon(c)) {
           let bar = Math.floor(g / 16)
           let si = st0.findIndex((s0, i) => bar >= s0 && bar < s0 + a.sections[i].bars)
           // Looping a section: jump back to its start when it ends.
@@ -199,13 +200,13 @@ export function ArrangementMap() {
         while (queue.length > 64) queue.shift()
       }
       tick()
-      timer = window.setInterval(tick, 25)
+      timer = startClock(tick)
     }, (el) => {
       let b = -1
       for (const q of queue) if (q.at <= el) b = q.bar
       setPos(b)
     }, () => {
-      clearInterval(timer)
+      stopClock(timer)
       setPos(-1)
     })
   }

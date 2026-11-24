@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { horizon, startClock, stopClock } from "@/audio/clock"
 import { Download, Eraser, X } from "lucide-react"
 import { drum, KIND_OF, tone, type ToneOptions } from "@/audio/engine"
 import { toggle } from "@/audio/playback"
@@ -103,7 +104,7 @@ export function ProgressionBuilder() {
         const pat = PATTERNS.find((p) => p.id === s.pattern)
         const swing = (pat?.swing ?? 0) * sixteenth
         const local = browserSound()
-        while (next < c.currentTime + 0.15) {
+        while (next < horizon(c)) {
           const b = Math.floor(k / 16) % s.chords.length, i = k % 16, at = next + (i % 2 ? swing : 0), ps = (k % (pat?.length ?? 16)) + 1
           const v = vs[b], d = s.chords[b]
           if (pat) for (const [name, steps, ghost = []] of pat.rows) {
@@ -129,13 +130,13 @@ export function ProgressionBuilder() {
         while (queue.length > 16) queue.shift()
       }
       tick()
-      timer = window.setInterval(tick, 25)
+      timer = startClock(tick)
     }, (el) => {
       let cur = -1
       for (const q of queue) if (q.at <= el) cur = q.bar
       setBar(cur)
     }, () => {
-      clearInterval(timer)
+      stopClock(timer)
       setBar(-1)
     })
   }
