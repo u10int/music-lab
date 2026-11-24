@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { playNote } from "@/audio/engine"
+import { tapNote, useMidi } from "@/midi/midi"
 import { KeyPicker, useKey } from "@/components/key-picker"
 import { Block, Caption } from "@/components/page"
 import { PadGrid, PadLegend, type Pad, type PadTone } from "@/components/pad-grid"
@@ -23,6 +24,8 @@ export function PlayableGrid({ onNote }: { onNote?: (midi: number) => void }) {
   const [mode, setMode] = usePref<Mode>("note-mode", "key")
   const [rowsMode, setRowsMode] = usePref<Rows>("note-rows", "4ths")
   const [lit, setLit] = useState<number | null>(null)
+  const { held } = useMidi()
+  const heldPcs = held.map((n) => n % 12)
   const sc = SCALES.find((s) => s.id === scale) ?? SCALES[0], iv = sc.iv
   const names = spellScale(root, iv)
   const inKey = mode === "key", step = { "4ths": 3, "3rds": 2, seq: 8 }[inKey ? rowsMode : "4ths"]
@@ -49,10 +52,11 @@ export function PlayableGrid({ onNote }: { onNote?: (midi: number) => void }) {
       row.push({
         tone: (isRoot ? "root" : isIn ? "in" : "off") as PadTone,
         label,
-        active: lit === m,
+        active: lit === m || heldPcs.includes(m % 12),
         aria: noteName(m) + (isRoot ? ", root" : ""),
         onPress: () => {
           playNote(m)
+          tapNote(m)
           onNote?.(m)
           setLit(m)
           setTimeout(() => setLit((x) => (x === m ? null : x)), 180)

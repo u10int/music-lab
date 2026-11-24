@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { SPRINTS } from "@/data/sprints"
-import { countDone, currentWeek, fmtDay, sprintForWeek, startDate, TOTAL, update, useProgress, weekOf } from "@/lib/store"
+import { countDone, currentWeek, fmtDay, fmtMinutes, minutesThisWeek, sprintForWeek, startDate, streaks, TOTAL, update, useProgress, weekOf } from "@/lib/store"
 
 const DAY_SLOT: Record<number, ["mon" | "mid" | "fri" | "wknd", string]> = { 1: ["mon", "Monday"], 2: ["mid", "Tuesday to Thursday"], 3: ["mid", "Tuesday to Thursday"], 4: ["mid", "Tuesday to Thursday"], 5: ["fri", "Friday"], 6: ["wknd", "Weekend"], 0: ["wknd", "Weekend"] }
 
@@ -64,6 +64,7 @@ export function Dashboard() {
               <div className="flex justify-between"><span>Sprint {s.n} skills</span><span className="tabular-nums">{skillsDone} of {s.skills.length}</span></div>
               <Progress value={(skillsDone / s.skills.length) * 100} aria-label={`Sprint ${s.n} progress`} />
             </div>
+            <div className="flex justify-between"><span>Practice this week</span><Link to="/practice" className="tabular-nums underline">{fmtMinutes(minutesThisWeek(p))}{streaks(p).current > 1 ? ` · ${streaks(p).current}-day streak` : ""}</Link></div>
             <div className="flex justify-between"><span>Weeks with an export</span><Link to="/exports" className="tabular-nums underline">{shippedWeeks} of 12</Link></div>
           </CardContent>
         </Card>

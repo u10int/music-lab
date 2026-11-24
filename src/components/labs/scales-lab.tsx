@@ -8,6 +8,7 @@ import { Piano } from "@/components/piano"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
 import { usePref } from "@/lib/store"
+import { useMidi } from "@/midi/midi"
 import { chordMidi, theory, type Theory } from "@/lib/theory"
 import { cn } from "@/lib/utils"
 
@@ -61,6 +62,7 @@ export function ScalesLab() {
   const { root, scale } = useKey()
   const [layout, setLayout] = usePref<Layout>("layout", "key")
   const [chord, setChord] = useState(0)
+  const { held } = useMidi()
   const T = theory(root, scale), ch = T.chords[Math.min(chord, 6)]
   const keyName = T.names[0] + " " + T.sc.name.toLowerCase()
 
@@ -159,6 +161,7 @@ export function ScalesLab() {
             names={T.names}
             root={T.pc}
             chord={ch.pcs}
+            held={held}
             label={`Piano keyboard, two octaves from C. Scale notes: ${T.names.join(", ")}. Selected chord ${ch.name}: ${ch.notes.join(", ")}.`}
           />
         </div>

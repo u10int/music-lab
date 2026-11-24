@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
 import { Play } from "lucide-react"
-import { tone } from "@/audio/engine"
+import { tone, type ToneOptions } from "@/audio/engine"
 import { stop, toggle } from "@/audio/playback"
 import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
@@ -8,32 +8,117 @@ import { Seg } from "@/components/seg"
 import { Button } from "@/components/ui/button"
 import { INTERVALS, QUALS } from "@/data/labs"
 import { update, useProgress } from "@/lib/store"
+import { chordMidi, theory } from "@/lib/theory"
 import { cn } from "@/lib/utils"
 
-type Mode = "chords" | "intervals"
+type Mode = "chords" | "intervals" | "progressions" | "degrees" | "keys"
+const MODES: [Mode, string][] = [["chords", "Chord quality"], ["intervals", "Intervals"], ["progressions", "Progressions"], ["degrees", "Scale degrees"], ["keys", "Major or minor"]]
+const HELP: Record<Mode, string> = {
+  chords: "Each question plays a chord together, then one note at a time. Name its quality.",
+  intervals: "Two notes together, then one after the other. Name the distance between them.",
+  progressions: "Four chords in a random key. Pick the progression by its Roman numerals. Listen for where the bass goes and whether it ends at home.",
+  degrees: "A short I–IV–V–I sets the key, then one note plays. Which step of the major scale is it?",
+  keys: "A chord progression and a scale run. Does it sound major (bright) or minor (darker)?",
+}
+
+/** Progressions by scale degree (0 = I), used for the progression quiz. */
+const PROGS: { minor: boolean; d: number[] }[] = [
+  { minor: false, d: [0, 4, 5, 3] },
+  { minor: false, d: [0, 5, 3, 4] },
+  { minor: false, d: [5, 3, 0, 4] },
+  { minor: false, d: [0, 3, 4, 0] },
+  { minor: false, d: [1, 4, 0, 0] },
+  { minor: true, d: [0, 5, 2, 6] },
+  { minor: true, d: [0, 3, 4, 0] },
+  { minor: true, d: [0, 6, 5, 6] },
+  { minor: true, d: [0, 3, 6, 2] },
+]
+const DEGREES = ["1 (root)", "2", "3", "4", "5", "6", "7"]
+
+interface Question { a: number; base: number; root: number; options: string[]; extra?: number }
+
+const rnd = (n: number) => Math.floor(Math.random() * n)
+const shuffle = <T,>(xs: T[]) => xs.map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map((x) => x[1])
+
+function progLabel(i: number) {
+  const p = PROGS[i]
+  const T = theory(0, p.minor ? "minor" : "major")
+  return p.d.map((d) => T.chords[d].roman).join("–")
+}
+
+function makeQuestion(mode: Mode): Question {
+  const base = 55 + rnd(10), root = rnd(12)
+  if (mode === "chords") return { a: rnd(4), base, root, options: QUALS.map((q) => q[0]) }
+  if (mode === "intervals") return { a: rnd(12), base, root, options: INTERVALS }
+  if (mode === "degrees") return { a: rnd(7), base, root, options: DEGREES }
+  if (mode === "keys") return { a: rnd(2), base, root, options: ["Major", "Minor"], extra: rnd(2) }
+  // Progressions: the answer plus three others from the same mode, in random order.
+  const minor = Math.random() < 0.5
+  const pool = PROGS.map((p, i) => ({ p, i })).filter((x) => x.p.minor === minor).map((x) => x.i)
+  const answer = pool[rnd(pool.length)]
+  const picks = shuffle([answer, ...shuffle(pool.filter((i) => i !== answer)).slice(0, 3)])
+  return { a: picks.indexOf(answer), base, root, options: picks.map(progLabel), extra: answer }
+}
+
+const KEYS: ToneOptions = { wave: "triangle", env: { a: 0.01, d: 0.5, s: 0.5, r: 0.3 }, cutoff: 3000, level: 0.15 }
+const BASS: ToneOptions = { wave: "sine", env: { a: 0.01, d: 0.5, s: 0.7, r: 0.2 }, cutoff: 4000, level: 0.28 }
+
+function schedule(mode: Mode, q: Question) {
+  return (c: AudioContext, bus: AudioNode, t: number): number => {
+    if (mode === "chords" || mode === "intervals") {
+      const notes = mode === "chords" ? QUALS[q.a][1].map((x) => q.base + x) : [q.base, q.base + q.a + 1]
+      notes.forEach((n) => tone(c, bus, t, n, 0.9, KEYS))
+      notes.forEach((n, k) => tone(c, bus, t + 1.1 + k * 0.4, n, 0.35, KEYS))
+      return 1.1 + notes.length * 0.4 + 0.6
+    }
+    const chordsAt = (T: ReturnType<typeof theory>, degs: number[], start: number, len: number) =>
+      degs.forEach((d, k) => {
+        const m = chordMidi(T, T.chords[d])
+        m.notes.forEach((n) => tone(c, bus, start + k * len, n, len * 0.85, KEYS))
+        tone(c, bus, start + k * len, m.bass, len * 0.85, BASS)
+      })
+    if (mode === "progressions") {
+      const p = PROGS[q.extra!]
+      chordsAt(theory(q.root, p.minor ? "minor" : "major"), p.d, t, 1.0)
+      return 4.4
+    }
+    if (mode === "degrees") {
+      const T = theory(q.root, "major")
+      chordsAt(T, [0, 3, 4, 0], t, 0.55)
+      let n = 60 + T.pc + T.sc.iv[q.a]
+      if (n > 72) n -= 12
+      tone(c, bus, t + 2.8, n, 0.9, { ...KEYS, level: 0.22 })
+      return 4
+    }
+    // Major or minor: a progression, then the scale up and back to the root.
+    const minor = q.a === 1
+    const T = theory(q.root, minor ? "minor" : "major")
+    chordsAt(T, q.extra ? [0, 3, 4, 0] : minor ? [0, 5, 2, 6] : [0, 4, 5, 3], t, 0.8)
+    const run = [0, 1, 2, 3, 4, 5, 6, 7]
+    run.forEach((d, k) => {
+      const n = 60 + T.pc - (T.pc > 7 ? 12 : 0) + (d === 7 ? 12 : T.sc.iv[d])
+      tone(c, bus, t + 3.4 + k * 0.2, n, 0.18, { ...KEYS, level: 0.18 })
+    })
+    return 3.4 + 8 * 0.2 + 0.5
+  }
+}
 
 export function EarTraining() {
   const progress = useProgress()
   const [mode, setMode] = useState<Mode>("chords")
-  const [q, setQ] = useState<{ a: number; base: number } | null>(null)
+  const [q, setQ] = useState<Question | null>(null)
   const [picked, setPicked] = useState<number | null>(null)
   const nextRef = useRef<HTMLButtonElement>(null)
-  const opts = mode === "chords" ? QUALS.map((x) => x[0]) : INTERVALS
   const sc = progress.ear[mode] ?? { right: 0, total: 0 }
+  const opts = q?.options ?? (mode === "chords" ? QUALS.map((x) => x[0]) : mode === "intervals" ? INTERVALS : mode === "degrees" ? DEGREES : mode === "keys" ? ["Major", "Minor"] : [])
 
   const play = (question = q) => {
     if (!question) return
-    const { a, base } = question
-    toggle("ear", 2.6, (c, bus, t) => {
-      const o = { wave: "triangle" as const, env: { a: 0.01, d: 0.5, s: 0.5, r: 0.3 }, cutoff: 3000, level: 0.16 }
-      const notes = mode === "chords" ? QUALS[a][1].map((x) => base + x) : [base, base + a + 1]
-      notes.forEach((n) => tone(c, bus, t, n, 0.9, o))
-      notes.forEach((n, k) => tone(c, bus, t + 1.1 + k * 0.4, n, 0.35, o))
-    })
+    toggle("ear", 6, schedule(mode, question))
   }
   const next = () => {
     stop()
-    const nq = { a: Math.floor(Math.random() * (mode === "chords" ? 4 : 12)), base: 55 + Math.floor(Math.random() * 10) }
+    const nq = makeQuestion(mode)
     setQ(nq)
     setPicked(null)
     play(nq)
@@ -48,27 +133,26 @@ export function EarTraining() {
     })
     requestAnimationFrame(() => nextRef.current?.focus())
   }
+  const many = opts.length > 4
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Caption>Each question plays the notes together, then one at a time. Name what you hear.</Caption>
-        <Seg label="Quiz type" value={mode} onChange={(m) => { stop(); setMode(m); setQ(null); setPicked(null) }} options={[["chords", "Chord quality"], ["intervals", "Intervals"]]} />
-      </div>
+      <Seg label="Quiz type" value={mode} onChange={(m) => { stop(); setMode(m); setQ(null); setPicked(null) }} options={MODES} />
+      <Caption>{HELP[mode]}</Caption>
       <div className="flex flex-wrap items-center gap-2">
         {q ? <PlayButton id="ear" label="Play again" onPlay={() => play()} /> : <Button variant="outline" size="sm" onClick={next}><Play className="size-3 fill-current" />Start</Button>}
         {q && picked !== null && <Button ref={nextRef} variant="outline" size="sm" onClick={next}>Next question</Button>}
         <span className="text-muted-foreground text-sm tabular-nums">{sc.total ? `${sc.right} of ${sc.total} right` : "No answers yet"}</span>
       </div>
-      <div className={cn("grid gap-2", mode === "chords" ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-4 lg:grid-cols-6")}>
+      <div className={cn("grid gap-2", many ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-6" : opts.length === 2 ? "max-w-sm grid-cols-2" : "grid-cols-2 sm:grid-cols-4")}>
         {opts.map((o, i) => {
           const st = q && picked !== null ? (i === q.a ? "correct" : i === picked ? "wrong" : "") : ""
           return (
             <Button
-              key={o}
+              key={i}
               variant="outline"
               disabled={!q || picked !== null}
               onClick={() => answer(i)}
-              className={cn("disabled:opacity-100", st === "correct" && "border-transparent bg-[var(--s3)] text-[var(--on-accent)]", st === "wrong" && "border-destructive text-destructive line-through", !st && picked !== null && "opacity-50")}
+              className={cn("h-auto min-h-9 whitespace-normal py-2 disabled:opacity-100", st === "correct" && "border-transparent bg-[var(--s3)] text-[var(--on-accent)]", st === "wrong" && "border-destructive text-destructive line-through", !st && picked !== null && "opacity-50")}
             >
               {o}
               {st === "correct" && <span className="sr-only"> (answer)</span>}
@@ -78,7 +162,7 @@ export function EarTraining() {
         })}
       </div>
       <p className="text-sm" role="status">
-        {q && picked !== null && (picked === q.a ? `Right, that was ${opts[q.a].toLowerCase()}.` : `Not quite. You picked ${opts[picked].toLowerCase()}, and it was ${opts[q.a].toLowerCase()}. Play it again to compare.`)}
+        {q && picked !== null && (picked === q.a ? `Right, that was ${opts[q.a]}.` : `Not quite. You picked ${opts[picked]}, and it was ${opts[q.a]}. Play it again to compare.`)}
       </p>
     </div>
   )

@@ -4,6 +4,7 @@ import { SPRINTS } from "@/data/sprints"
 /** Same shape as the original Push Sprint Tracker, so its JSON imports directly. */
 export interface RefTrack { id: string; track: string; borrow: string; url: string }
 export interface ExportEntry { id: string; date: string; note: string }
+export interface Session { id: string; date: string; minutes: number; focus: string; note: string }
 export interface Progress {
   start: string
   done: Record<string, boolean>
@@ -14,6 +15,7 @@ export interface Progress {
   exports: ExportEntry[]
   ear: Record<string, { right: number; total: number }>
   push: "p3" | "p2"
+  sessions: Session[]
 }
 
 const KEY = "music-lab-progress-v1"
@@ -25,7 +27,7 @@ function nextMonday() {
   d.setDate(d.getDate() + ((8 - d.getDay()) % 7))
   return isoDate(d)
 }
-const blank = (): Progress => ({ start: nextMonday(), done: {}, shipped: {}, log: {}, genre: "all", refs: {}, exports: [], ear: {}, push: "p3" })
+const blank = (): Progress => ({ start: nextMonday(), done: {}, shipped: {}, log: {}, genre: "all", refs: {}, exports: [], ear: {}, push: "p3", sessions: [] })
 
 function load(): Progress {
   try {
@@ -152,3 +154,45 @@ function readPref<T>(k: string, initial: T): T {
   prefCache.set(k, v)
   return v
 }
+
+/* ---------- Practice stats ---------- */
+export const isoOf = (d: Date) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0")
+export function minutesByDay(p: Progress) {
+  const m = new Map<string, number>()
+  for (const s of p.sessions) m.set(s.date, (m.get(s.date) ?? 0) + s.minutes)
+  return m
+}
+/** Consecutive days with practice, ending today (or yesterday, so the streak isn't lost before you practice today). */
+export function streaks(p: Progress) {
+  const days = minutesByDay(p)
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  if (!days.has(isoOf(d))) d.setDate(d.getDate() - 1)
+  let current = 0
+  while (days.has(isoOf(d))) {
+    current++
+    d.setDate(d.getDate() - 1)
+  }
+  const sorted = [...days.keys()].sort()
+  let longest = 0, run = 0, prev: Date | null = null
+  for (const iso of sorted) {
+    const x = new Date(iso + "T00:00:00")
+    run = prev && Math.round((x.getTime() - prev.getTime()) / 86400000) === 1 ? run + 1 : 1
+    longest = Math.max(longest, run)
+    prev = x
+  }
+  return { current, longest }
+}
+/** Monday of the week containing `d`. */
+export function mondayOf(d: Date) {
+  const x = new Date(d)
+  x.setHours(0, 0, 0, 0)
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7))
+  return x
+}
+export function minutesThisWeek(p: Progress) {
+  const start = isoOf(mondayOf(new Date()))
+  return p.sessions.filter((s) => s.date >= start && s.date <= todayISO()).reduce((a, s) => a + s.minutes, 0)
+}
+export const WEEKLY_GOAL_MIN = 9 * 60
+export const fmtMinutes = (m: number) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)} hr${m % 60 ? ` ${m % 60} min` : ""}`)

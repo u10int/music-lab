@@ -18,11 +18,14 @@ const SoundDesignLab = lazy(() => labs().then((m) => ({ default: m.SoundDesignLa
 const DrumsLab = lazy(() => labs().then((m) => ({ default: m.DrumsLab })))
 const ArrangementLab = lazy(() => labs().then((m) => ({ default: m.ArrangementLab })))
 const MixingLab = lazy(() => labs().then((m) => ({ default: m.MixingLab })))
+const SequencerLab = lazy(() => labs().then((m) => ({ default: m.SequencerLab })))
 
 const SprintPage = lazy(() => import("@/pages/sprint").then((m) => ({ default: m.SprintPage })))
 const ExportsPage = lazy(() => import("@/pages/exports").then((m) => ({ default: m.ExportsPage })))
 const PlanPage = lazy(() => import("@/pages/plan").then((m) => ({ default: m.PlanPage })))
 const SettingsPage = lazy(() => import("@/pages/settings").then((m) => ({ default: m.SettingsPage })))
+const PlayAlongPage = lazy(() => import("@/pages/play-along").then((m) => ({ default: m.PlayAlongPage })))
+const PracticePage = lazy(() => import("@/pages/practice").then((m) => ({ default: m.PracticePage })))
 function Layout() {
   useTheme()
   const { pathname } = useLocation()
@@ -61,13 +64,16 @@ const router = createBrowserRouter([
       { path: "/", element: <Dashboard /> },
       { path: "/sprints/:n", element: <SprintPage /> },
       { path: "/exports", element: <ExportsPage /> },
+      { path: "/practice", element: <PracticePage /> },
       { path: "/plan", element: <PlanPage /> },
       { path: "/labs/theory", element: <TheoryLab /> },
       { path: "/labs/ear", element: <EarLab /> },
+      { path: "/labs/play-along", element: <PlayAlongPage /> },
       { path: "/labs/sound-design", element: <SoundDesignLab /> },
       { path: "/labs/drums", element: <DrumsLab /> },
       { path: "/labs/arrangement", element: <ArrangementLab /> },
       { path: "/labs/mixing", element: <MixingLab /> },
+      { path: "/labs/sequencer", element: <SequencerLab /> },
       { path: "/instruments", element: <InstrumentsPage /> },
       { path: "/push", element: <PushPage /> },
       { path: "/settings", element: <SettingsPage /> },

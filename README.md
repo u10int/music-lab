@@ -22,6 +22,8 @@ npm run lint
 | --- | --- |
 | `src/data/` | All content as typed data: sprints, resources, patterns, scales, recipes, effects, glossary, Push guide. Add content here, not in components. |
 | `src/audio/` | `engine.ts` (tone, drum, shared context), `playback.ts` (one sound at a time, `usePlayingId`), `previews.ts` (recipe sketches). |
+| `src/midi/midi.ts` | Web MIDI input: connect, held notes, note listeners (`useMidi`, `onNote`). |
+| `src/lib/midi-file.ts` | Writes Standard MIDI Files for the sequencer's export. |
 | `src/lib/store.ts` | Progress saved to `localStorage`, with import and export. `usePref` keeps small per-browser settings like the selected key. |
 | `src/lib/theory.ts` | Scale spelling, diatonic chords, progressions. |
 | `src/components/` | Shared pieces: `PadGrid`, `Piano`, `PlayButton`, `Seg`, diagrams, and `ui/` for shadcn components. |
@@ -50,8 +52,5 @@ It's a static single-page app. Any static host works; the build output is `dist/
 
 ## Ideas for next
 
-- Web MIDI input so a connected Push or keyboard plays the grids and checks scale and chord drills
-- A step sequencer that exports MIDI to drag into Live
-- More ear training: progressions and scale degrees
-- A practice log with streaks and time per skill
-- Sync across devices
+- Sync across devices (needs a backend with sign-in)
+- Reference song analyzer: notes and chords from a stem in the browser with Basic Pitch

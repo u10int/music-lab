@@ -6,6 +6,7 @@ import { FrequencyMap, SidechainLab } from "@/components/labs/mix-lab"
 import { ScalesLab } from "@/components/labs/scales-lab"
 import { SliceLab } from "@/components/labs/slice-lab"
 import { SynthLab } from "@/components/labs/synth-lab"
+import { Sequencer } from "@/components/labs/sequencer"
 import { Block, PageHeader } from "@/components/page"
 import { DrumLayouts, NoteRepeat } from "@/components/push/drum-layouts"
 import { PlayableGrid } from "@/components/push/notes-lab"
@@ -72,6 +73,15 @@ export function MixingLab() {
       <Block title="Where each part sits"><FrequencyMap /></Block>
       <Block title="Sidechain: the kick ducks the bass"><SidechainLab /></Block>
       <More to="/instruments?tab=effects">the effects guide</More>
+    </div>
+  )
+}
+
+export function SequencerLab() {
+  return (
+    <div className="space-y-10">
+      <PageHeader title="Step sequencer">Program a one-bar drum loop and a melody in your key, hear them loop, then export each as a MIDI file to drag into a Live clip.</PageHeader>
+      <Sequencer />
     </div>
   )
 }

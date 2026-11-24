@@ -4,7 +4,8 @@ const WHITES = [0, 2, 4, 5, 7, 9, 11]
 const BLACKS: [number, number][] = [[1, 0], [3, 1], [6, 3], [8, 4], [10, 5]]
 
 /** Two octaves from C. Highlights scale notes, the root and a chord. Keys play when `onPlay` is set. */
-export function Piano({ scale, names, root, chord = [], label, onPlay }: { scale: number[]; names: string[]; root: number; chord?: number[]; label: string; onPlay?: (midi: number) => void }) {
+export function Piano({ scale, names, root, chord = [], held = [], label, onPlay }: { scale: number[]; names: string[]; root: number; chord?: number[]; held?: number[]; label: string; onPlay?: (midi: number) => void }) {
+  const heldPcs = held.map((n) => n % 12)
   const lab = (pc: number) => {
     const i = scale.indexOf(pc)
     return i === -1 ? "" : names[i]
@@ -18,6 +19,7 @@ export function Piano({ scale, names, root, chord = [], label, onPlay }: { scale
         : "min-w-0 flex-1 rounded-b-[4px] border border-l-0 border-pad-edge bg-card first:border-l",
       isRoot && !hit && (black ? "bg-[color-mix(in_oklab,var(--s4)_70%,var(--key-black))]" : "bg-[color-mix(in_oklab,var(--s4)_28%,var(--card))]"),
       hit && "bg-[var(--c,var(--s5))] text-[var(--on-accent)] font-semibold",
+      heldPcs.includes(pc) && "bg-[var(--s5)] text-white font-semibold",
       onPlay && "cursor-pointer",
     )
     const props = { key: `${o}-${pc}`, className: cls, style: left !== undefined ? { left: `${left}%` } : undefined }
