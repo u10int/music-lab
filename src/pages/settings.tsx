@@ -61,7 +61,7 @@ export function SettingsPage() {
     URL.revokeObjectURL(a.href)
   }
   return (
-    <div className="max-w-3xl space-y-12">
+    <div className="max-w-3xl space-y-10">
       <PageHeader title="Settings and data">Theme, your account, and backups of your progress as a file.</PageHeader>
       <AccountBlock />
       <Block title="Appearance">

@@ -110,7 +110,7 @@ export function RequireAccount({ children, what }: { children: React.ReactNode; 
   return (
     <div className="mx-auto max-w-md space-y-6 py-10">
       <div className="space-y-2">
-        <h1 className="font-display text-3xl font-bold">Sign in to see {what}</h1>
+        <h1 className="text-3xl leading-tight font-extrabold tracking-tight">Sign in to see {what}</h1>
         <p className="text-muted-foreground text-pretty">Sprints, practice logs, flashcards and reviews are saved to your account, so they’re private to you and follow you between devices.</p>
       </div>
       <div className="rounded-xl border bg-card p-5"><SignInPanel idPrefix="gate" /></div>

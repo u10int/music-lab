@@ -76,7 +76,7 @@ export function PracticePage() {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       <PageHeader title="Practice log">Log each session, or run the timer while you practice. Streaks count days in a row with any practice.</PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -106,7 +106,7 @@ export function PracticePage() {
             </Select>
           </div>
           <div className="grid gap-1.5"><Label htmlFor="pr-note">Note (optional)</Label><Input id="pr-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Swung hats at 58%, finally clicked" autoComplete="off" className="text-base sm:text-sm" /></div>
-          <Button type="submit" variant="outline" className="sm:mt-[22px]">Log session</Button>
+          <Button type="submit" className="sm:mt-[22px]">Log session</Button>
         </form>
       </Block>
 

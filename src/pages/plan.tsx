@@ -6,7 +6,7 @@ const ext = { target: "_blank", rel: "noopener", className: "underline" }
 
 export function PlanPage() {
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       <PageHeader title="How the plan works">How the 12 weeks work, and what to leave alone until they're done.</PageHeader>
       <Block title="Rules">
         <TermGrid items={[

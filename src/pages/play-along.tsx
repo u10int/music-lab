@@ -32,7 +32,7 @@ function Readout() {
   const sub = !sorted.length ? "Hold notes to see what they are." : chord ? `${chord.quality[0].toUpperCase() + chord.quality.slice(1)}${chord.inversion ? ", inverted" : ""} · ${sorted.map(noteName).join(" ")}` : sorted.map(noteName).join(" ")
   return (
     <div className="space-y-1" aria-live="polite">
-      <p className="font-display text-4xl font-extrabold tabular-nums">{text}</p>
+      <p className={cn("font-display text-4xl font-extrabold tabular-nums", !sorted.length && "text-muted-foreground/60")}>{text}</p>
       <p className="text-muted-foreground text-sm">{sub}</p>
     </div>
   )
@@ -115,7 +115,7 @@ export function PlayAlongPage() {
   const m = useMidi()
   const [drill, setDrill] = useState<Drill>("scale")
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       <PageHeader title="Play along">Connect your Push or a MIDI keyboard and the app shows what you play: note names, the chord you're holding, and where it sits on the grid. Then run the drills.</PageHeader>
 
       <Block title="Your controller">

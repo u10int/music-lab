@@ -4,7 +4,7 @@ import { tone, type ToneOptions } from "@/audio/engine"
 import { stop, toggle } from "@/audio/playback"
 import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
-import { Seg } from "@/components/seg"
+import { TabSwitch } from "@/components/seg"
 import { Button } from "@/components/ui/button"
 import { INTERVALS, QUALS } from "@/data/labs"
 import { recordEar, update, useProgress, usePref } from "@/lib/store"
@@ -145,12 +145,12 @@ export function EarTraining() {
   const many = opts.length > 4
   return (
     <div className="space-y-4">
-      <Seg label="Quiz type" value={mode} onChange={(m) => { stop(); setMode(m); setQ(null); setPicked(null) }} options={MODES} />
+      <TabSwitch label="Quiz type" value={mode} onChange={(m) => { stop(); setMode(m); setQ(null); setPicked(null) }} options={MODES} />
       <Caption>{HELP[mode]}</Caption>
       <WeakSpots detail={progress.earDetail?.[mode]} focus={focus} setFocus={setFocus} id="ear-focus" />
       <div className="flex flex-wrap items-center gap-2">
-        {q ? <PlayButton id="ear" label="Play again" onPlay={() => play()} /> : <Button variant="outline" size="sm" onClick={next}><Play className="size-3 fill-current" />Start</Button>}
-        {q && picked !== null && <Button ref={nextRef} variant="outline" size="sm" onClick={next}>Next question</Button>}
+        {q ? <PlayButton id="ear" label="Play again" onPlay={() => play()} /> : <Button onClick={next}><Play className="size-3.5 fill-current" />Start</Button>}
+        {q && picked !== null && <Button ref={nextRef} onClick={next}>Next question</Button>}
         <span className="text-muted-foreground text-sm tabular-nums">{sc.total ? `${sc.right} of ${sc.total} right` : "No answers yet"}</span>
       </div>
       <div className={cn("grid gap-2", many ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-6" : opts.length === 2 ? "max-w-sm grid-cols-2" : "grid-cols-2 sm:grid-cols-4")}>

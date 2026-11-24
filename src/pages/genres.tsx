@@ -68,7 +68,7 @@ export function GenrePage() {
     navigate("/planner")
   }
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       <div className="space-y-3">
         <Link to="/genres" className="text-muted-foreground inline-flex items-center gap-1 text-sm hover:underline"><ArrowLeft className="size-4" />All genres</Link>
         <PageHeader

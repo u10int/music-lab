@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Search } from "lucide-react"
 import { toggle } from "@/audio/playback"
 import { PREVIEW } from "@/audio/previews"
-import { Caption } from "@/components/page"
+import { Caption, SECTION_TITLE } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
 import { Button } from "@/components/ui/button"
@@ -69,12 +69,12 @@ export function Sounds({ initialQuery = "" }: { initialQuery?: string }) {
   return (
     <div className="space-y-10">
       <section className="space-y-3">
-        <h2 className="font-sans text-base font-semibold">Which instrument?</h2>
+        <h2 className={SECTION_TITLE}>Which instrument?</h2>
         <PickTable rows={PICK.map(([w, id]) => [w, <InstLink key={id} id={id} />])} />
       </section>
       <section className="space-y-4" id="find">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-sans text-base font-semibold">Find a sound</h2>
+          <h2 className={SECTION_TITLE}>Find a sound</h2>
           <span className="text-muted-foreground text-sm tabular-nums" aria-live="polite">{list.length} of {RECIPES.length} sounds</span>
         </div>
         <div className="flex flex-wrap items-end gap-3">

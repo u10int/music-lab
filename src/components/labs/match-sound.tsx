@@ -112,7 +112,7 @@ export function MatchSound() {
       </div>
       <Caption>A sound plays with some knobs set to secret values. Play the target, turn the knobs until yours sounds the same, then check. 80 points or more counts as a match.</Caption>
       {!r ? (
-        <Button variant="outline" size="sm" onClick={start}><Play className="size-3 fill-current" />Start a round</Button>
+        <Button onClick={start}><Play className="size-3.5 fill-current" />Start a round</Button>
       ) : (
         <div className="space-y-5 rounded-xl border bg-card p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -149,7 +149,7 @@ export function MatchSound() {
             })}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            {checked === null ? <Button size="sm" onClick={check}>Check</Button> : <Button size="sm" variant="outline" onClick={start}>Next round</Button>}
+            {checked === null ? <Button onClick={check}>Check</Button> : <Button onClick={start}>Next round</Button>}
             <p role="status" className={cn("text-sm", checked !== null && "font-medium")}>
               {checked !== null && (checked >= 80 ? `${checked} points. That’s a match.` : `${checked} points. The green marks show the targets; play both again to hear the difference.`)}
             </p>

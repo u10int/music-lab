@@ -47,7 +47,7 @@ export function ExportsPage() {
           <Label htmlFor="exp-note">What you exported</Label>
           <Input ref={noteRef} id="exp-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="8-bar loop with swung hats, 30 seconds" autoComplete="off" className="text-base sm:text-sm" />
         </div>
-        <Button type="submit" variant="outline" className="sm:mt-[22px]">Log export</Button>
+        <Button type="submit" className="sm:mt-[22px]">Log export</Button>
       </form>
       {undo && (
         <p className="text-sm" role="status">

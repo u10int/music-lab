@@ -4,7 +4,7 @@ import { Download, Eraser, X } from "lucide-react"
 import { drum, KIND_OF, tone, type ToneOptions } from "@/audio/engine"
 import { toggle } from "@/audio/playback"
 import { KeyPicker, useKey } from "@/components/key-picker"
-import { Caption } from "@/components/page"
+import { Caption, SECTION_TITLE } from "@/components/page"
 import { Piano } from "@/components/piano"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
@@ -182,19 +182,17 @@ export function ProgressionBuilder() {
           </Select>
         </Field>
       </Toolbar>
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="grid gap-1.5">
-          <Label htmlFor="pb-preset">Start from</Label>
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="space-y-1">
+            <h2 className={SECTION_TITLE}>Chords in {T.names[0]} {T.sc.name.toLowerCase()}</h2>
+            <Caption>Tap to add a chord as the next bar, up to eight, or start from a common progression.</Caption>
+          </div>
           <Select value="" onValueChange={(v) => set({ chords: v.split(",").map(Number) })}>
-            <SelectTrigger id="pb-preset" size="sm" className="w-44"><SelectValue placeholder="A progression" /></SelectTrigger>
+            <SelectTrigger size="sm" className="w-56" aria-label="Start from a progression"><SelectValue placeholder="Start from a progression" /></SelectTrigger>
             <SelectContent>{T.progs.map((p) => <SelectItem key={p.join()} value={p.join()}>{p.map((d) => T.chords[d].roman).join("–")}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <h3 className="font-semibold">Chords in {T.names[0]} {T.sc.name.toLowerCase()}</h3>
-        <Caption>Tap to add a chord as the next bar, up to eight.</Caption>
         <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
           {T.chords.map((_, d) => {
             const c = chordName(T, d, st.sevenths)
@@ -210,7 +208,7 @@ export function ProgressionBuilder() {
 
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-semibold">Your progression</h3>
+          <h2 className={SECTION_TITLE}>Your progression</h2>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" disabled={!st.chords.length} onClick={() => set({ chords: [] })}><Eraser />Clear</Button>
           </div>
@@ -249,7 +247,7 @@ export function ProgressionBuilder() {
       )}
 
       <div className="space-y-3 border-t pt-6">
-        <h3 className="font-semibold">Play it on your instruments in Live</h3>
+        <h2 className={SECTION_TITLE}>Play it on your instruments in Live</h2>
         <MidiOutPicker idPrefix="pb" channels={<>Bass goes out on channel 2, chords on 3 and drums on 10. Make a MIDI track for each and set its input channel to match.</>} />
       </div>
     </div>

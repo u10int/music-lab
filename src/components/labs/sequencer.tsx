@@ -4,7 +4,7 @@ import { Download, Eraser } from "lucide-react"
 import { audio, drum, KIND_OF, masterBus, tone, type DrumKind } from "@/audio/engine"
 import { toggle, usePlayingId } from "@/audio/playback"
 import { KeyPicker, useKey } from "@/components/key-picker"
-import { Caption } from "@/components/page"
+import { Caption, SECTION_TITLE } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
 import { Button } from "@/components/ui/button"
@@ -162,6 +162,7 @@ export function Sequencer() {
       <Toolbar
         transport={<PlayButton id="seq" label="Play loop" primary onPlay={play} />}
         actions={<>
+          <Button variant="ghost" size="sm" className="mr-auto" onClick={() => setSeq({ ...empty(), tempo: seq.tempo, swing: seq.swing, sound: seq.sound })}><Eraser />Clear</Button>
           <Button variant="outline" size="sm" onClick={() => exportMidi("drums")}><Download />Export drums</Button>
           <Button variant="outline" size="sm" onClick={() => exportMidi("melody")}><Download />Export melody</Button>
         </>}
@@ -193,15 +194,12 @@ export function Sequencer() {
             </SelectContent>
           </Select>
         </Field>
-        <Field>
-          <Button variant="ghost" size="sm" onClick={() => setSeq({ ...empty(), tempo: seq.tempo, swing: seq.swing, sound: seq.sound })}><Eraser />Clear</Button>
-        </Field>
       </Toolbar>
       {playing && <Caption>Edits play on the next pass, so you can build the loop while it runs.</Caption>}
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-semibold">Drums</h3>
+          <h2 className={SECTION_TITLE}>Drums</h2>
 
         </div>
         <div className="overflow-x-auto">
@@ -226,7 +224,7 @@ export function Sequencer() {
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h3 className="font-semibold">Melody</h3>
+          <h2 className={SECTION_TITLE}>Melody</h2>
           <div className="flex flex-wrap items-end gap-3">
             <KeyPicker idPrefix="sq" />
             <Seg label="Sound" value={seq.sound} onChange={(v) => setSeq({ ...seq, sound: v })} options={[["pluck", "Pluck"], ["bass", "Bass"], ["lead", "Lead"]]} />
@@ -253,7 +251,7 @@ export function Sequencer() {
       </section>
 
       <section className="space-y-3">
-        <h3 className="font-semibold">Play it on your instruments in Live</h3>
+        <h2 className={SECTION_TITLE}>Play it on your instruments in Live</h2>
         <MidiOutPicker idPrefix="sq" channels={<>The melody goes out on channel 1 and drums on channel 10, using Drum Rack pad notes. Make a MIDI track for each and set its input channel to match.</>} />
       </section>
     </div>

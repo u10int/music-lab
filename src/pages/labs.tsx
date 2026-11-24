@@ -56,7 +56,7 @@ export function EarLab() {
 
 export function SoundDesignLab() {
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       <PageHeader title="Sound design">Signature sounds from each genre you can play and tweak, a game to train your ear for synth controls, and a small synth with the same oscillator, filter and envelope as Drift to learn how the controls work.</PageHeader>
       <Block title="Genre sounds" description={`${GENRE_SOUNDS.length} sounds across ${new Set(GENRE_SOUNDS.map((x) => x.family)).size} genres, from wave, phonk and hardwave to ODESZA-style, trance, dub techno and ambient.`}><GenreSounds /></Block>
       <Block title="Match the sound" description="Hear a sound, then find the knob settings that made it. The fastest way to learn what each control does."><MatchSound /></Block>
@@ -68,7 +68,7 @@ export function SoundDesignLab() {
 
 export function DrumsLab() {
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       <PageHeader title="Drums and sampling">Drum patterns from house to drum and bass, the Push drum layouts, and how Simpler slices a loop onto pads.</PageHeader>
       <Block title="Drum pattern library" description={`${PATTERNS.length} patterns across ${new Set(PATTERNS.map((x) => x.family)).size} genres, one or two bars of 16ths each. Play one, then program it on Push or load it into the step sequencer.`}><DrumPatterns /></Block>
       <DrumLayouts />
@@ -90,7 +90,7 @@ export function ArrangementLab() {
 
 export function MixingLab() {
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       <PageHeader title="Mixing">Where each part sits in the frequency range, and what sidechain ducking does to the bass.</PageHeader>
       <Block title="Where each part sits"><FrequencyMap /></Block>
       <Block title="Sidechain: the kick ducks the bass"><SidechainLab /></Block>

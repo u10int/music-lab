@@ -4,7 +4,7 @@ import { audio, drum, tone, type ToneOptions } from "@/audio/engine"
 import { stop, toggle } from "@/audio/playback"
 import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
-import { Seg } from "@/components/seg"
+import { Seg, TabSwitch } from "@/components/seg"
 import { Button } from "@/components/ui/button"
 import { recordEar, update, useProgress, usePref } from "@/lib/store"
 import { weightedPick } from "@/lib/adaptive"
@@ -190,7 +190,7 @@ export function MixEar() {
 
   return (
     <div className="space-y-4">
-      <Seg label="Drill" value={mode} onChange={(m) => reset(() => setMode(m))} options={MODES} />
+      <TabSwitch label="Drill" value={mode} onChange={(m) => reset(() => setMode(m))} options={MODES} />
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <Seg label="Sound" value={source} onChange={(s) => reset(() => setSource(s))} options={[["music", "A loop"], ["noise", "Pink noise"]]} />
         {mode === "eq" && <Seg label="Bands" value={level} onChange={(l) => reset(() => setLevel(l))} options={[["4", "4 bands"], ["7", "7 bands"], ["10", "10 bands"]]} />}
@@ -199,12 +199,12 @@ export function MixEar() {
       {mode === "eq" && <WeakSpots detail={progress.earDetail?.[key]} focus={focus} setFocus={setFocus} id="mix-focus" />}
       <div className="flex flex-wrap items-center gap-2">
         {!q ? (
-          <Button variant="outline" size="sm" disabled={busy} onClick={() => void next()}><Play className="size-3 fill-current" />{busy ? "Preparing…" : "Start"}</Button>
+          <Button disabled={busy} onClick={() => void next()}><Play className="size-3.5 fill-current" />{busy ? "Preparing…" : "Start"}</Button>
         ) : (
           <>
             <PlayButton id="mix-a" label={mode === "eq" ? "Play flat" : "Play A"} onPlay={() => playBuffers("mix-a", [q.a])} />
             <PlayButton id="mix-b" label={mode === "eq" ? "Play boosted" : "Play B"} onPlay={() => playBuffers("mix-b", [q.b])} />
-            {picked !== null && <Button ref={nextRef} variant="outline" size="sm" disabled={busy} onClick={() => void next()}>{busy ? "Preparing…" : "Next question"}</Button>}
+            {picked !== null && <Button ref={nextRef} disabled={busy} onClick={() => void next()}>{busy ? "Preparing…" : "Next question"}</Button>}
           </>
         )}
         <span className="text-muted-foreground text-sm tabular-nums">{sc.total ? `${sc.right} of ${sc.total} right` : "No answers yet"}</span>

@@ -42,7 +42,7 @@ export function SprintPage() {
   const isNow = cur.week === w1 || cur.week === w1 + 1
 
   return (
-    <div className="space-y-12" style={{ ["--c" as string]: `var(${s.c})` }}>
+    <div className="space-y-10" style={{ ["--c" as string]: `var(${s.c})` }}>
       <header className="space-y-2">
         <p className="text-muted-foreground text-sm">Weeks {w1}–{w1 + 1}, {fmtDay.format(weekStart(p, w1))} to {fmtDay.format(end)}{isNow ? " · Current sprint" : ""}</p>
         <h1 className="flex items-center gap-3 text-3xl font-extrabold"><span aria-hidden="true" className="size-3 rounded-full bg-[var(--c)]" />Sprint {s.n}: {s.title}</h1>
@@ -54,11 +54,11 @@ export function SprintPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardContent className="space-y-4">
-            <div className="space-y-1"><h2 className="font-sans text-base font-semibold">Done when</h2><p className="text-pretty">{s.done}</p></div>
-            <div className="space-y-1"><h2 className="font-sans text-base font-semibold">When to use the mouse</h2><p className="text-pretty">{s.mouse}</p></div>
+            <div className="space-y-1"><h2 className="font-sans text-base font-semibold tracking-normal">Done when</h2><p className="text-pretty">{s.done}</p></div>
+            <div className="space-y-1"><h2 className="font-sans text-base font-semibold tracking-normal">When to use the mouse</h2><p className="text-pretty">{s.mouse}</p></div>
             <Separator />
             <div className="flex items-center justify-between gap-3">
-              <h2 className="font-sans text-base font-semibold">Deliverable</h2>
+              <h2 className="font-sans text-base font-semibold tracking-normal">Deliverable</h2>
               <Label className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                 <Checkbox checked={!!p.shipped[s.id]} onCheckedChange={(v) => update((d) => { d.shipped[s.id] = v === true })} />Shipped
               </Label>

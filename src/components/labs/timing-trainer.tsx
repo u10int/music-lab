@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { horizon, startClock, stopClock } from "@/audio/clock"
 import { audio } from "@/audio/engine"
 import { stop, toggle, usePlayingId } from "@/audio/playback"
-import { Caption } from "@/components/page"
+import { Caption, SECTION_TITLE } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
 import { Button } from "@/components/ui/button"
@@ -151,7 +151,7 @@ export function TimingTrainer() {
       </div>
 
       <div className="space-y-1.5 text-sm">
-        <h3 className="font-semibold">What good looks like</h3>
+        <h2 className={SECTION_TITLE}>What good looks like</h2>
         <p className="text-pretty">A spread under ±15 ms feels tight; most players start around ±30. Work at a slow tempo until 80% of hits land within 20 ms, then go up 5 BPM. 16ths at 100 BPM is the same speed as Note Repeat hats at 1/16 in a 100 BPM track.</p>
       </div>
     </div>

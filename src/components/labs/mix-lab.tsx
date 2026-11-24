@@ -2,7 +2,7 @@ import { useState } from "react"
 import { drum, tone } from "@/audio/engine"
 import { toggle } from "@/audio/playback"
 import { useKey } from "@/components/key-picker"
-import { Caption } from "@/components/page"
+import { Caption, SECTION_TITLE } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
@@ -103,8 +103,8 @@ export function SidechainLab() {
 export function MixLab() {
   return (
     <div className="space-y-8">
-      <div className="space-y-3"><h3 className="font-semibold">Where each part sits</h3><FrequencyMap /></div>
-      <div className="space-y-3"><h3 className="font-semibold">Sidechain: the kick ducks the bass</h3><SidechainLab /></div>
+      <div className="space-y-3"><h2 className={SECTION_TITLE}>Where each part sits</h2><FrequencyMap /></div>
+      <div className="space-y-3"><h2 className={SECTION_TITLE}>Sidechain: the kick ducks the bass</h2><SidechainLab /></div>
     </div>
   )
 }

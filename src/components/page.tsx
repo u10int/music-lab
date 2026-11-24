@@ -1,11 +1,14 @@
 import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 
+/** Section heading style shared by Block and tools that lay out their own sections. */
+export const SECTION_TITLE = "font-sans text-lg font-semibold tracking-tight"
+
 export function PageHeader({ title, children, actions }: { title: string; children?: ReactNode; actions?: ReactNode }) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-4 pb-2">
       <div className="max-w-2xl space-y-1.5">
-        <h1 className="text-3xl font-extrabold leading-tight">{title}</h1>
+        <h1 className="text-3xl leading-tight font-extrabold tracking-tight">{title}</h1>
         {children && <div className="text-muted-foreground text-pretty">{children}</div>}
       </div>
       {actions}
@@ -20,7 +23,7 @@ export function Block({ title, description, actions, children, className }: { ti
       {(title || actions) && (
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
-            {title && <h2 className="font-sans text-base font-semibold tracking-normal">{title}</h2>}
+            {title && <h2 className={SECTION_TITLE}>{title}</h2>}
             {description && <div className="text-muted-foreground text-sm text-pretty">{description}</div>}
           </div>
           {actions}

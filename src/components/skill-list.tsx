@@ -9,6 +9,7 @@ import { SKILL_GUIDES } from "@/data/skill-guides"
 import type { Sprint } from "@/data/sprints"
 import { update, useProgress } from "@/lib/store"
 import { cn } from "@/lib/utils"
+import { SECTION_TITLE } from "@/components/page"
 
 const stepsDone = (p: ReturnType<typeof useProgress>, key: string) => p.skillSteps?.[key] ?? []
 
@@ -36,7 +37,7 @@ export function SkillList({ s }: { s: Sprint }) {
     <section className="space-y-4" aria-labelledby="skills-h">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
-          <h2 id="skills-h" className="font-sans text-base font-semibold tracking-normal">Skills</h2>
+          <h2 id="skills-h" className={SECTION_TITLE}>Skills</h2>
           <p className="text-muted-foreground text-sm">Each skill has a short walkthrough to follow on Push. Tick a skill once you can do it without the steps.</p>
         </div>
         <span className="text-muted-foreground text-sm tabular-nums">{doneN} of {keys.length} learned</span>
