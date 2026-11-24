@@ -155,7 +155,7 @@ export function Sequencer() {
       ))}
     </div>
   )
-  const cellCls = (on: boolean, i: number) => cn("block aspect-square w-full rounded-[4px] border-[1.5px] border-pad-edge transition-[background-color,scale] duration-100 active:scale-[0.96]", on && "border-transparent", step === i && "outline-2 outline-offset-1 outline-foreground")
+  const cellCls = (on: boolean, i: number) => cn("block aspect-square w-full rounded-none border-[1.5px] border-pad-edge transition-[background-color,scale] duration-100 active:scale-[0.96]", on && "border-transparent", step === i && "outline-2 outline-offset-1 outline-foreground")
 
   return (
     <div className="space-y-8">

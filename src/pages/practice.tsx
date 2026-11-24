@@ -43,7 +43,7 @@ function Heatmap() {
         <div className="grid grid-flow-col grid-rows-7 gap-1" role="img" aria-label={`Practice over the last 12 weeks: ${fmtMinutes(total)} in total`}>
           {weeks.flat().map((iso) => {
             const m = byDay.get(iso) ?? 0
-            return <span key={iso} title={`${fmtDay.format(new Date(iso + "T00:00:00"))}: ${m ? fmtMinutes(m) : "no practice"}`} className={cn("size-4 rounded-[3px]", iso > today ? "opacity-0" : m ? fill[level(m)] : "bg-pad-empty", iso === today && "outline-1 outline-offset-1 outline-foreground")} />
+            return <span key={iso} title={`${fmtDay.format(new Date(iso + "T00:00:00"))}: ${m ? fmtMinutes(m) : "no practice"}`} className={cn("size-4 rounded-none", iso > today ? "opacity-0" : m ? fill[level(m)] : "bg-pad-empty", iso === today && "outline-1 outline-offset-1 outline-foreground")} />
           })}
         </div>
       </div>

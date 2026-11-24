@@ -293,7 +293,7 @@ export function ArrangementMap() {
                 return (
                   <div key={s.id + "e"} style={{ gridColumn: i + 1, gridRow: 2 }} className="flex items-end">
                     <span className="sr-only">Energy {e} of 10</span>
-                    <span aria-hidden="true" className="block w-full rounded-t-[3px] bg-foreground/60 transition-[height] duration-300" style={{ height: `${Math.max(4, e * 10)}%` }} />
+                    <span aria-hidden="true" className="block w-full rounded-none bg-foreground/60 transition-[height] duration-300" style={{ height: `${Math.max(4, e * 10)}%` }} />
                   </div>
                 )
               })}
@@ -302,7 +302,7 @@ export function ArrangementMap() {
                 return (
                   <button key={s.id + li} type="button" onClick={() => cycle(i, li)} style={{ gridColumn: i + 1, gridRow: li + 3 }}
                     aria-label={`${lane} in ${s.name}: ${ST_TXT[v]}. Click to change`}
-                    className={cn("min-w-0 truncate rounded px-1.5 text-left text-[11px] transition-[background-color,scale] duration-150 enabled:active:scale-[0.96] hover:brightness-110", STYLE[v])}>
+                    className={cn("min-w-0 truncate rounded-none px-1.5 text-left text-[11px] transition-[background-color,scale] duration-150 enabled:active:scale-[0.96] hover:brightness-110", STYLE[v])}>
                     {SHORT[v] ?? ""}
                   </button>
                 )

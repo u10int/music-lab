@@ -10,7 +10,7 @@ export function Ring({ value, size = 120, stroke = 10, label, children, classNam
     <div className={cn("relative grid shrink-0 place-items-center", className)} style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={label} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="stroke-[color-mix(in_oklab,var(--c,var(--foreground))_16%,transparent)]" />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - v)}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} strokeLinecap="butt" strokeDasharray={c} strokeDashoffset={c * (1 - v)}
           className="stroke-[var(--c,var(--foreground))] transition-[stroke-dashoffset] duration-500 ease-out" style={{ opacity: v ? 1 : 0 }} />
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center">{children}</div>
@@ -64,8 +64,8 @@ export function SprintTimeline({ p, week }: { p: Progress; week: number }) {
           return (
             <Link key={s.id} to={`/sprints/${s.n}`} aria-label={`Sprint ${s.n}: ${s.title}, weeks ${w1}–${w1 + 1}`}
               className="group grid gap-1.5 rounded-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" style={{ ["--sc" as string]: `var(${s.c})` }}>
-              <span className="relative h-2.5 overflow-hidden rounded-full bg-[color-mix(in_oklab,var(--sc)_22%,transparent)]">
-                <span className="absolute inset-y-0 left-0 rounded-full bg-[var(--sc)] transition-[width] duration-500" style={{ width: `${part * 100}%` }} />
+              <span className="relative h-2.5 overflow-hidden rounded-none bg-[color-mix(in_oklab,var(--sc)_22%,transparent)]">
+                <span className="absolute inset-y-0 left-0 rounded-none bg-[var(--sc)] transition-[width] duration-500" style={{ width: `${part * 100}%` }} />
               </span>
               <span className={cn("truncate text-xs group-hover:underline", week >= w1 && week <= w1 + 1 ? "text-foreground font-semibold" : "text-muted-foreground")}>
                 <span className="tabular-nums">{s.n}</span><span className="hidden sm:inline"> · {s.short}</span>
@@ -107,14 +107,14 @@ export function PracticeHeatmap({ p, weeks = 16 }: { p: Progress; weeks?: number
           <div key={w} className="grid max-w-5 min-w-0 flex-1 grid-rows-7 gap-1">
             {col.map((c) => (
               <span key={c.iso} title={c.future ? undefined : `${fmtDay.format(c.x)}: ${c.m ? c.m + " min" : "no practice"}`}
-                className={cn("aspect-square w-full rounded-[3px]", c.future ? "bg-transparent" : shade[level(c.m)], c.iso === today && "ring-1 ring-foreground ring-offset-1 ring-offset-card")} />
+                className={cn("aspect-square w-full rounded-none", c.future ? "bg-transparent" : shade[level(c.m)], c.iso === today && "ring-1 ring-foreground ring-offset-1 ring-offset-card")} />
             ))}
           </div>
         ))}
       </div>
       <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 text-xs">
         <span className="tabular-nums">{active} days · {Math.round(total / 60)} hours in {weeks} weeks</span>
-        <span className="flex items-center gap-1" aria-hidden="true">Less{shade.map((s, i) => <span key={i} className={cn("size-3 rounded-[3px]", s)} />)}More</span>
+        <span className="flex items-center gap-1" aria-hidden="true">Less{shade.map((s, i) => <span key={i} className={cn("size-3 rounded-none", s)} />)}More</span>
       </div>
     </div>
   )

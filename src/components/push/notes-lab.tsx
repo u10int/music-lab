@@ -110,7 +110,7 @@ export function SequencingLayouts() {
         </figure>
         <figure className="space-y-2">
           <svg viewBox="0 0 220 220" className="mx-auto block h-auto w-full max-w-[220px]" role="img" aria-label="One pad with three gestures: press harder for pressure, slide your finger up or down for slide, rock left or right for pitch bend">
-            <rect className="hw-pad" style={{ fill: "color-mix(in oklab, var(--s4) 40%, var(--card))" }} x={60} y={60} width={100} height={100} rx={12} />
+            <rect className="hw-pad" style={{ fill: "color-mix(in oklab, var(--s4) 40%, var(--card))" }} x={60} y={60} width={100} height={100} rx={0} />
             <circle cx={110} cy={110} r={10} fill="var(--foreground)" />
             <path fill="none" stroke="var(--foreground)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" d="M110 52 V20 M110 168 V200 M100 30 L110 18 L120 30 M100 190 L110 202 L120 190 M52 110 H20 M168 110 H200 M30 100 L18 110 L30 120 M190 100 L202 110 L190 120" />
             <text className="vtext" x={110} y={12} textAnchor="middle">Slide</text>

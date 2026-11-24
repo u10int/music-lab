@@ -20,7 +20,7 @@ function parseTime(s: string) {
 const barAt = (t: number, tempo: number) => (t * tempo) / 240
 const blank = (): RefNote => ({ id: uid(), title: "", artist: "", url: "", tempo: 124, date: todayISO(), notes: "", markers: [] })
 
-/** Sections between markers, rounded to whole bars. Lengths snap to multiples of 4 when they're close. */
+/** Sections between markers, rounded-none to whole bars. Lengths snap to multiples of 4 when they're close. */
 function sectionsOf(n: RefNote, end?: number) {
   const ms = [...n.markers].sort((a, b) => a.t - b.t)
   return ms.map((m, i) => {
@@ -178,7 +178,7 @@ export function NotebookPage() {
                     <div className="flex h-20 items-end gap-0.5 rounded-lg border bg-card p-2" role="img" aria-label={`Energy across ${secs.length} sections`}>
                       {secs.map((s) => (
                         <div key={s.m.id} className="flex h-full min-w-0 flex-col justify-end" style={{ flex: `${s.bars ?? 8} 1 0` }}>
-                          <div className="rounded-t-[3px] bg-[var(--s5)]" style={{ height: `${s.m.energy * 10}%` }} />
+                          <div className="rounded-none bg-[var(--s5)]" style={{ height: `${s.m.energy * 10}%` }} />
                           <span className="text-muted-foreground mt-1 truncate text-[11px]">{s.m.label}</span>
                         </div>
                       ))}

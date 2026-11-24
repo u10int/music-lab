@@ -188,7 +188,7 @@ export function LoopBuilder() {
           <div key={bar} className="grid grid-cols-16 gap-px">
             {Array.from({ length: 16 }, (_, j) => {
               const i = bar * 16 + j
-              return <span key={j} className={cn("h-3 rounded-[1px]", on.has(i) ? "bg-foreground/60" : j % 4 === 0 ? "bg-border" : "bg-pad-empty", playing && step === i && "bg-[var(--s3)]")} />
+              return <span key={j} className={cn("h-3 rounded-none", on.has(i) ? "bg-foreground/60" : j % 4 === 0 ? "bg-border" : "bg-pad-empty", playing && step === i && "bg-[var(--s3)]")} />
             })}
           </div>
         ))}

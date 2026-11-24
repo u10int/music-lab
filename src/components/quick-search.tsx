@@ -26,7 +26,7 @@ export function QuickSearch() {
         <SidebarMenuButton tooltip={isMac ? "Search (⌘K)" : "Search (Ctrl+K)"} onClick={() => { setLoaded(true); setOpen(true) }} onPointerEnter={() => setLoaded(true)} className="text-muted-foreground">
           <Search />
           <span>Search</span>
-          <kbd className="ml-auto rounded border px-1.5 font-sans text-[11px] font-medium" aria-hidden="true">{isMac ? "⌘K" : "Ctrl K"}</kbd>
+          <kbd className="ml-auto rounded-none border px-1.5 font-sans text-[11px] font-medium" aria-hidden="true">{isMac ? "⌘K" : "Ctrl K"}</kbd>
         </SidebarMenuButton>
       </SidebarMenuItem>
       {loaded && <Suspense fallback={null}><SearchDialog open={open} setOpen={setOpen} /></Suspense>}

@@ -120,7 +120,7 @@ export function SoundCard({ s }: { s: GenreSound }) {
 
       <div aria-hidden="true" className="grid grid-cols-[repeat(32,minmax(0,1fr))] gap-px">
         {Array.from({ length: 32 }, (_, i) => (
-          <span key={i} className={cn("h-1.5 rounded-[1px]", notes.has(i) ? "bg-foreground/60" : "bg-pad-empty", i % 4 === 0 && !notes.has(i) && "bg-border", playing && step === i && "bg-[var(--s3)]")} />
+          <span key={i} className={cn("h-1.5 rounded-none", notes.has(i) ? "bg-foreground/60" : "bg-pad-empty", i % 4 === 0 && !notes.has(i) && "bg-border", playing && step === i && "bg-[var(--s3)]")} />
         ))}
       </div>
 

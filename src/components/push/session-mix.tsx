@@ -38,11 +38,11 @@ export function MixMode() {
         <figure className="space-y-2">
           <svg viewBox="0 0 400 160" className="block h-auto w-full max-w-[400px]" role="img" aria-label="Global Mix: the eight encoders each control one track's volume, shown as eight level bars on the display">
             {vols.map((_, i) => <circle key={"k" + i} className="hw-k" cx={30 + i * 50} cy={22} r={14} />)}
-            <rect className="hw-disp" x={2} y={48} width={396} height={112} rx={4} />
+            <rect className="hw-disp" x={2} y={48} width={396} height={112} rx={0} />
             {vols.map((v, i) => (
               <g key={i}>
-                <rect x={22 + i * 50} y={60} width={16} height={70} rx={3} fill="#3a3b40" />
-                <rect x={22 + i * 50} y={60 + 70 * (1 - v)} width={16} height={70 * v} rx={3} fill="#ececea" />
+                <rect x={22 + i * 50} y={60} width={16} height={70} rx={0} fill="#3a3b40" />
+                <rect x={22 + i * 50} y={60 + 70 * (1 - v)} width={16} height={70 * v} rx={0} fill="#ececea" />
                 <text x={30 + i * 50} y={150} textAnchor="middle" fill="#c9cacf" fontSize={11}>{TRACKS[i][0]}</text>
               </g>
             ))}

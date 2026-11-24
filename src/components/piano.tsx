@@ -15,8 +15,8 @@ export function Piano({ scale, names, root, chord = [], held = [], label, onPlay
     const cls = cn(
       "flex items-end justify-center pb-1.5 text-[11px] select-none",
       black
-        ? "absolute top-0 z-10 h-[60%] w-[7%] -translate-x-1/2 rounded-b-[3px] bg-[var(--key-black)] text-[var(--key-black-fg)]"
-        : "min-w-0 flex-1 rounded-b-[4px] border border-l-0 border-pad-edge bg-card first:border-l",
+        ? "absolute top-0 z-10 h-[60%] w-[7%] -translate-x-1/2 rounded-none bg-[var(--key-black)] text-[var(--key-black-fg)]"
+        : "min-w-0 flex-1 rounded-none border border-l-0 border-pad-edge bg-card first:border-l",
       isRoot && !hit && (black ? "bg-[color-mix(in_oklab,var(--s4)_70%,var(--key-black))]" : "bg-[color-mix(in_oklab,var(--s4)_28%,var(--card))]"),
       hit && "bg-[var(--c,var(--s5))] text-[var(--on-accent)] font-semibold",
       heldPcs.includes(pc) && "bg-[var(--s5)] text-white font-semibold",

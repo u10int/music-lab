@@ -12,7 +12,7 @@ export function PlayButton({ id, label, onPlay, size = "sm", primary = false, cl
   if (primary) {
     return (
       <Button type="button" size="lg" aria-pressed={on} aria-keyshortcuts="Space" onClick={onPlay} data-transport=""
-        className={cn("h-11 min-w-32 gap-2.5 px-5 text-base", on && "bg-[var(--s3)] text-[color:var(--on-accent)] hover:bg-[color-mix(in_oklab,var(--s3)_88%,black)]", className)}>
+        className={cn("h-11 min-w-32 gap-2.5 px-5 text-base", on && "bg-[#23782b] text-white hover:bg-[#1c6623]", className)}>
         {on ? <Square className="size-4 fill-current" /> : <Play className="size-4 fill-current" />}
         {on ? "Stop" : label}
       </Button>
@@ -20,7 +20,7 @@ export function PlayButton({ id, label, onPlay, size = "sm", primary = false, cl
   }
   return (
     <Button type="button" variant="outline" size={size} aria-pressed={on} onClick={onPlay}
-      className={cn(on && "border-transparent bg-[var(--s3)] text-[color:var(--on-accent)] hover:bg-[color-mix(in_oklab,var(--s3)_88%,black)] hover:text-[color:var(--on-accent)] dark:bg-[var(--s3)]", className)}>
+      className={cn(on && "border-transparent bg-[#23782b] text-white hover:bg-[#1c6623] hover:text-white dark:bg-[#23782b]", className)}>
       {on ? <Square className="size-3 fill-current" /> : <Play className="size-3 fill-current" />}
       {on ? "Stop" : label}
     </Button>

@@ -123,7 +123,7 @@ export function PlannerPage() {
                   return (
                     <td key={s.id}>
                       <button type="button" aria-label={`${l.name} in ${s.name}: ${ST_TXT[st]}. Change to ${ST_TXT[next]}`} onClick={() => edit((d) => { d.lanes[li].cells[s.id] = next })}
-                        className={cn("block h-8 w-full truncate rounded px-1.5 text-left text-[11px] transition-[background-color,scale] duration-150 active:scale-[0.97]", CELL[st])}>
+                        className={cn("block h-8 w-full truncate rounded-none px-1.5 text-left text-[11px] transition-[background-color,scale] duration-150 active:scale-[0.97]", CELL[st])}>
                         {ST_SHORT[st] ?? (st === "filt" ? "Filtered" : st === "half" ? "Enters" : "")}
                       </button>
                     </td>

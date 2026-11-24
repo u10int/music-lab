@@ -87,7 +87,7 @@ function HeroLoop() {
               const color = row < 3 ? ROWS[row].color : "var(--s5)"
               return (
                 <span key={s}
-                  className={cn("aspect-square rounded-[4px] transition-[background-color,box-shadow] duration-100", s % 4 === 0 ? "ring-1 ring-white/10" : "", !on && (s === col ? "bg-white/20" : "bg-white/[0.06]"))}
+                  className={cn("aspect-square rounded-none transition-[background-color,box-shadow] duration-100", s % 4 === 0 ? "ring-1 ring-white/10" : "", !on && (s === col ? "bg-white/20" : "bg-white/[0.06]"))}
                   style={on ? { background: hit ? color : `color-mix(in oklab, ${color} 45%, transparent)`, boxShadow: hit ? `0 0 14px ${color}` : undefined } : undefined} />
               )
             })}
@@ -121,7 +121,7 @@ function LoopArt() {
   return (
     <svg viewBox="0 0 160 64" className="w-full" aria-hidden="true">
       {rows.map((r, y) => Array.from({ length: 16 }, (_, x) => (
-        <rect key={y + "-" + x} x={x * 10 + 1} y={y * 16 + 2} width={8} height={12} rx={2} fill={r.includes(x) ? colors[y] : "var(--pad-empty)"} />
+        <rect key={y + "-" + x} x={x * 10 + 1} y={y * 16 + 2} width={8} height={12} rx={0} fill={r.includes(x) ? colors[y] : "var(--pad-empty)"} />
       )))}
     </svg>
   )
@@ -131,7 +131,7 @@ function MelodyArt() {
   return (
     <svg viewBox="0 0 160 64" className="w-full" aria-hidden="true">
       {[1, 3, 5].map((r) => <rect key={r} x={0} y={r * 8} width={160} height={8} fill="color-mix(in oklab, var(--s5) 10%, transparent)" />)}
-      {notes.map(([s, l, r], i) => <rect key={i} x={s * 5 + 1} y={r * 8 + 1} width={l * 5 - 2} height={6} rx={2} fill={r % 2 ? "var(--s5)" : "var(--s2)"} />)}
+      {notes.map(([s, l, r], i) => <rect key={i} x={s * 5 + 1} y={r * 8 + 1} width={l * 5 - 2} height={6} rx={0} fill={r % 2 ? "var(--s5)" : "var(--s2)"} />)}
     </svg>
   )
 }
@@ -143,7 +143,7 @@ function ArrangeArt() {
   const total = x0
   return (
     <svg viewBox="0 0 160 64" className="w-full" aria-hidden="true">
-      {lanes.map((l, y) => secs.map((b, i) => l[i] ? <rect key={y + "-" + i} x={(xs[i] / total) * 160 + 1} y={y * 12 + 3} width={(b / total) * 160 - 2} height={9} rx={2} fill={y === 3 ? "color-mix(in oklab, var(--s5) 55%, var(--card))" : "var(--s5)"} /> : null))}
+      {lanes.map((l, y) => secs.map((b, i) => l[i] ? <rect key={y + "-" + i} x={(xs[i] / total) * 160 + 1} y={y * 12 + 3} width={(b / total) * 160 - 2} height={9} rx={0} fill={y === 3 ? "color-mix(in oklab, var(--s5) 55%, var(--card))" : "var(--s5)"} /> : null))}
     </svg>
   )
 }

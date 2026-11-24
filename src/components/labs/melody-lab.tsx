@@ -303,7 +303,7 @@ export function MelodyLab() {
                     }} />
                   {sorted.filter((n) => Math.floor(n.step / 16) === bar).map((n) => (
                     <span key={n.step} aria-hidden="true"
-                      className={cn("pointer-events-none absolute h-5 rounded-[4px] border border-black/10", isChordTone(n.deg, chord) ? "bg-[var(--s5)]" : "bg-[var(--s2)]", playing && step >= n.step && step < n.step + n.len && "bg-[var(--s3)]")}
+                      className={cn("pointer-events-none absolute h-5 rounded-none border border-black/10", isChordTone(n.deg, chord) ? "bg-[var(--s5)]" : "bg-[var(--s2)]", playing && step >= n.step && step < n.step + n.len && "bg-[var(--s3)]")}
                       style={{ top: `${ROWS.indexOf(n.deg) * 1.25}rem`, left: `${((n.step % 16) / 16) * 100}%`, width: `calc(${(Math.min(n.len, 16 - (n.step % 16)) / 16) * 100}% - 2px)` }} />
                   ))}
                   {playing && Math.floor(step / 16) === bar && <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 w-0.5 bg-foreground" style={{ left: `${((step % 16) / 16) * 100}%` }} />}

@@ -59,7 +59,7 @@ export function PatternView({ p }: { p: Pattern }) {
               <span>{name}</span>
               <div role="img" aria-label={`${name}: ${on.length === (p.length ?? 16) ? "every step" : on.length ? "steps " + on.join(", ") : "no main hits"}${ghost.length ? `; quiet on ${ghost.join(", ")}` : ""}`}>
                 {steps((i) => (
-                  <i key={i} className={cn("block aspect-square rounded-[3px] border-[1.5px] border-pad-edge", on.includes(i + 1) && "border-transparent bg-[var(--s1)]", ghost.includes(i + 1) && "border-transparent bg-[color-mix(in_oklab,var(--s1)_35%,var(--card))]", now === i && "outline-2 outline-offset-1 outline-foreground")} />
+                  <i key={i} className={cn("block aspect-square rounded-none border-[1.5px] border-pad-edge", on.includes(i + 1) && "border-transparent bg-[var(--s1)]", ghost.includes(i + 1) && "border-transparent bg-[color-mix(in_oklab,var(--s1)_35%,var(--card))]", now === i && "outline-2 outline-offset-1 outline-foreground")} />
                 ))}
               </div>
             </div>

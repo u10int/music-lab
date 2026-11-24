@@ -30,7 +30,7 @@ const TONE: Record<PadTone, string> = {
 
 export function PadCell({ pad, className }: { pad: Pad; className?: string }) {
   const cls = cn(
-    "grid aspect-square min-w-0 place-items-center overflow-hidden rounded-[5px] text-xs leading-none text-foreground",
+    "grid aspect-square min-w-0 place-items-center overflow-hidden rounded-none text-xs leading-none text-foreground",
     TONE[pad.tone ?? "empty"],
     pad.active && "bg-foreground text-background",
     className,
@@ -88,7 +88,7 @@ export function PadGrid({ rows, label, side, cols = 8, className }: { rows: Pad[
           <span
             key={i}
             className={cn(
-              "grid place-items-center rounded px-0.5 text-[11px] tabular-nums",
+              "grid place-items-center rounded-none px-0.5 text-[11px] tabular-nums",
               s.on ? "bg-foreground text-background font-semibold" : "bg-card text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
             )}
           >

@@ -284,7 +284,7 @@ export function Sampler() {
                   const i = row * 4 + col, has = i < slices.length
                   return (
                     <button key={i} type="button" disabled={!has} onClick={() => press(i)} aria-label={`Pad ${i + 1}, key ${KEYS[i].toUpperCase()}${i === sel ? ", selected" : ""}`}
-                      className={cn("grid aspect-square place-items-center rounded-[6px] border-[1.5px] border-pad-edge bg-pad-empty text-xs transition-[scale,background-color] duration-100 enabled:active:scale-[0.96] disabled:opacity-40",
+                      className={cn("grid aspect-square place-items-center rounded-none border-[1.5px] border-pad-edge bg-pad-empty text-xs transition-[scale,background-color] duration-100 enabled:active:scale-[0.96] disabled:opacity-40",
                         has && "bg-[color-mix(in_oklab,var(--s5)_30%,var(--card))]", i === sel && "border-foreground", (lit === i || step === i) && "border-transparent bg-[var(--s3)] text-[var(--on-accent)]")}>
                       <span className="grid gap-0.5 leading-none"><b>{i + 1}</b><span className="opacity-70">{KEYS[i].toUpperCase()}</span></span>
                     </button>
