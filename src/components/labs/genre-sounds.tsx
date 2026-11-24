@@ -65,7 +65,7 @@ function SoundCard({ s }: { s: GenreSound }) {
         while (next < c.currentTime + 0.15) {
           const i = k % 32, at = next + (i % 2 ? swing : 0)
           if (dr && pattern) for (const [name, steps, ghost = []] of pattern.rows) {
-            const st = (i % 16) + 1
+            const st = (i % (pattern.length ?? 16)) + 1
             if (steps.includes(st)) drum(c, bus, at, KIND_OF[name], 0.55)
             else if (ghost.includes(st)) drum(c, bus, at, KIND_OF[name], 0.22)
           }

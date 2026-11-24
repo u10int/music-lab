@@ -16,7 +16,7 @@ import { usePref } from "@/lib/store"
 import { noteName, theory } from "@/lib/theory"
 import { cn } from "@/lib/utils"
 
-const STEPS = 16
+const MAX_STEPS = 32
 /** Drum Rack pad notes: C1 is the first pad, matching General MIDI drum notes. */
 const LANES: { id: DrumKind; name: string; note: number }[] = [
   { id: "kick", name: "Kick", note: 36 },
@@ -36,14 +36,21 @@ const SOUND: Record<Sound, { oct: number; o: Parameters<typeof tone>[5] }> = {
   lead: { oct: 0, o: { wave: "square", env: { a: 0.01, d: 0.2, s: 0.6, r: 0.15 }, cutoff: 3200, detune: 6, level: 0.11 } },
 }
 /** 0 = off, 1 = on, 2 = accent. */
-type Seq = { tempo: number; swing: number; drums: Record<string, number[]>; melody: (number | null)[]; sound: Sound }
-const empty = (): Seq => ({ tempo: 124, swing: 0, drums: Object.fromEntries(LANES.map((l) => [l.id, Array(STEPS).fill(0)])), melody: Array(STEPS).fill(null), sound: "pluck" })
+type Seq = { tempo: number; swing: number; drums: Record<string, number[]>; melody: (number | null)[]; sound: Sound; bars?: 1 | 2 }
+const empty = (): Seq => ({ tempo: 124, swing: 0, drums: Object.fromEntries(LANES.map((l) => [l.id, Array(MAX_STEPS).fill(0)])), melody: Array(MAX_STEPS).fill(null), sound: "pluck", bars: 1 })
+/** Older saved patterns were one bar long; pad everything to two bars. */
+function normalize(s: Seq): Seq {
+  const pad = <T,>(xs: T[] | undefined, fill: T) => Array.from({ length: MAX_STEPS }, (_, i) => xs?.[i] ?? fill)
+  return { ...s, bars: s.bars ?? 1, drums: Object.fromEntries(LANES.map((l) => [l.id, pad(s.drums?.[l.id], 0)])), melody: pad(s.melody, null) }
+}
 const VEL = [0, 60, 120]
 
 export function Sequencer() {
   const { root, scale } = useKey()
   const T = theory(root, scale)
-  const [seq, setSeq] = usePref<Seq>("sequencer", empty())
+  const [stored, setSeq] = usePref<Seq>("sequencer", empty())
+  const seq = normalize(stored)
+  const N = (seq.bars ?? 1) * 16
   const [step, setStep] = useState(-1)
   const playing = usePlayingId() === "seq"
   const ref = useRef({ seq, T })
@@ -62,7 +69,7 @@ export function Sequencer() {
         const { seq: s, T: th } = ref.current
         const sixteenth = 60 / s.tempo / 4
         while (next < c.currentTime + 0.12) {
-          const i = k % STEPS, at = next + (i % 2 ? s.swing * sixteenth : 0)
+          const i = k % ((s.bars ?? 1) * 16), at = next + (i % 2 ? s.swing * sixteenth : 0)
           for (const l of LANES) { const v = s.drums[l.id]?.[i] ?? 0; if (v) drum(c, bus, at, l.id, v === 2 ? 1 : 0.45) }
           const deg = s.melody[i]
           if (deg !== null && deg !== undefined) {
@@ -87,7 +94,7 @@ export function Sequencer() {
     })
   }
 
-  const cycle = (lane: string, i: number) => setSeq({ ...seq, drums: { ...seq.drums, [lane]: (seq.drums[lane] ?? Array(STEPS).fill(0)).map((v: number, j: number) => (j === i ? (v + 1) % 3 : v)) } })
+  const cycle = (lane: string, i: number) => setSeq({ ...seq, drums: { ...seq.drums, [lane]: seq.drums[lane].map((v: number, j: number) => (j === i ? (v + 1) % 3 : v)) } })
   const setNote = (deg: number, i: number) => setSeq({ ...seq, melody: seq.melody.map((v, j) => (j === i ? (v === deg ? null : deg) : v)) })
   const loadPreset = (id: string) => {
     const p = PATTERNS.find((x) => x.id === id)
@@ -95,15 +102,14 @@ export function Sequencer() {
     const drums = empty().drums
     for (const [name, steps, ghost = []] of p.rows) {
       const lane = KIND_OF[name]
-      if (lane) drums[lane] = Array.from({ length: STEPS }, (_, i) => (steps.includes(i + 1) ? 2 : ghost.includes(i + 1) ? 1 : 0))
+      if (lane) drums[lane] = Array.from({ length: MAX_STEPS }, (_, i) => (steps.includes(i + 1) ? 2 : ghost.includes(i + 1) ? 1 : 0))
     }
-    setSeq({ ...seq, drums, tempo: p.tempo, swing: p.swing ?? 0 })
+    setSeq({ ...seq, drums, tempo: p.tempo, swing: p.swing ?? 0, bars: p.length === 32 ? 2 : 1 })
   }
   const exportMidi = (what: "drums" | "melody") => {
-    const bars = 1, notes = []
-    for (let b = 0; b < bars; b++)
-      for (let i = 0; i < STEPS; i++) {
-        const tick = (b * STEPS + i) * TICKS_PER_16TH + (i % 2 ? Math.round(seq.swing * TICKS_PER_16TH) : 0)
+    const notes = []
+    for (let i = 0; i < N; i++) {
+        const tick = i * TICKS_PER_16TH + (i % 2 ? Math.round(seq.swing * TICKS_PER_16TH) : 0)
         if (what === "drums") {
           for (const l of LANES) { const v = seq.drums[l.id]?.[i] ?? 0; if (v) notes.push({ tick, note: l.note, velocity: VEL[v], duration: TICKS_PER_16TH / 2, channel: 9 }) }
         } else {
@@ -112,20 +118,29 @@ export function Sequencer() {
         }
       }
     const name = what === "drums" ? "Drums" : `${T.names[0]} ${T.sc.name} ${seq.sound}`
-    downloadFile(writeMidi([{ name, notes, length: bars * STEPS * TICKS_PER_16TH }], seq.tempo), `music-lab-${what}-${seq.tempo}bpm.mid`)
+    downloadFile(writeMidi([{ name, notes, length: N * TICKS_PER_16TH }], seq.tempo), `music-lab-${what}-${seq.tempo}bpm.mid`)
   }
 
+  const bars = Array.from({ length: N / 16 }, (_, b) => b)
   const head = (
     <div className="grid grid-cols-[88px_minmax(0,1fr)] items-end gap-2" aria-hidden="true">
       <span />
-      <div className="grid grid-cols-4 gap-2">
-        {[0, 1, 2, 3].map((b) => <span key={b} className="grid grid-cols-4 gap-1">{[0, 1, 2, 3].map((k) => <span key={k} className="text-muted-foreground text-[11px] tabular-nums">{k === 0 ? b + 1 : ""}</span>)}</span>)}
+      <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}>
+        {bars.map((bar) => (
+          <div key={bar} className="grid grid-cols-4 gap-2">
+            {[0, 1, 2, 3].map((b) => <span key={b} className="grid grid-cols-4 gap-1">{[0, 1, 2, 3].map((k) => <span key={k} className="text-muted-foreground text-[11px] whitespace-nowrap tabular-nums">{k === 0 ? (b === 0 && bars.length > 1 ? `Bar ${bar + 1}` : b + 1) : ""}</span>)}</span>)}
+          </div>
+        ))}
       </div>
     </div>
   )
   const cells = (render: (i: number) => React.ReactNode) => (
-    <div className="grid grid-cols-4 gap-2">
-      {[0, 1, 2, 3].map((b) => <span key={b} className="grid grid-cols-4 gap-1">{[0, 1, 2, 3].map((k) => render(b * 4 + k))}</span>)}
+    <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}>
+      {bars.map((bar) => (
+        <div key={bar} className="grid grid-cols-4 gap-2">
+          {[0, 1, 2, 3].map((b) => <span key={b} className="grid grid-cols-4 gap-1">{[0, 1, 2, 3].map((k) => render(bar * 16 + b * 4 + k))}</span>)}
+        </div>
+      ))}
     </div>
   )
   const cellCls = (on: boolean, i: number) => cn("block aspect-square w-full rounded-[4px] border-[1.5px] border-pad-edge transition-[background-color,scale] duration-100 active:scale-[0.96]", on && "border-transparent", step === i && "outline-2 outline-offset-1 outline-foreground")
@@ -141,6 +156,15 @@ export function Sequencer() {
         <div className="grid w-40 gap-2">
           <div className="flex justify-between text-sm"><Label htmlFor="swing">Swing</Label><output className="text-muted-foreground tabular-nums">{Math.round(seq.swing * 100)}%</output></div>
           <Slider id="swing" min={0} max={0.6} step={0.01} value={[seq.swing]} onValueChange={([v]) => setSeq({ ...seq, swing: v })} aria-label="Swing" />
+        </div>
+        <div className="grid gap-1.5">
+          <span className="text-sm font-medium">Length</span>
+          <Seg label="Pattern length" value={String(seq.bars ?? 1)} onChange={(v) => {
+            const two = v === "2"
+            // Going to two bars copies bar 1 into an empty bar 2, so there's something to vary.
+            const empty2 = LANES.every((l) => seq.drums[l.id].slice(16).every((x) => !x)) && seq.melody.slice(16).every((x) => x === null)
+            setSeq(two && empty2 ? { ...seq, bars: 2, drums: Object.fromEntries(LANES.map((l) => [l.id, [...seq.drums[l.id].slice(0, 16), ...seq.drums[l.id].slice(0, 16)]])), melody: [...seq.melody.slice(0, 16), ...seq.melody.slice(0, 16)] } : { ...seq, bars: two ? 2 : 1 })
+          }} options={[["1", "1 bar"], ["2", "2 bars"]]} />
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="preset">Start from</Label>
@@ -166,7 +190,7 @@ export function Sequencer() {
           <Button variant="outline" size="sm" onClick={() => exportMidi("drums")}><Download />Export drums .mid</Button>
         </div>
         <div className="overflow-x-auto">
-          <div className="grid min-w-[520px] gap-1.5">
+          <div className={cn("grid gap-1.5", N > 16 ? "min-w-[960px]" : "min-w-[520px]")}>
             {head}
             {LANES.map((l) => (
               <div key={l.id} className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2 text-sm">
@@ -195,7 +219,7 @@ export function Sequencer() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <div className="grid min-w-[520px] gap-1">
+          <div className={cn("grid gap-1", N > 16 ? "min-w-[960px]" : "min-w-[520px]")}>
             {[7, 6, 5, 4, 3, 2, 1, 0].map((deg) => (
               <div key={deg} className="grid grid-cols-[88px_minmax(0,1fr)] items-center gap-2 text-sm">
                 <span className={cn("tabular-nums", deg % 7 === 0 && "font-semibold")}>{T.names[deg % 7]}<span className="text-muted-foreground text-xs"> {noteName(midiFor(deg)).replace(/^\D+/, "")}</span></span>

@@ -1,9 +1,9 @@
 /**
- * One-bar drum patterns on a 16-step grid (step 1 is the downbeat, 5/9/13 are
+ * Drum patterns on a 16-step grid per bar (step 1 is the downbeat, 5/9/13 are
  * beats 2–4). Each row is [lane, steps, ghost steps]. Ghost steps play quietly.
  * These are starting points: the defining hits of each style, not transcriptions.
  */
-export type Family = "yours" | "house" | "techno" | "bass" | "breaks" | "hiphop" | "world"
+export type Family = "yours" | "house" | "techno" | "bass" | "breaks" | "futuregarage" | "hiphop" | "world"
 export type Lane = "Kick" | "Snare" | "Clap" | "Rim" | "Hat" | "Open hat" | "Shaker" | "Tom" | "Ride"
 export interface Pattern {
   id: string
@@ -11,6 +11,8 @@ export interface Pattern {
   name: string
   bpm: string
   tempo: number
+  /** 16 steps (one bar) unless set to 32 for two-bar patterns. */
+  length?: 16 | 32
   /** Suggested swing, 0–0.6 of a 16th. */
   swing?: number
   rows: [Lane, number[], number[]?][]
@@ -24,6 +26,7 @@ export const FAMILIES: [Family | "all", string][] = [
   ["techno", "Techno and trance"],
   ["bass", "Drum and bass, dubstep"],
   ["breaks", "Breaks and garage"],
+  ["futuregarage", "Future garage"],
   ["hiphop", "Hip-hop and trap"],
   ["world", "Afro, Latin, retro"],
 ]
@@ -100,6 +103,45 @@ export const PATTERNS: Pattern[] = [
   { id: "electro", family: "world", name: "Electro (808)", bpm: "125–130 BPM", tempo: 128,
     rows: [["Kick", [1, 7, 11]], ["Clap", BACKBEAT], ["Hat", ALL16, []], ["Tom", [15]]],
     note: "Classic drum-machine funk: syncopated kicks, steady 16th hats and a tom fill. Keep everything dry and punchy." },
+
+  // Future garage: two-bar patterns, because the variation between bars is the style
+  { id: "fg-shuffle", family: "futuregarage", name: "Future garage 2-step", bpm: "130–138 BPM, swung", tempo: 134, swing: 0.32, length: 32,
+    rows: [
+      ["Kick", [1, 11, 17, 27, 28]],
+      ["Snare", [5, 13, 21, 29], [8, 15, 24, 31]],
+      ["Rim", [4, 10, 20, 26], [14, 30, 32]],
+      ["Hat", [3, 7, 11, 15, 19, 23, 27, 31], [6, 14, 22]],
+      ["Shaker", [], [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]],
+    ],
+    note: "The garage skip: kick on 1 and the 'and' of 3, with bar 2 answering bar 1. Keep ghost snares and rims very quiet, and pitch the snare down a few semitones." },
+  { id: "fg-broken", family: "futuregarage", name: "Broken shuffle (Burial-style)", bpm: "135–140 BPM", tempo: 138, swing: 0.28, length: 32,
+    rows: [
+      ["Kick", [1, 8, 11, 17, 27], [22]],
+      ["Snare", [5, 13, 21, 29], [16, 24, 32]],
+      ["Rim", [3, 12, 19, 30], [6, 23]],
+      ["Hat", [3, 7, 11, 19, 23, 27, 31], [15]],
+      ["Shaker", [], [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31]],
+    ],
+    note: "Hits sound slightly off the grid on purpose: turn Quantize off and nudge rims and ghost snares by hand. Layer vinyl crackle under everything and roll off the top end." },
+  { id: "fg-halftime", family: "futuregarage", name: "Half-time atmospheric", bpm: "140 BPM, half-time feel", tempo: 140, swing: 0.2, length: 32,
+    rows: [
+      ["Kick", [1, 11, 17], [20, 28]],
+      ["Snare", [9, 25], [16, 32]],
+      ["Rim", [6, 14, 22, 30]],
+      ["Hat", [], [3, 5, 7, 11, 13, 15, 19, 21, 23, 27, 29, 31]],
+      ["Tom", [], [30, 31, 32]],
+    ],
+    note: "One snare per bar leaves room for long pads and vocal chops. The quiet hat bed and the tom pickup into bar 1 keep it moving without crowding it." },
+  { id: "fg-rolling", family: "futuregarage", name: "Rolling melodic garage", bpm: "128–132 BPM, swung", tempo: 130, swing: 0.36, length: 32,
+    rows: [
+      ["Kick", [1, 7, 11, 17, 23, 26]],
+      ["Clap", [5, 13, 21, 29], [31]],
+      ["Rim", [10, 16, 26, 32], [4, 20]],
+      ["Hat", [3, 7, 11, 15, 19, 23, 27, 31], [2, 6, 10, 14, 18, 22, 26, 30]],
+      ["Open hat", [15, 31]],
+      ["Shaker", [], [4, 8, 12, 16, 20, 24, 28, 32]],
+    ],
+    note: "Denser and bouncier, for the melodic end of the genre. Heavy swing on the hats, and let the open hat breathe into the next bar." },
 
   // Hip-hop and trap
   { id: "trap", family: "hiphop", name: "Trap", bpm: "140 BPM, half-time", tempo: 140,

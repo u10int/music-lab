@@ -8,6 +8,7 @@ import { SliceLab } from "@/components/labs/slice-lab"
 import { SynthLab } from "@/components/labs/synth-lab"
 import { GenreSounds } from "@/components/labs/genre-sounds"
 import { GENRE_SOUNDS } from "@/data/genre-sounds"
+import { PATTERNS } from "@/data/patterns"
 import { Sequencer } from "@/components/labs/sequencer"
 import { TimingTrainer } from "@/components/labs/timing-trainer"
 import { ProgressionBuilder } from "@/components/labs/progression-builder"
@@ -43,7 +44,7 @@ export function SoundDesignLab() {
   return (
     <div className="space-y-12">
       <PageHeader title="Sound design">Signature sounds from each genre you can play and tweak, then a small synth with the same oscillator, filter and envelope as Drift to learn how the controls work.</PageHeader>
-      <Block title="Genre sounds" description={`${GENRE_SOUNDS.length} sounds across wave, phonk, house, techno, bass music and more.`}><GenreSounds /></Block>
+      <Block title="Genre sounds" description={`${GENRE_SOUNDS.length} sounds across wave, phonk, house, techno, bass music, future garage and more.`}><GenreSounds /></Block>
       <Block title="Synth playground" description="Change a control, play it, and watch the shape change."><SynthLab /></Block>
       <More to="/instruments?tab=modulation">the modulation guide</More>
     </div>
@@ -54,7 +55,7 @@ export function DrumsLab() {
   return (
     <div className="space-y-12">
       <PageHeader title="Drums and sampling">Drum patterns from house to drum and bass, the Push drum layouts, and how Simpler slices a loop onto pads.</PageHeader>
-      <Block title="Drum pattern library" description="23 one-bar patterns across electronic styles, 16 steps each. Play one, then program it on Push or load it into the step sequencer."><DrumPatterns /></Block>
+      <Block title="Drum pattern library" description={`${PATTERNS.length} patterns across electronic styles, one or two bars of 16ths each. Play one, then program it on Push or load it into the step sequencer.`}><DrumPatterns /></Block>
       <DrumLayouts />
       <NoteRepeat />
       <Block title="Slicing a loop"><SliceLab /></Block>
@@ -85,7 +86,7 @@ export function MixingLab() {
 export function SequencerLab() {
   return (
     <div className="space-y-10">
-      <PageHeader title="Step sequencer">Program a one-bar drum loop and a melody in your key, hear them loop, then export each as a MIDI file to drag into a Live clip.</PageHeader>
+      <PageHeader title="Step sequencer">Program a one- or two-bar drum loop and a melody in your key, hear them loop, then export each as a MIDI file to drag into a Live clip.</PageHeader>
       <Sequencer />
     </div>
   )

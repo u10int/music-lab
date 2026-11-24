@@ -101,11 +101,11 @@ export function ProgressionBuilder() {
         const pat = PATTERNS.find((p) => p.id === s.pattern)
         const swing = (pat?.swing ?? 0) * sixteenth
         while (next < c.currentTime + 0.15) {
-          const b = Math.floor(k / 16) % s.chords.length, i = k % 16, at = next + (i % 2 ? swing : 0)
+          const b = Math.floor(k / 16) % s.chords.length, i = k % 16, at = next + (i % 2 ? swing : 0), ps = (k % (pat?.length ?? 16)) + 1
           const v = vs[b], d = s.chords[b]
           if (pat) for (const [name, steps, ghost = []] of pat.rows) {
-            if (steps.includes(i + 1)) drum(c, bus, at, KIND_OF[name], 0.8)
-            else if (ghost.includes(i + 1)) drum(c, bus, at, KIND_OF[name], 0.32)
+            if (steps.includes(ps)) drum(c, bus, at, KIND_OF[name], 0.8)
+            else if (ghost.includes(ps)) drum(c, bus, at, KIND_OF[name], 0.32)
           }
           const hitChord = s.rhythm === "held" ? i === 0 : s.rhythm === "eighths" ? i % 2 === 0 : [3, 6, 11, 14].includes(i)
           const len = s.rhythm === "held" ? sixteenth * 15.5 : s.rhythm === "eighths" ? sixteenth * 1.6 : sixteenth * 1.2
