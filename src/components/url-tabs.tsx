@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 import { useLocation, useSearchParams } from "react-router"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { stop } from "@/audio/playback"
@@ -8,6 +8,13 @@ export function UrlTabs({ tabs, label }: { tabs: [string, string, ReactNode][]; 
   const [params, setParams] = useSearchParams()
   const { hash } = useLocation()
   const tab = tabs.some((t) => t[0] === params.get("tab")) ? params.get("tab")! : tabs[0][0]
+
+  // On narrow screens the tab row scrolls; keep the active tab in view.
+  const listRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const row = listRef.current, el = row?.querySelector<HTMLElement>("[data-state=active]")
+    if (row && el) row.scrollLeft = Math.max(0, el.offsetLeft - row.clientWidth / 2 + el.offsetWidth / 2)
+  }, [tab])
 
   // Scroll to and flash an anchor like #gl-lfo after the tab renders.
   useEffect(() => {
@@ -33,8 +40,8 @@ export function UrlTabs({ tabs, label }: { tabs: [string, string, ReactNode][]; 
       }}
       className="gap-8"
     >
-      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <TabsList aria-label={label} className="w-max">
+      <div ref={listRef} className="relative -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <TabsList aria-label={label} className="w-max min-w-full">
           {tabs.map(([v, l]) => <TabsTrigger key={v} value={v}>{l}</TabsTrigger>)}
         </TabsList>
       </div>
