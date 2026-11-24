@@ -12,7 +12,7 @@
 export interface DayLink { to: string; label: string }
 export interface Drill { text: string; min: number; link?: DayLink }
 export interface Step { title: string; detail: string; min: number; link?: DayLink }
-export interface Variant { label: string; q?: string; focus: string }
+export interface Variant { label: string; q?: string; focus: string; /** Concrete steps for this variant; fills {how} in a step. */ how?: string }
 export interface DayPlan {
   /** What you'll have at the end of the session. */
   outcome: string
@@ -61,9 +61,12 @@ export const DAY_PLANS: Record<string, DayPlan> = {
   "s1-w1-mid": {
     outcome: "A new one-bar {v} beat, programmed on Push and saved in its own clip slot.",
     variants: [
-      { label: "straight", q: "pattern=prog", focus: "Straight: every hit on the grid, swing at 0%. Four on the floor, offbeat hats. Steady, like progressive house." },
-      { label: "swung", q: "pattern=ukg", focus: "Swung: turn the Swing encoder to 55–62% so every second 16th arrives late. The same pattern suddenly bounces, like UK garage." },
-      { label: "half-time", q: "pattern=wave", focus: "Half-time: at 140–150 BPM, put the snare on step 9 only, once per bar. The tempo stays fast but the beat feels half as fast, like wave and trap." },
+      { label: "straight", q: "pattern=prog", focus: "Straight means every hit lands exactly on the grid with no swing, so the hats tick evenly like a clock. Four on the floor with offbeat hats, steady like progressive house.",
+        how: "Hold Quantize on Push and check that Swing is at 0%. Select the clip and press Quantize so every hit sits exactly on the 16th grid. Listen to the hats: each should be the same distance apart (tick, tick, tick, tick). To hear what straight is not, turn Swing up to 60% for a moment, then set it back to 0%." },
+      { label: "swung", q: "pattern=ukg", focus: "Swung means every second 16th arrives a little late, so the hats go long-short, long-short. The same pattern suddenly bounces, like UK garage.",
+        how: "Hold Quantize on Push and turn Swing to about 58%. Then select the clip and press Quantize to apply it. Try 50% (straight) and 66% (heavy) to hear the range, then settle where it bounces without sounding sloppy." },
+      { label: "half-time", q: "pattern=wave", focus: "Half-time means the snare hits once per bar instead of twice, so the beat feels half as fast while the tempo stays at 140–150 BPM, like wave and trap.",
+        how: "Move the snare or clap from steps 5 and 13 to step 9 only. Keep the kick sparse (step 1, maybe 11) and leave the hats running in 8ths or 16ths. Play it next to Tuesday's straight beat at the same tempo to hear the difference." },
     ],
     warmup: [
       W.timing(140),
@@ -73,11 +76,11 @@ export const DAY_PLANS: Record<string, DayPlan> = {
     steps: [
       { title: "Hear the target", detail: "Play today's pattern. Count the 16 steps and note which ones the kick, snare and hats use.", min: 5, link: L("/labs/sequencer?{q}", "Today's pattern") },
       { title: "Program it on Push", detail: "Pick an empty clip slot on your drum track, set the loop to one bar, and step in kick, then snare, then hats. Match it by ear rather than copying the grid.", min: 15 },
-      { title: "Make it {v}", detail: "Follow today's focus above. Play it against yesterday's clip so you hear the difference in feel.", min: 10 },
+      { title: "Set the feel: {v}", detail: "{how}", min: 10 },
       { title: "Shape velocity", detail: "Hold a step and turn the velocity encoder. Drop the offbeat hats to about 60% so the beat leans on the downbeats.", min: 10, link: L("/push?tab=drums", "Step sequencer guide") },
       { title: "Record a live layer", detail: "Turn on Fixed Length (1 bar), hold Repeat at 1/16 and play hats over the loop, letting the pressure on the pad set the velocity.", min: 5, link: L("/push?tab=drums", "Note Repeat") },
     ],
-    check: ["The beat loops cleanly with no gap", "You changed the velocity of at least four steps", "Played next to yesterday's clip, today's {v} feel is obvious"],
+    check: ["The beat loops cleanly with no gap", "You changed the velocity of at least four steps", "You can hear and explain how today's {v} beat differs from the others"],
     tip: "Program the kick and snare first. If they feel right, everything else is decoration.",
     skills: [1, 2, 3],
   },
@@ -737,7 +740,7 @@ export function dayPlan(sprintId: string, week: 1 | 2, slot: "mon" | "mid" | "fr
   const p = DAY_PLANS[`${sprintId}-w${week}-${slot}`]
   if (!p) return null
   const v = p.variants?.[Math.max(0, Math.min(p.variants.length - 1, variantIdx))]
-  const fill = (s: string) => s.replaceAll("{v}", v?.label ?? "").replaceAll("{q}", v?.q ?? "")
+  const fill = (s: string) => s.replaceAll("{how}", v?.how ?? "").replaceAll("{v}", v?.label ?? "").replaceAll("{q}", v?.q ?? "")
   const link = (l?: DayLink) => (l ? { to: fill(l.to).replace(/[?&]$/, ""), label: fill(l.label) } : undefined)
   return {
     outcome: fill(p.outcome),
