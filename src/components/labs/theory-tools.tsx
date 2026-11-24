@@ -137,7 +137,7 @@ export function ModesExplorer() {
       <Caption>Modes are the major scale started from a different note. Here every mode starts on {NOTE_NAMES[root]}, so you can hear how each changed note shifts the mood. They run from brightest to darkest.</Caption>
       <div className="grid gap-2">
         {MODES.map((x, i) => (
-          <div key={x.name} className={cn("grid gap-2 rounded-lg border bg-card p-3 sm:grid-cols-[11rem_minmax(0,1fr)_auto] sm:items-center", i === sel && "border-foreground")}>
+          <div key={x.name} className={cn("grid gap-2 border bg-card p-3 sm:grid-cols-[11rem_minmax(0,1fr)_auto] sm:items-center", i === sel && "border-foreground")}>
             <div>
               <p className="font-medium">{x.name}</p>
               <p className="text-muted-foreground text-xs">{x.vs ? `Major with ${x.vs}` : "The major scale"}</p>
@@ -189,7 +189,7 @@ export function BorrowedChords() {
       <Caption>Borrowing takes a chord from a key that shares the same root, like {MAJOR_NAMES[root]} minor’s chords in {MAJOR_NAMES[root]} major. It adds color without changing key. You’re in {keyLabel(root, minor)}{minor ? " (minor)" : " major"}; switch the key at the top to hear these in another key.</Caption>
       <div className="grid gap-3 md:grid-cols-2">
         {list.map((b) => (
-          <div key={b.roman} className="flex flex-col gap-3 rounded-xl border bg-card p-4">
+          <div key={b.roman} className="flex flex-col gap-3 border bg-card p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-semibold">{b.roman} <span className="text-muted-foreground font-normal">· {nm(b.semis, b.ivs)}</span></p>
@@ -248,7 +248,7 @@ export function FindKey() {
       {ranked.length > 0 && (
         <ol className="grid gap-2 sm:grid-cols-2">
           {ranked.map((k, i) => (
-            <li key={k.root + "" + k.minor} className={cn("flex items-center justify-between gap-3 rounded-lg border bg-card p-3", i === 0 && "border-foreground")}>
+            <li key={k.root + "" + k.minor} className={cn("flex items-center justify-between gap-3 border bg-card p-3", i === 0 && "border-foreground")}>
               <div className="min-w-0">
                 <p className="font-medium">{keyLabel(k.root, k.minor).replace(/m$/, "")} {k.minor ? "minor" : "major"}{i === 0 && k.score === best ? <span className="text-muted-foreground font-normal"> · best fit</span> : null}</p>
                 <p className="text-muted-foreground text-xs">{k.missing.length ? `${k.missing.map((p) => NOTE_NAMES[p]).join(", ")} ${k.missing.length > 1 ? "are" : "is"} outside this key` : "Every note fits"}</p>

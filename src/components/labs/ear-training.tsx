@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { useSearchParams } from "react-router"
+import { Link, useSearchParams } from "react-router"
 import { Play } from "lucide-react"
 import { tone, type ToneOptions } from "@/audio/engine"
 import { stop, toggle } from "@/audio/playback"
@@ -23,6 +23,14 @@ const HELP: Record<Mode, string> = {
   progressions: "Four chords in a random key. Pick the progression by its Roman numerals. Listen for where the bass goes and whether it ends at home.",
   degrees: "A short I–IV–V–I sets the key, then one note plays. Which step of the major scale is it?",
   keys: "A chord progression and a scale run. Does it sound major (bright) or minor (darker)?",
+}
+
+/** Where to learn what each quiz tests. */
+const LEARN: Partial<Record<Mode, [string, string]>> = {
+  chords: ["/labs/theory?tab=qualities", "Learn the chord qualities"],
+  intervals: ["/labs/theory?tab=intervals", "Learn the intervals"],
+  progressions: ["/labs/theory?tab=chords", "Hear the chords in a key"],
+  keys: ["/labs/theory?tab=qualities", "Hear major and minor side by side"],
 }
 
 /** Progressions by scale degree (0 = I), used for the progression quiz. */
@@ -150,7 +158,7 @@ export function EarTraining() {
   return (
     <div className="space-y-4">
       <TabSwitch label="Quiz type" value={mode} onChange={(m) => { stop(); setMode(m); setQ(null); setPicked(null) }} options={MODES} />
-      <Caption>{HELP[mode]}</Caption>
+      <Caption>{HELP[mode]}{LEARN[mode] && <> <Link to={LEARN[mode]![0]} className="text-foreground underline underline-offset-2">{LEARN[mode]![1]}</Link> first if they’re new to you.</>}</Caption>
       <WeakSpots detail={progress.earDetail?.[mode]} focus={focus} setFocus={setFocus} id="ear-focus" />
       <div className="flex flex-wrap items-center gap-2">
         {q ? <PlayButton id="ear" label="Play again" onPlay={() => play()} /> : <Button onClick={next}><Play className="size-3.5 fill-current" />Start</Button>}

@@ -22,6 +22,7 @@ import { Sampler } from "@/components/labs/sampler"
 import { MelodyLab as MelodyWriter } from "@/components/labs/melody-lab"
 import { MixEar } from "@/components/labs/mix-ear"
 import { MatchSound } from "@/components/labs/match-sound"
+import { ChordQualities, Intervals } from "@/components/labs/hear-theory"
 import { BorrowedChords, CircleOfFifths, FindKey, ModesExplorer } from "@/components/labs/theory-tools"
 import { KeyPicker } from "@/components/key-picker"
 import { UrlTabs } from "@/components/url-tabs"
@@ -36,9 +37,11 @@ const More = ({ to, children }: { to: string; children: React.ReactNode }) => (
 export function TheoryLab() {
   return (
     <div className="space-y-10">
-      <PageHeader title="Scales and chords" actions={<div className="flex flex-wrap items-end gap-3"><KeyPicker idPrefix="th" /></div>}>Pick a key once and every lab uses it. Hear the chords in a key, find keys on the circle of fifths, explore modes and borrowed chords, and work out the key of something you hear.</PageHeader>
+      <PageHeader title="Scales and chords" actions={<div className="flex flex-wrap items-end gap-3"><KeyPicker idPrefix="th" /></div>}>Pick a key once and every lab uses it. Learn how chord qualities and intervals sound, hear the chords in a key, find keys on the circle of fifths, explore modes and borrowed chords, and work out the key of something you hear.</PageHeader>
       <UrlTabs label="Theory topics" tabs={[
         ["chords", "Chords in a key", <div key="chords" className="space-y-12"><Block title="Chords in a key"><ScalesLab hideKey /></Block><Block title="Play the grid"><PlayableGrid /></Block></div>],
+        ["qualities", "Chord qualities", <Block key="qualities" title="Chord qualities" description="Major, minor, diminished, sevenths and more: what each one is made of and how it sounds."><ChordQualities /></Block>],
+        ["intervals", "Intervals", <Block key="intervals" title="Intervals" description="The distance between two notes, and the building block of every chord."><Intervals /></Block>],
         ["circle", "Circle of fifths", <Block key="circle" title="Circle of fifths"><CircleOfFifths /></Block>],
         ["modes", "Modes", <Block key="modes" title="Modes"><ModesExplorer /></Block>],
         ["borrowed", "Borrowed chords", <Block key="borrowed" title="Borrowed chords"><BorrowedChords /></Block>],

@@ -135,7 +135,7 @@ export function ScalesLab({ hideKey = false }: { hideKey?: boolean }) {
                   aria-pressed={i === ch.d}
                   onClick={() => playChord(i)}
                   className={cn(
-                    "grid gap-0.5 rounded-md border border-pad-edge bg-card px-1 py-2 text-sm transition-[background-color,scale] duration-150 active:scale-[0.96]",
+                    "grid gap-0.5 border border-pad-edge bg-card px-1 py-2 text-sm transition-[background-color,scale] duration-150 active:scale-[0.96]",
                     i === ch.d && "border-transparent bg-[var(--s2)] text-[var(--on-accent)]",
                   )}
                 >
@@ -149,7 +149,7 @@ export function ScalesLab({ hideKey = false }: { hideKey?: boolean }) {
             <h3 className="font-semibold">Progressions to try</h3>
             <div className="grid gap-1.5 sm:grid-cols-2">
               {T.progs.map((p, i) => (
-                <button key={i} type="button" onClick={() => playProg(i)} className="grid rounded-md border border-pad-edge bg-card px-3 py-2 text-left text-sm transition-[scale] duration-150 active:scale-[0.96]">
+                <button key={i} type="button" onClick={() => playProg(i)} className="grid border border-pad-edge bg-card px-3 py-2 text-left text-sm transition-[scale] duration-150 active:scale-[0.96]">
                   <b>{p.map((d) => T.chords[d].roman).join("–")}</b>
                   <span className="text-muted-foreground">{p.map((d) => T.chords[d].name).join("–")}</span>
                 </button>
