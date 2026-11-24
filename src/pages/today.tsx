@@ -1,16 +1,18 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { ArrowRight } from "lucide-react"
 import { Link } from "react-router"
 import { Block, Caption, PageHeader } from "@/components/page"
 import { PracticeTimer } from "@/components/practice-timer"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Ring, WeekStrip } from "@/components/stats"
+import { SKILL_GUIDES } from "@/data/skill-guides"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { SPRINTS } from "@/data/sprints"
 import { dueCards } from "@/lib/cards"
-import { currentWeek, fmtMinutes, minutesByDay, sprintForWeek, streaks, todayISO, uid, update, usePref, useProgress } from "@/lib/store"
+import { currentWeek, fmtMinutes, minutesByDay, minutesThisWeek, sprintForWeek, streaks, todayISO, uid, update, usePref, useProgress, WEEKLY_GOAL_MIN } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
 const SLOT: Record<number, ["mon" | "mid" | "fri" | "wknd", string]> = { 1: ["mon", "Monday: learn"], 2: ["mid", "Practice day"], 3: ["mid", "Practice day"], 4: ["mid", "Practice day"], 5: ["fri", "Friday: reference"], 6: ["wknd", "Weekend: build"], 0: ["wknd", "Weekend: build"] }
@@ -51,66 +53,107 @@ export function TodayPage() {
     setNote("")
   }
 
+  const weekMin = minutesThisWeek(p)
+  const plan = PLAN_MIN[slot]
+  const minsRef = useRef<HTMLInputElement>(null)
+
   return (
-    <div className="space-y-12" style={{ ["--c" as string]: `var(${s.c})` }}>
+    <div className="space-y-10" style={{ ["--c" as string]: `var(${s.c})` }}>
       <PageHeader title="Today">
         {new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" }).format(new Date())}
-        {inPlan ? ` · Week ${cur.week}, Sprint ${s.n}` : cur.week < 1 ? " · The plan hasn't started yet" : " · The 12 weeks are done"}
+        {inPlan ? ` · Week ${cur.week} of 12` : cur.week < 1 ? " · The plan hasn't started yet" : " · The 12 weeks are done"}
       </PageHeader>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="md:col-span-2">
-          <CardContent className="space-y-3">
-            <p className="text-muted-foreground text-sm">{slotName} · about {fmtMinutes(PLAN_MIN[slot])}</p>
-            <p className="flex items-center gap-2 font-display text-xl font-bold"><span aria-hidden="true" className="size-2.5 rounded-full bg-[var(--c)]" />Sprint {s.n}: {s.title}</p>
-            <p className="text-lg text-pretty">{s.weeks[weekInSprint][slot]}</p>
-            {day === 0 && <p className="text-sm">It's Sunday: export something, even 30 seconds, and <Link to="/exports" className="underline">log the export</Link>.</p>}
-            <Link to={`/sprints/${s.n}`} className="inline-flex items-center gap-1.5 text-sm font-medium underline">Sprint details <ArrowRight className="size-4" /></Link>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="space-y-1">
-            <p className="text-muted-foreground text-sm">Practiced today</p>
-            <p className="font-display text-3xl font-extrabold tabular-nums">{fmtMinutes(minutes)}</p>
-            <p className="text-muted-foreground text-sm">{current > 0 ? `${current}-day streak` : "Log a session to start a streak"}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Block title="Warm-up" description={`About 15 minutes. ${doneCount} of ${warmups.length} done.`}>
-        <ul className="max-w-3xl divide-y border-y">
-          {warmups.map(([k, text, to, label]) => (
-            <li key={k} className="flex items-center justify-between gap-3 py-2.5">
-              <div className="flex items-center gap-3">
-                <Checkbox id={"w-" + k} checked={!!checks[k]} onCheckedChange={(v) => setChecks({ ...checks, [k]: v === true })} />
-                <Label htmlFor={"w-" + k} className={cn("font-normal", checks[k] && "text-muted-foreground line-through")}>{text}</Label>
+      <section aria-labelledby="focus-h" className="overflow-hidden rounded-2xl border bg-[color-mix(in_oklab,var(--c)_7%,var(--card))]">
+        <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div className="min-w-0 space-y-4">
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+              <span aria-hidden="true" className="size-2.5 rounded-full bg-[var(--c)]" />
+              <Link to={`/sprints/${s.n}`} className="font-medium hover:underline">Sprint {s.n}: {s.title}</Link>
+              <span className="text-muted-foreground">· {slotName}</span>
+            </p>
+            <h2 id="focus-h" className="font-display max-w-2xl text-2xl leading-tight font-bold text-balance sm:text-3xl">{s.weeks[weekInSprint][slot]}</h2>
+            {day === 0 && <p className="text-sm">It’s Sunday: export something, even 30 seconds, and <Link to="/exports" className="underline">log the export</Link>.</p>}
+            <div className="pt-2"><PracticeTimer onStop={(m) => { setMins(String(m)); requestAnimationFrame(() => minsRef.current?.focus()) }} /></div>
+          </div>
+          <div className="flex items-center gap-5 lg:flex-col lg:gap-3">
+            <Ring value={minutes / plan} size={132} stroke={11} label={`${minutes} of ${plan} planned minutes today`}>
+              <div className="leading-tight">
+                <p className="font-display text-2xl font-extrabold tabular-nums">{minutes}</p>
+                <p className="text-muted-foreground text-xs">of {plan} min</p>
               </div>
-              <Link to={to} className="text-sm whitespace-nowrap underline">{label}</Link>
-            </li>
-          ))}
-        </ul>
+            </Ring>
+            <div className="space-y-0.5 text-sm lg:text-center">
+              <p className="font-medium">{minutes >= plan ? "Today’s plan is done" : minutes ? `${plan - minutes} min to go` : `About ${fmtMinutes(plan)} planned`}</p>
+              <p className="text-muted-foreground">{current > 0 ? `${current}-day streak` : "Log a session to start a streak"}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Block title="This week" description={`${fmtMinutes(weekMin)} of your ${fmtMinutes(WEEKLY_GOAL_MIN)} weekly goal. The dashed line is each day’s plan.`} actions={<Link to="/practice" className="text-sm underline">Practice log</Link>}>
+        <WeekStrip p={p} />
       </Block>
 
-      {nextSkills.length > 0 && (
-        <Block title="Skills to work toward" description="The next skills in this sprint, each with a step-by-step walkthrough. Check one off once you can do it without the steps.">
-          <ul className="max-w-3xl space-y-3">
-            {nextSkills.map(({ k, key }) => (
-              <li key={key} className="flex items-start gap-3">
-                <Checkbox id={"t-" + key} checked={!!p.done[key]} onCheckedChange={(v) => update((d) => { d.done[key] = v === true })} className="mt-0.5" />
-                <Label htmlFor={"t-" + key} className="flex-1 leading-snug font-normal">{k}</Label>
-                <Link to={`/sprints/${s.n}?skill=${key}`} className="text-sm whitespace-nowrap underline">{(p.skillSteps?.[key]?.length ?? 0) > 0 ? "Continue walkthrough" : "Walk through"}</Link>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section aria-labelledby="warm-h" className="space-y-4 rounded-xl border bg-card p-5">
+          <div className="flex items-baseline justify-between gap-3">
+            <div>
+              <h2 id="warm-h" className="font-semibold">Warm-up</h2>
+              <p className="text-muted-foreground text-sm">About 15 minutes before the main task.</p>
+            </div>
+            <span className="text-muted-foreground text-sm tabular-nums">{doneCount} of {warmups.length}</span>
+          </div>
+          <Progress value={(doneCount / warmups.length) * 100} aria-hidden="true" className="h-1.5 [&>div]:bg-[var(--c)]" />
+          <ul className="-mx-2">
+            {warmups.map(([k, text, to, label]) => (
+              <li key={k} className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-accent/60">
+                <Checkbox id={"w-" + k} checked={!!checks[k]} onCheckedChange={(v) => setChecks({ ...checks, [k]: v === true })} />
+                <Label htmlFor={"w-" + k} className={cn("flex-1 leading-snug font-normal", checks[k] && "text-muted-foreground line-through")}>{text}</Label>
+                <Button variant="ghost" size="icon" className="size-8 shrink-0" asChild><Link to={to} aria-label={`Open ${label}`}><ArrowRight /></Link></Button>
               </li>
             ))}
           </ul>
-        </Block>
-      )}
+        </section>
 
-      <Block title="Practice session" description="Start the timer when you sit down. Stopping it fills in the minutes below.">
-        <PracticeTimer onStop={(m) => setMins(String(m))} />
+        <section aria-labelledby="skills-h" className="space-y-4 rounded-xl border bg-card p-5">
+          <div className="flex items-baseline justify-between gap-3">
+            <div>
+              <h2 id="skills-h" className="font-semibold">Skills to work toward</h2>
+              <p className="text-muted-foreground text-sm">Walk through the steps on Push, then tick it once it sticks.</p>
+            </div>
+            <Link to={`/sprints/${s.n}`} className="text-sm whitespace-nowrap underline">All skills</Link>
+          </div>
+          {nextSkills.length ? (
+            <ul className="space-y-3">
+              {nextSkills.map(({ k, key }) => {
+                const g = SKILL_GUIDES[key], n = p.skillSteps?.[key]?.length ?? 0, total = g?.steps.length ?? 1
+                return (
+                  <li key={key} className="space-y-3 rounded-lg border p-3.5">
+                    <div className="flex items-start gap-3">
+                      <Checkbox id={"t-" + key} checked={!!p.done[key]} onCheckedChange={(v) => update((d) => { d.done[key] = v === true })} className="mt-0.5" />
+                      <Label htmlFor={"t-" + key} className="flex-1 leading-snug font-medium">{k}</Label>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pl-7">
+                      <Progress value={(n / total) * 100} aria-label={`${n} of ${total} steps`} className="h-1.5 min-w-16 flex-1 basis-20 [&>div]:bg-[var(--c)]" />
+                      <span className="text-muted-foreground text-xs whitespace-nowrap tabular-nums">{n} of {total} steps{g ? ` · ${g.min} min` : ""}</span>
+                      <Button size="sm" variant={n ? "default" : "outline"} asChild><Link to={`/sprints/${s.n}?skill=${key}`}>{n ? "Continue" : "Start"}</Link></Button>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : (
+            <p className="text-sm">Every skill in this sprint is ticked off. Focus on the deliverable: {s.goal}</p>
+          )}
+        </section>
+      </div>
+
+      <Block title="Log a session" description="Stopping the timer fills in the minutes. Sessions count toward your streak and weekly goal.">
         <form onSubmit={log} className="grid max-w-3xl items-end gap-3 sm:grid-cols-[7rem_minmax(0,1fr)_auto]">
-          <div className="grid gap-1.5"><Label htmlFor="td-min">Minutes</Label><Input id="td-min" type="number" inputMode="numeric" min={1} max={600} value={mins} onChange={(e) => setMins(e.target.value)} placeholder={String(PLAN_MIN[slot])} className="text-base tabular-nums sm:text-sm" /></div>
+          <div className="grid gap-1.5"><Label htmlFor="td-min">Minutes</Label><Input ref={minsRef} id="td-min" type="number" inputMode="numeric" min={1} max={600} value={mins} onChange={(e) => setMins(e.target.value)} placeholder={String(plan)} className="text-base tabular-nums sm:text-sm" /></div>
           <div className="grid gap-1.5"><Label htmlFor="td-note">What happened (optional)</Label><Input id="td-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="What worked, what was slow, next question" autoComplete="off" className="text-base sm:text-sm" /></div>
-          <Button type="submit" variant="outline" disabled={!Number(mins)}>Log session</Button>
+          <Button type="submit" disabled={!Number(mins)}>Log session</Button>
         </form>
         {logged && <p className="text-sm" role="status">{logged} <Link to="/practice" className="underline">See the practice log</Link>.</p>}
         <Caption>Logged against Sprint {s.n}. Use the practice log to pick a different focus or date.</Caption>

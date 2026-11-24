@@ -21,7 +21,7 @@ export function PracticeTimer({ onStop }: { onStop: (minutes: number) => void })
       {start ? (
         <Button onClick={() => { onStop(Math.max(1, Math.round(secs / 60))); setStart(null) }}><Pause className="fill-current" />Stop and log</Button>
       ) : (
-        <Button variant="outline" onClick={() => { setNow(Date.now()); setStart(Date.now()) }}><Play className="fill-current" />Start practice timer</Button>
+        <Button onClick={() => { setNow(Date.now()); setStart(Date.now()) }}><Play className="fill-current" />Start practice timer</Button>
       )}
       {start && <Caption>The timer keeps running if you switch pages.</Caption>}
     </div>
