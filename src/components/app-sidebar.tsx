@@ -7,6 +7,7 @@ import {
 import { SPRINTS } from "@/data/sprints"
 import { useProgress } from "@/lib/store"
 import { MidiStatus } from "@/components/midi-status"
+import { AccountMenu } from "@/components/account"
 import { QuickSearch } from "@/components/quick-search"
 
 type Item = { to: string; label: string; icon?: React.ComponentType<{ className?: string }>; dot?: string; done?: boolean }
@@ -98,6 +99,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <MidiStatus />
+          <AccountMenu />
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Settings and data">
               <NavLink to="/settings"><Settings /><span>Settings and data</span></NavLink>

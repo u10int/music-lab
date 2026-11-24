@@ -56,3 +56,15 @@ It's a static single-page app. Any static host works; the build output is `dist/
 
 - Sync across devices (needs a backend with sign-in)
 - Reference song analyzer: notes and chords from a stem in the browser with Basic Pitch
+
+## Accounts (Supabase)
+
+Accounts are off until a Supabase project is configured. Then the tracking pages
+(dashboard, today, sprints, practice log, flashcards, exports, planner, notebook,
+weekly review) need sign-in, and progress syncs to a `progress` table, one row per
+user, protected by row-level security. Labs and guides stay open to everyone.
+
+1. Create a Supabase project and run `supabase/migrations/0001_progress.sql`.
+2. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (see `.env.example`) locally and in Vercel.
+3. Enable the GitHub provider (callback `https://<project>.supabase.co/auth/v1/callback`) and email sign-in.
+4. Set the Site URL to the Vercel domain and add `http://localhost:5173` as a redirect URL.

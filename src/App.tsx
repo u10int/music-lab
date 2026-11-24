@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from "react"
+import { RequireAccount } from "@/components/account"
 import { createBrowserRouter, Outlet, RouterProvider, useLocation } from "react-router"
 import { stop } from "@/audio/playback"
 import { AppSidebar } from "@/components/app-sidebar"
@@ -90,16 +91,16 @@ const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: "/", element: <Dashboard /> },
-      { path: "/today", element: <TodayPage /> },
-      { path: "/sprints/:n", element: <SprintPage /> },
-      { path: "/exports", element: <ExportsPage /> },
-      { path: "/practice", element: <PracticePage /> },
-      { path: "/flashcards", element: <FlashcardsPage /> },
+      { path: "/", element: <RequireAccount what="your dashboard"><Dashboard /></RequireAccount> },
+      { path: "/today", element: <RequireAccount what="today’s session"><TodayPage /></RequireAccount> },
+      { path: "/sprints/:n", element: <RequireAccount what="your sprints"><SprintPage /></RequireAccount> },
+      { path: "/exports", element: <RequireAccount what="your exports"><ExportsPage /></RequireAccount> },
+      { path: "/practice", element: <RequireAccount what="your practice log"><PracticePage /></RequireAccount> },
+      { path: "/flashcards", element: <RequireAccount what="your flashcards"><FlashcardsPage /></RequireAccount> },
       { path: "/plan", element: <PlanPage /> },
-      { path: "/planner", element: <PlannerPage /> },
-      { path: "/review", element: <ReviewPage /> },
-      { path: "/notebook", element: <NotebookPage /> },
+      { path: "/planner", element: <RequireAccount what="your track plan"><PlannerPage /></RequireAccount> },
+      { path: "/review", element: <RequireAccount what="your weekly review"><ReviewPage /></RequireAccount> },
+      { path: "/notebook", element: <RequireAccount what="your reference notebook"><NotebookPage /></RequireAccount> },
       { path: "/labs/theory", element: <TheoryLab /> },
       { path: "/labs/ear", element: <EarLab /> },
       { path: "/labs/play-along", element: <PlayAlongPage /> },
