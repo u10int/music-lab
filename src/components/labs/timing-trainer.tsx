@@ -105,7 +105,7 @@ export function TimingTrainer() {
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
-        <PlayButton id="timing" label="Start click" size="default" onPlay={start} />
+        <PlayButton id="timing" label="Start click" primary onPlay={start} />
         <div className="grid w-44 gap-2">
           <div className="flex justify-between text-sm"><Label htmlFor="tt-tempo">Tempo</Label><output className="text-muted-foreground tabular-nums">{tempo} BPM</output></div>
           <Slider id="tt-tempo" min={60} max={180} step={1} value={[tempo]} disabled={running} onValueChange={([v]) => setTempo(v)} aria-label="Tempo" />

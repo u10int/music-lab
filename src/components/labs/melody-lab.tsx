@@ -7,6 +7,7 @@ import { fxChain, voice } from "@/audio/patch"
 import { toggle, usePlayingId } from "@/audio/playback"
 import { KeyPicker, useKey } from "@/components/key-picker"
 import { MidiOutPicker } from "@/components/midi-out-picker"
+import { Toolbar } from "@/components/toolbar"
 import { Block, Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
@@ -218,7 +219,13 @@ export function MelodyLab() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+      <Toolbar
+        transport={<PlayButton id="melody" label="Play" primary onPlay={play} />}
+        actions={<>
+          <Button variant="outline" disabled={!st.notes.length} onClick={toLoop}><Repeat />Use in loop builder</Button>
+          <Button variant="outline" disabled={!st.notes.length} onClick={exportMidi}><Download />Export .mid</Button>
+        </>}
+      >
         <KeyPicker idPrefix="ml" />
         <div className="grid gap-1.5">
           <Label htmlFor="ml-sound">Sound</Label>
@@ -238,7 +245,7 @@ export function MelodyLab() {
           <div className="flex justify-between text-sm"><Label htmlFor="ml-tempo">Tempo</Label><output className="text-muted-foreground tabular-nums">{st.tempo} BPM</output></div>
           <Slider id="ml-tempo" aria-label="Tempo" min={60} max={180} step={1} value={[st.tempo]} onValueChange={([v]) => set({ tempo: v })} />
         </div>
-      </div>
+      </Toolbar>
 
       <Block title="Chords" description="The melody is written over these. Rows that are notes of the bar’s chord are shaded on the grid.">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -256,7 +263,6 @@ export function MelodyLab() {
 
       <Block title="Write">
         <div className="flex flex-wrap items-center gap-2">
-          <PlayButton id="melody" label="Play" size="default" onPlay={play} />
           <Button variant="outline" size="sm" onClick={() => set({ notes: suggest(st.prog, st.style) })}><Sparkles />Suggest a melody</Button>
           <Select value={st.style} onValueChange={(v) => set({ style: v as Style })}>
             <SelectTrigger size="sm" className="w-44" aria-label="Melody style"><SelectValue /></SelectTrigger>
@@ -330,11 +336,7 @@ export function MelodyLab() {
         </Block>
       )}
 
-      <Block title="Use it">
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" disabled={!st.notes.length} onClick={toLoop}><Repeat />Use in the loop builder</Button>
-          <Button variant="outline" disabled={!st.notes.length} onClick={exportMidi}><Download />Export .mid</Button>
-        </div>
+      <Block title="Take it further">
         <Caption>The loop builder plays your melody with its genre drums, bass and chords. On Push, play it in Note mode with the scale set to {T.names[0]} {T.sc.name.toLowerCase()}, or enter it in the melodic step sequencer. See <Link className="underline" to="/labs/theory?tab=chords">chords in a key</Link> for the shapes.</Caption>
         <MidiOutPicker idPrefix="ml" channels={<>The melody goes out on channel 4, chords on 3, bass on 2 and drums on 10, matching the loop builder.</>} />
       </Block>

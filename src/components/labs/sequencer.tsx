@@ -17,6 +17,7 @@ import { usePref } from "@/lib/store"
 import { noteName, theory } from "@/lib/theory"
 import { cn } from "@/lib/utils"
 import { MidiOutPicker } from "@/components/midi-out-picker"
+import { Toolbar } from "@/components/toolbar"
 import { browserSound, sendNote } from "@/midi/midi-out"
 
 const MAX_STEPS = 32
@@ -158,8 +159,13 @@ export function Sequencer() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
-        <PlayButton id="seq" label="Play loop" size="default" onPlay={play} />
+      <Toolbar
+        transport={<PlayButton id="seq" label="Play loop" primary onPlay={play} />}
+        actions={<>
+          <Button variant="outline" onClick={() => exportMidi("drums")}><Download />Export drums</Button>
+          <Button variant="outline" onClick={() => exportMidi("melody")}><Download />Export melody</Button>
+        </>}
+      >
         <div className="grid w-40 gap-2">
           <div className="flex justify-between text-sm"><Label htmlFor="tempo">Tempo</Label><output className="text-muted-foreground tabular-nums">{seq.tempo} BPM</output></div>
           <Slider id="tempo" min={70} max={180} step={1} value={[seq.tempo]} onValueChange={([v]) => setSeq({ ...seq, tempo: v })} aria-label="Tempo" />
@@ -192,13 +198,13 @@ export function Sequencer() {
           </Select>
         </div>
         <Button variant="ghost" size="sm" onClick={() => setSeq({ ...empty(), tempo: seq.tempo, swing: seq.swing, sound: seq.sound })}><Eraser />Clear</Button>
-      </div>
+      </Toolbar>
       {playing && <Caption>Edits play on the next pass, so you can build the loop while it runs.</Caption>}
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-semibold">Drums</h3>
-          <Button variant="outline" size="sm" onClick={() => exportMidi("drums")}><Download />Export drums .mid</Button>
+
         </div>
         <div className="overflow-x-auto">
           <div className={cn("grid gap-1.5", N > 16 ? "min-w-[960px]" : "min-w-[520px]")}>
@@ -226,7 +232,7 @@ export function Sequencer() {
           <div className="flex flex-wrap items-end gap-3">
             <KeyPicker idPrefix="sq" />
             <Seg label="Sound" value={seq.sound} onChange={(v) => setSeq({ ...seq, sound: v })} options={[["pluck", "Pluck"], ["bass", "Bass"], ["lead", "Lead"]]} />
-            <Button variant="outline" size="sm" onClick={() => exportMidi("melody")}><Download />Export melody .mid</Button>
+
           </div>
         </div>
         <div className="overflow-x-auto">

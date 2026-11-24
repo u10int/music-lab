@@ -8,6 +8,7 @@ import { toggle, usePlayingId } from "@/audio/playback"
 import { useKey } from "@/components/key-picker"
 import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
+import { Toolbar } from "@/components/toolbar"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -236,7 +237,18 @@ export function ArrangementMap() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+      <Toolbar
+        transport={<PlayButton id="arrangement" label={cur === 0 ? "Play" : `Play from ${cs.name.toLowerCase()}`} primary onPlay={() => play(cur)} />}
+        actions={!confirming ? (
+          <Button variant="outline" onClick={() => (progress.plan ? setConfirming(true) : toPlanner())}><PencilRuler />Use as track plan</Button>
+        ) : (
+          <>
+            <span className="text-sm">Replace your current track plan?</span>
+            <Button variant="destructive" size="sm" onClick={toPlanner}>Replace</Button>
+            <Button variant="ghost" size="sm" onClick={() => setConfirming(false)}>Cancel</Button>
+          </>
+        )}
+      >
         <div className="grid gap-1.5">
           <Label htmlFor="arr-tpl">Template</Label>
           <Select value={arr.template} onValueChange={(v) => { setSt(fromTemplate(v)); setSel(0) }}>
@@ -252,11 +264,10 @@ export function ArrangementMap() {
           <Switch id="arr-loop" checked={loopSec} onCheckedChange={setLoopSec} />
           <Label htmlFor="arr-loop" className="font-normal">Loop the selected section</Label>
         </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <PlayButton id="arrangement" label={cur === 0 ? "Play" : `Play from ${cs.name.toLowerCase()}`} size="default" onPlay={() => play(cur)} />
+      </Toolbar>
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-sm font-medium tabular-nums">{total} bars · {mmss(total * barS)}</span>
         <Button variant="ghost" size="sm" onClick={() => { setSt(fromTemplate(arr.template)); setSel(0) }}><RotateCcw />Reset template</Button>
-        <span className="text-muted-foreground text-sm tabular-nums">{total} bars · {mmss(total * barS)}</span>
       </div>
       <Caption>{tpl.note} Sounds come from the {tpl.name.toLowerCase()} loop in <Link className="underline" to={`/labs/loop-builder?genre=${tpl.family}`}>the loop builder</Link>, in your current key. Click a cell to change what that part does in that section.</Caption>
 
@@ -327,7 +338,7 @@ export function ArrangementMap() {
                 <SelectContent>{[4, 8, 16, 24, 32].map((b) => <SelectItem key={b} value={String(b)}>{b} bars</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <PlayButton id="arrangement" label="Play this section" onPlay={() => play(cur)} />
+            
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" disabled={cur === 0} onClick={() => move(-1)}><ArrowLeft />Move left</Button>
@@ -347,18 +358,6 @@ export function ArrangementMap() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        {!confirming ? (
-          <Button variant="outline" onClick={() => (progress.plan ? setConfirming(true) : toPlanner())}><PencilRuler />Use as my track plan</Button>
-        ) : (
-          <>
-            <span className="text-sm">This replaces your current track plan.</span>
-            <Button variant="destructive" size="sm" onClick={toPlanner}>Replace track plan</Button>
-            <Button variant="ghost" size="sm" onClick={() => setConfirming(false)}>Cancel</Button>
-          </>
-        )}
-        <Caption>Then perform it: one Session scene per section, recorded into Live’s Arrangement.</Caption>
-      </div>
     </div>
   )
 }

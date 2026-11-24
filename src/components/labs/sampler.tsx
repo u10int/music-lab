@@ -239,7 +239,7 @@ export function Sampler() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center gap-2">
         <input ref={fileRef} type="file" accept="audio/*" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => { const f = e.target.files?.[0]; if (f) void openFile(f); e.target.value = "" }} />
-        <Button variant="outline" onClick={() => fileRef.current?.click()}><FileAudio />Load an audio file</Button>
+        <Button size="lg" onClick={() => fileRef.current?.click()}><FileAudio />Load an audio file</Button>
         <Button variant="ghost" onClick={() => void loadDemo()}><Sparkles />Use a demo loop</Button>
         {loaded && <span className="text-muted-foreground min-w-0 truncate text-sm">{loaded.name} · {loaded.buf.duration.toFixed(2)} s</span>}
       </div>
@@ -313,7 +313,7 @@ export function Sampler() {
               </Block>
               <Block title="Rearrange">
                 <div className="flex flex-wrap items-center gap-2">
-                  <PlayButton id="sampler" label="Play slices" onPlay={playSeq} />
+                  <PlayButton id="sampler" label="Play slices" primary onPlay={playSeq} />
                   <Button variant="outline" size="sm" onClick={() => setOrder((o) => [...o].sort(() => Math.random() - 0.5))}><Shuffle />Shuffle order</Button>
                   <Button variant="ghost" size="sm" onClick={() => setOrder(Array.from({ length: 16 }, (_, i) => i))}>In order</Button>
                 </div>

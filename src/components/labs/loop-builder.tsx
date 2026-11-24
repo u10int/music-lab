@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { horizon, startClock, stopClock } from "@/audio/clock"
-import { Download, RotateCcw, Save, Shuffle, Trash2 } from "lucide-react"
+import { Check, Download, RotateCcw, Save, Shuffle, Trash2 } from "lucide-react"
+import { Toolbar } from "@/components/toolbar"
 import { Link, useSearchParams } from "react-router"
 import { drum } from "@/audio/engine"
 import { fxChain, voice } from "@/audio/patch"
@@ -146,7 +147,13 @@ export function LoopBuilder() {
     downloadFile(writeMidi(tracks, loop.tempo), `music-lab-${loop.family}-loop-${loop.tempo}bpm.mid`)
   }
 
-  const save = () => update((d) => {
+  const [saved, setSaved] = useState(false)
+  const save = () => {
+    setSaved(true)
+    window.setTimeout(() => setSaved(false), 1800)
+    saveLoop()
+  }
+  const saveLoop = () => update((d) => {
     d.loops ??= []
     d.loops.unshift({ id: uid(), name: `${famName(loop.family)} in ${T.names[0]} ${T.sc.name.toLowerCase()}`, date: todayISO(), root, scale, loop })
   })
@@ -205,31 +212,30 @@ export function LoopBuilder() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+      <Toolbar
+        transport={<PlayButton id="loop" label="Play loop" primary onPlay={play} />}
+        actions={<>
+          <Button variant="outline" onClick={save}>{saved ? <Check /> : <Save />}{saved ? "Saved" : "Save loop"}</Button>
+          <Button variant="outline" onClick={exportMidi}><Download />Export .mid</Button>
+        </>}
+      >
         <div className="grid gap-1.5">
           <Label htmlFor="lb-genre">Genre</Label>
           <Select value={loop.family} onValueChange={(f) => { setStored(defaultLoop(f)); setScale(genreInfo(f)!.scale) }}>
-            <SelectTrigger id="lb-genre" size="sm" className="w-48"><SelectValue /></SelectTrigger>
+            <SelectTrigger id="lb-genre" size="sm" className="w-44"><SelectValue /></SelectTrigger>
             <SelectContent>{GENRE_INFO.map((g) => <SelectItem key={g.id} value={g.id}>{famName(g.id)}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <KeyPicker idPrefix="lb" />
-        <div className="grid w-40 gap-2">
+        <div className="grid w-36 gap-2">
           <div className="flex justify-between text-sm"><Label htmlFor="lb-tempo">Tempo</Label><output className="text-muted-foreground tabular-nums">{loop.tempo} BPM</output></div>
           <Slider id="lb-tempo" aria-label="Tempo" min={60} max={180} step={1} value={[loop.tempo]} onValueChange={([v]) => setLoop({ tempo: v })} />
         </div>
-        <div className="grid w-32 gap-2">
+        <div className="grid w-28 gap-2">
           <div className="flex justify-between text-sm"><Label htmlFor="lb-swing">Swing</Label><output className="text-muted-foreground tabular-nums">{Math.round(loop.swing * 100)}%</output></div>
           <Slider id="lb-swing" aria-label="Swing" min={0} max={0.6} step={0.01} value={[loop.swing]} onValueChange={([v]) => setLoop({ swing: v })} />
         </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <PlayButton id="loop" label="Play loop" size="default" onPlay={play} />
-        <Button variant="outline" size="sm" onClick={() => setStored(shuffleLoop(loop))}><Shuffle />Shuffle sounds</Button>
-        <Button variant="outline" size="sm" onClick={save}><Save />Save loop</Button>
-        <Button variant="outline" size="sm" onClick={exportMidi}><Download />Export .mid</Button>
-        <Button variant="ghost" size="sm" onClick={() => setStored(defaultLoop(loop.family))}><RotateCcw />Reset</Button>
-      </div>
+      </Toolbar>
       <Caption>
         {info.blurb} Typical tempo {info.tempo[0]}–{info.tempo[1]} BPM. <Link className="underline" to={`/genres/${loop.family}`}>More about {famName(loop.family).toLowerCase()}</Link>
       </Caption>
@@ -254,7 +260,7 @@ export function LoopBuilder() {
         </div>
       </Block>
 
-      <Block title="Parts">
+      <Block title="Parts" actions={<div className="flex gap-1"><Button variant="outline" size="sm" onClick={() => setStored(shuffleLoop(loop))}><Shuffle />Shuffle sounds</Button><Button variant="ghost" size="sm" onClick={() => setStored(defaultLoop(loop.family))}><RotateCcw />Reset</Button></div>}>
         <div className="divide-y rounded-xl border bg-card">
           {PARTS.map((p) => (
             <div key={p} className="grid gap-3 p-4 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)_auto] lg:items-center">
