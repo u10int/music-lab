@@ -81,7 +81,7 @@ export function DrumsLab() {
 export function ArrangementLab() {
   return (
     <div className="space-y-10">
-      <PageHeader title="Arrangement">What enters and leaves where in a progressive house track. Use it as a map when you perform scenes into the Arrangement.</PageHeader>
+      <PageHeader title="Arrangement">How tracks in each genre are laid out, and what enters and leaves in each section. Play it, change it, and turn it into your own track plan.</PageHeader>
       <ArrangementMap />
     </div>
   )
