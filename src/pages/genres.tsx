@@ -97,7 +97,7 @@ function GenreCard({ id }: { id: string }) {
     <li className="relative flex flex-col gap-4 border-r border-b p-5 transition-[background-color] duration-150 hover:bg-muted/60">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-2xl leading-tight font-medium">
+          <h3 className="text-2xl font-medium">
             <Link to={`/genres/${id}`} className="after:absolute after:inset-0 hover:underline">{famName(id)}</Link>
           </h3>
           <p className="text-muted-foreground mt-0.5 text-sm tabular-nums">{g.tempo[0]}–{g.tempo[1]} BPM · {SCALE_NAME[g.scale]}</p>
@@ -275,7 +275,7 @@ function GenreHero({ id }: { id: string }) {
       <div className="flex flex-col items-center gap-3 border-b p-5 md:border-r md:border-b-0">
         <TempoDial value={tempo} range={g.tempo} color={color} onChange={setTempo} />
         <p className="-mt-1 text-center leading-tight">
-          <span className="block text-4xl font-medium tabular-nums">{tempo}</span>
+          <span className="block text-stat-lg font-medium tabular-nums">{tempo}</span>
           <span className="text-muted-foreground text-xs">BPM · {inRange ? "in the usual range" : tempo < g.tempo[0] ? "slower than usual" : "faster than usual"}</span>
         </p>
         <PlayButton id={pid} label="Play the loop" primary onPlay={play} className="w-full" />

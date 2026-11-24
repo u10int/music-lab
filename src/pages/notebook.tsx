@@ -65,7 +65,7 @@ function TapTimer({ onMark }: { onMark: (t: number) => void }) {
   }, [])
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4">
-      <output className="font-display min-w-24 text-3xl font-medium tabular-nums" aria-label="Time listened">{mmss(elapsed)}</output>
+      <output className="min-w-24 text-stat font-medium tabular-nums" aria-label="Time listened">{mmss(elapsed)}</output>
       <Button variant="outline" onClick={toggleRun}>{running ? <Pause /> : <Play className="fill-current" />}{running ? "Pause" : elapsed ? "Resume" : "Start"}</Button>
       <Button onClick={() => onMark(elapsed)} disabled={!running && !elapsed}><Flag />Mark a section</Button>
       <Button variant="ghost" size="sm" disabled={running || !elapsed} onClick={() => setBase(0)}><RotateCcw />Reset</Button>

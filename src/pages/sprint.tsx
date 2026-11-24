@@ -48,8 +48,8 @@ function SprintHeader({ p, s, w1, end, isNow }: { p: Progress; s: (typeof SPRINT
       <div className="grid items-end gap-6 md:grid-cols-[minmax(0,1fr)_auto]">
         <div className="space-y-2">
           <p className="text-muted-foreground text-sm">Sprint {s.n} of 6 · Weeks {w1}–{w1 + 1}, {fmtDay.format(weekStart(p, w1))} to {fmtDay.format(end)}{isNow ? " · Now" : ""}</p>
-          <h1 className="text-4xl leading-[1.05] font-medium text-balance sm:text-5xl">{s.title}</h1>
-          <p className="max-w-2xl text-lg text-pretty">{s.goal}</p>
+          <h1 className="text-title font-medium text-balance">{s.title}</h1>
+          <p className="text-lead max-w-2xl text-pretty">{s.goal}</p>
         </div>
         <div className="flex items-end gap-5 md:justify-end">
           <p className="leading-none">
@@ -107,11 +107,11 @@ export function SprintPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardContent className="space-y-4">
-            <div className="space-y-1"><h2 className="font-sans text-base font-semibold tracking-normal">Done when</h2><p className="text-pretty">{s.done}</p></div>
-            <div className="space-y-1"><h2 className="font-sans text-base font-semibold tracking-normal">When to use the mouse</h2><p className="text-pretty">{s.mouse}</p></div>
+            <div className="space-y-1"><h2 className="font-sans font-semibold">Done when</h2><p className="text-pretty">{s.done}</p></div>
+            <div className="space-y-1"><h2 className="font-sans font-semibold">When to use the mouse</h2><p className="text-pretty">{s.mouse}</p></div>
             <Separator />
             <div className="flex items-center justify-between gap-3">
-              <h2 className="font-sans text-base font-semibold tracking-normal">Deliverable</h2>
+              <h2 className="font-sans font-semibold">Deliverable</h2>
               <Label className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                 <Checkbox checked={!!p.shipped[s.id]} onCheckedChange={(v) => update((d) => { d.shipped[s.id] = v === true })} />Shipped
               </Label>
@@ -155,8 +155,8 @@ export function SprintPage() {
       <SprintProofs p={p} s={s} />
       <SprintRetro p={p} s={s} />
 
-      <Card><CardContent className="space-y-6"><h2 className="text-xl font-medium">{LAB[s.id][0]}</h2>{LAB[s.id][1]()}</CardContent></Card>
-      {s.id === "s2" && <Card><CardContent className="space-y-4"><h2 className="text-xl font-medium">Ear training</h2><EarTraining /></CardContent></Card>}
+      <Card><CardContent className="space-y-6"><h2 className="text-heading font-medium">{LAB[s.id][0]}</h2>{LAB[s.id][1]()}</CardContent></Card>
+      {s.id === "s2" && <Card><CardContent className="space-y-4"><h2 className="text-heading font-medium">Ear training</h2><EarTraining /></CardContent></Card>}
       <SprintShortcuts sprintId={s.id} />
       <References s={s} />
       <Resources s={s} />

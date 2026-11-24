@@ -48,7 +48,7 @@ export function PracticeTimer({ onStop, label, compact }: { onStop: (minutes: nu
   })
   return (
     <div className={cn("flex flex-wrap items-center", compact ? "gap-2" : "gap-4")}>
-      <span className={cn("font-display font-medium tabular-nums", compact ? "text-xl" : "text-4xl")} aria-live="off">{fmtClock(secs)}</span>
+      <span className={cn("font-display font-medium tabular-nums", compact ? "text-xl" : "text-stat-lg")} aria-live="off">{fmtClock(secs)}</span>
       {running ? (
         <Button size={compact ? "sm" : "default"} onClick={() => { onStop(Math.max(1, Math.round(secs / 60))); setStart(null) }}><Pause className="fill-current" />Stop and log</Button>
       ) : (

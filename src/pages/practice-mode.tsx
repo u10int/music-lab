@@ -90,8 +90,8 @@ export function PracticeModePage() {
       <section aria-live="polite" className="grid gap-6 border-y border-foreground py-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="min-w-0 space-y-3">
           <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">{it.kind}{it.tag && <span className="border border-foreground/40 px-1 text-xs text-foreground">{it.tag}</span>}<span className="tabular-nums">· {it.min} min</span></p>
-          <h1 className="text-3xl leading-tight font-medium text-balance sm:text-4xl">{it.kind === "Session" ? it.title : it.text}</h1>
-          {it.kind === "Session" && <p className="max-w-3xl text-lg text-pretty">{it.text}</p>}
+          <h1 className="text-headline font-medium text-balance">{it.kind === "Session" ? it.title : it.text}</h1>
+          {it.kind === "Session" && <p className="text-lead max-w-3xl text-pretty">{it.text}</p>}
           {it.link && !internal && <Button variant="outline" asChild><a href={it.link.to} target="_blank" rel="noopener">{it.link.label}<ArrowUpRight /></a></Button>}
         </div>
         <StepTimer key={it.id} min={it.min} />
@@ -108,7 +108,7 @@ export function PracticeModePage() {
       {embedSrc && (
         <section aria-label={it.link!.label} className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-medium">{it.link!.label}</h2>
+            <h2 className="font-sans font-semibold">{it.link!.label}</h2>
             <Link to={withFrom(it.link!.to, sel, isToday)} className="text-sm underline">Open full page</Link>
           </div>
           <iframe key={embedSrc} src={embedSrc} title={it.link!.label} className="h-[75vh] w-full border" />
@@ -130,7 +130,7 @@ function StepTimer({ min }: { min: number }) {
   const over = left === 0
   return (
     <div className="flex flex-col items-start gap-3 lg:items-end">
-      <p className={cn("text-5xl font-medium tabular-nums", over && "text-[#23782b]")} role="timer" aria-label={`${Math.ceil(left / 60)} minutes left on this step`}>{fmtClock(left)}</p>
+      <p className={cn("text-stat-lg font-medium tabular-nums", over && "text-[#23782b]")} role="timer" aria-label={`${Math.ceil(left / 60)} minutes left on this step`}>{fmtClock(left)}</p>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" disabled={over} onClick={() => setRunning(!running)}>{running && !over ? <><Pause />Pause</> : <><Play />Start step timer</>}</Button>
         <Button variant="ghost" size="icon-sm" aria-label="Reset the step timer" onClick={() => { setRunning(false); setLeft(min * 60) }}><RotateCcw /></Button>

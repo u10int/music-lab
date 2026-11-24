@@ -39,7 +39,7 @@ function SprintDays({ p, w1, sel, onPick }: { p: Prog; w1: number; sel: string; 
   return (
     <section aria-labelledby="days-h" className="space-y-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="days-h" className="text-sm font-medium">This sprint, day by day</h2>
+        <h2 id="days-h" className="font-sans font-semibold">This sprint, day by day</h2>
         <p className="text-muted-foreground text-sm">
           {missed.length ? <>{missed.length} {missed.length === 1 ? "day" : "days"} to catch up. <button type="button" className="text-foreground underline" onClick={() => onPick(missed[missed.length - 1].iso)}>Open the latest</button>{missed.length >= 3 && <> or <button type="button" className="text-foreground underline" onClick={() => update((d) => { const st = new Date(d.start + "T00:00:00"); st.setDate(st.getDate() + 7); d.start = isoOf(st) })}>push the plan back a week</button></>}</> : "Nothing missed so far."}
         </p>
@@ -189,8 +189,8 @@ export function TodayPage() {
               <Link to={`/sprints/${s.n}`} className="font-medium hover:underline">Sprint {s.n}: {s.title}</Link>
               <span className="text-muted-foreground">· {slotName}{slot === "mid" ? ` · day ${day - 1} of 3` : ""} · about {fmtMinutes(total || planMin)}</span>
             </p>
-            <h2 id="focus-h" className="max-w-3xl text-3xl leading-tight font-medium text-balance sm:text-4xl">{s.weeks[weekInSprint][slot]}</h2>
-            {plan && <p className="max-w-2xl text-lg text-pretty"><span className="text-muted-foreground">By the end: </span>{plan.outcome}</p>}
+            <h2 id="focus-h" className="max-w-3xl text-headline font-medium text-balance">{s.weeks[weekInSprint][slot]}</h2>
+            {plan && <p className="text-lead max-w-2xl text-pretty"><span className="text-muted-foreground">By the end: </span>{plan.outcome}</p>}
             {plan?.variant && (
               <div className="max-w-2xl space-y-2 bg-muted/60 p-4">
                 <div className="flex flex-wrap gap-1.5" role="list" aria-label="This practice block's three days">
@@ -214,7 +214,7 @@ export function TodayPage() {
           {!future && (
             <div className="flex items-center gap-5 lg:flex-col lg:gap-3">
               <Ring value={markedDone ? 1 : minutes / planMin} size={120} stroke={10} label={`${minutes} of ${planMin} planned minutes${isToday ? " today" : ""}`}>
-                <div className="leading-tight"><p className="text-2xl font-medium tabular-nums">{minutes}</p><p className="text-muted-foreground text-xs">of {planMin} min</p></div>
+                <div className="space-y-1"><p className="text-stat font-medium tabular-nums">{minutes}</p><p className="text-muted-foreground text-xs">of {planMin} min</p></div>
               </Ring>
               <div className="space-y-0.5 text-sm lg:text-center">
                 <p className="font-medium">{dayIsDone ? (isToday ? "Today’s plan is done" : "This day is done") : `${stepsDone} of ${steps.length} steps`}</p>

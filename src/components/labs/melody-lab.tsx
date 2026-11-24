@@ -373,7 +373,7 @@ export function MelodyLab() {
           <span className="inline-flex items-center gap-2"><i className="inline-block h-3 w-5 rounded-sm bg-[color-mix(in_oklab,var(--s5)_25%,transparent)]" />Chord tone rows</span>
         </div>
         <div className="space-y-2 pt-2">
-          <h3 className="text-sm font-medium">Try notes before you place them</h3>
+          <h3 className="font-semibold">Try notes before you place them</h3>
           <QwertyPiano scale={T.pcs} names={T.names} root={T.pc} base={12 * (snd.oct + 2)}
             chord={chordTones(st.prog[Math.max(0, Math.floor(step / 16))]).map((d) => (root + iv[((d % 7) + 7) % 7]) % 12)}
             label={`Piano in ${T.names[0]} ${T.sc.name.toLowerCase()}, playing the ${snd.name.toLowerCase()} sound`}

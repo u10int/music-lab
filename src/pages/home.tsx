@@ -174,8 +174,8 @@ export function HomePage() {
     <div className="space-y-20 pb-6">
       <section className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,27rem)] lg:gap-12">
         <div className="space-y-6">
-          <h1 className="font-display text-5xl leading-[1.04] font-medium text-balance xl:text-6xl">Learn Ableton Live, Push and music theory by making music</h1>
-          <p className="text-muted-foreground max-w-xl text-lg text-pretty">Playable labs for beats, melodies, sound design and mixing, with guides to 31 electronic genres from wave and phonk to trance and drum and bass. It all runs in your browser and can send MIDI straight into Live.</p>
+          <h1 className="text-display font-medium text-balance">Learn Ableton Live, Push and music theory by making music</h1>
+          <p className="text-muted-foreground text-lead max-w-xl text-pretty">Playable labs for beats, melodies, sound design and mixing, with guides to 31 electronic genres from wave and phonk to trance and drum and bass. It all runs in your browser and can send MIDI straight into Live.</p>
           <div className="flex flex-wrap gap-3">
             <Button size="lg" asChild><Link to="/labs/loop-builder">Open the loop builder<ArrowRight /></Link></Button>
             <Button size="lg" variant="outline" asChild><a href="#account">Track your progress</a></Button>
@@ -186,7 +186,7 @@ export function HomePage() {
 
       <section className="space-y-6" aria-labelledby="h-make">
         <div className="max-w-2xl space-y-2">
-          <h2 id="h-make" className="text-2xl font-medium sm:text-3xl">Make something in minutes</h2>
+          <h2 id="h-make" className="text-headline font-medium">Make something in minutes</h2>
           <p className="text-muted-foreground text-pretty">Start from a genre, change what you like, and take it into Live as MIDI.</p>
         </div>
         <ul className="grid gap-4 md:grid-cols-3">
@@ -195,7 +195,7 @@ export function HomePage() {
               <Link to={to} className="group flex h-full flex-col overflow-hidden rounded-2xl border bg-card transition-[border-color] duration-150 hover:border-foreground/30">
                 <div className="border-b bg-[color-mix(in_oklab,var(--muted)_60%,var(--card))] px-5 py-6"><Art /></div>
                 <div className="flex flex-1 flex-col gap-1.5 p-5">
-                  <span className="flex items-center justify-between gap-2 text-lg font-semibold">{name}<ArrowRight className="text-muted-foreground size-4 transition-transform duration-150 group-hover:translate-x-0.5" /></span>
+                  <span className="flex items-center justify-between gap-2 text-subheading font-medium">{name}<ArrowRight className="text-muted-foreground size-4 transition-transform duration-150 group-hover:translate-x-0.5" /></span>
                   <span className="text-muted-foreground text-sm text-pretty">{desc}</span>
                 </div>
               </Link>
@@ -206,7 +206,7 @@ export function HomePage() {
 
       <section className="space-y-6" aria-labelledby="h-more">
         <div className="max-w-2xl space-y-2">
-          <h2 id="h-more" className="text-2xl font-medium sm:text-3xl">Train your ears, hands and theory</h2>
+          <h2 id="h-more" className="text-headline font-medium">Train your ears, hands and theory</h2>
           <p className="text-muted-foreground text-pretty">Short, playable lessons that connect what you hear to what you do on Push.</p>
         </div>
         <ul className="grid gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -228,7 +228,7 @@ export function HomePage() {
       <section className="space-y-6" aria-labelledby="h-genres">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="max-w-2xl space-y-2">
-            <h2 id="h-genres" className="text-2xl font-medium sm:text-3xl">31 genres, each with its own sounds</h2>
+            <h2 id="h-genres" className="text-headline font-medium">31 genres, each with its own sounds</h2>
             <p className="text-muted-foreground text-pretty">Tempo, drums, chord habits, structure and artists to study, plus playable drum patterns and sound recipes.</p>
           </div>
           <Button variant="outline" asChild><Link to="/genres">All genres<ArrowRight /></Link></Button>
@@ -249,7 +249,7 @@ export function HomePage() {
         <div className="grid gap-10 p-6 sm:p-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="space-y-6">
             <div className="space-y-2">
-              <h2 id="h-account" className="text-2xl font-medium sm:text-3xl">Follow a plan, and see yourself improve</h2>
+              <h2 id="h-account" className="text-headline font-medium">Follow a plan, and see yourself improve</h2>
               <p className="text-muted-foreground max-w-xl text-pretty">A free account turns the labs into a 12-week course: six two-week sprints from driving Live with Push to mixing and finishing a track.</p>
             </div>
             <ul className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">

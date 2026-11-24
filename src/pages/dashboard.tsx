@@ -21,7 +21,7 @@ function Stat({ label, value, sub, children, to }: { label: string; value: React
   const body = (
     <>
       <p className="text-muted-foreground text-sm">{label}</p>
-      <p className="font-display text-3xl leading-none font-medium tabular-nums">{value}</p>
+      <p className="text-stat font-medium tabular-nums">{value}</p>
       {children}
       {sub && <p className="text-muted-foreground text-sm">{sub}</p>}
     </>
@@ -69,10 +69,10 @@ export function Dashboard() {
           <div className="min-w-0 space-y-4">
             <p className="text-muted-foreground text-sm">{status}{inPlan ? ` · ${cur.week % 2 ? "First" : "Second"} week of Sprint ${s.n}` : ""}</p>
             <div className="space-y-2">
-              <h2 id="sprint-h" className="font-display flex items-center gap-3 text-2xl leading-tight font-medium sm:text-3xl">
+              <h2 id="sprint-h" className="flex items-center gap-3 text-headline font-medium">
                 <span aria-hidden="true" className="size-3 shrink-0 rounded-full bg-[var(--c)]" />Sprint {s.n}: {s.title}
               </h2>
-              <p className="max-w-2xl text-lg text-pretty">{s.goal}</p>
+              <p className="text-lead max-w-2xl text-pretty">{s.goal}</p>
             </div>
             {slot && inPlan && <p className="max-w-2xl text-sm text-pretty"><span className="font-semibold">{slot[1]}:</span> {s.weeks[weekInSprint][slot[0]]}</p>}
             <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -90,7 +90,7 @@ export function Dashboard() {
           <div className="flex items-center gap-5 lg:flex-col lg:gap-3">
             <Ring value={skillsDone / s.skills.length} size={132} stroke={11} label={`${skillsDone} of ${s.skills.length} sprint ${s.n} skills learned`}>
               <div className="leading-tight">
-                <p className="font-display text-2xl font-medium tabular-nums">{skillsDone}/{s.skills.length}</p>
+                <p className="text-stat font-medium tabular-nums">{skillsDone}/{s.skills.length}</p>
                 <p className="text-muted-foreground text-xs">skills</p>
               </div>
             </Ring>
@@ -122,13 +122,13 @@ export function Dashboard() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section aria-labelledby="heat-h" className="space-y-4 rounded-xl border bg-card p-5">
           <div className="flex items-baseline justify-between gap-3">
-            <h2 id="heat-h" className="font-semibold">Practice</h2>
+            <h2 id="heat-h" className="font-sans font-semibold">Practice</h2>
             <Link to="/practice" className="text-sm underline">Practice log</Link>
           </div>
           <PracticeHeatmap p={p} weeks={16} />
         </section>
         <section aria-labelledby="next-h" className="flex flex-col gap-4 rounded-xl border bg-card p-5" style={{ ["--c" as string]: `var(${s.c})` }}>
-          <h2 id="next-h" className="font-semibold">Up next</h2>
+          <h2 id="next-h" className="font-sans font-semibold">Up next</h2>
           {nextKey ? (
             <div className="space-y-2">
               <p className="text-muted-foreground text-sm">Skill {nextIdx + 1} of Sprint {s.n}</p>

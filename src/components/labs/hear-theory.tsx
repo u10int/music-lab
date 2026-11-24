@@ -160,8 +160,8 @@ export function ChordQualities() {
         <div className="grid gap-8 border-y border-foreground py-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
           <div className="min-w-0 space-y-5">
             <div className="space-y-1" aria-live="polite">
-              <p className="text-5xl font-medium tracking-tight">{symbol}</p>
-              <p className="text-lg">{name}</p>
+              <p className="text-stat-lg font-medium">{symbol}</p>
+              <p className="text-subheading">{name}</p>
               <p className="text-muted-foreground text-sm tabular-nums">{notes.join("  ")} <span className="mx-1">·</span> {parts.map((p) => p.label).join(" ")}</p>
             </div>
             <Piano scale={pcs} names={notes} root={root} chord={pcs} label={`${symbol}: ${notes.join(", ")}`}
@@ -199,7 +199,7 @@ export function ChordQualities() {
       </div>
 
       <section className="space-y-4" aria-labelledby="cq-all">
-        <h3 id="cq-all" className="text-lg font-medium">The qualities</h3>
+        <h3 id="cq-all" className="text-subheading font-medium">The qualities</h3>
         <Caption>Pick one to load it above. Built on {ROOT_NAMES[root]}, the root of your key.</Caption>
         {(["Triads", "Sevenths", "Suspended"] as const).map((g) => (
           <div key={g} className="space-y-2">
@@ -256,7 +256,7 @@ function CompareChords({ root, base }: { root: number; base: number }) {
   return (
     <section className="space-y-4" aria-labelledby="cq-cmp">
       <div className="space-y-1">
-        <h3 id="cq-cmp" className="text-lg font-medium">Hear the difference</h3>
+        <h3 id="cq-cmp" className="text-subheading font-medium">Hear the difference</h3>
         <Caption>Each pair changes one note. They play A, B, A, B so the change stands out.</Caption>
       </div>
       <ul className="divide-y border-y">
@@ -334,7 +334,7 @@ export function Intervals() {
         <div className="grid gap-8 border-y border-foreground py-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
           <div className="min-w-0 space-y-5" aria-live="polite">
             <div className="space-y-1">
-              <p className="text-4xl font-medium tracking-tight">{iv.name}</p>
+              <p className="text-headline font-medium">{iv.name}</p>
               <p className="text-muted-foreground text-sm tabular-nums">{ROOT_NAMES[root]} to {top} <span className="mx-1">·</span> {iv.semis} half steps <span className="mx-1">·</span> written {iv.short}</p>
             </div>
             <Piano scale={pcs} names={[ROOT_NAMES[root], top]} root={root} chord={pcs} label={`${iv.name}: ${ROOT_NAMES[root]} to ${top}`} />

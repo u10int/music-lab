@@ -200,7 +200,7 @@ function SkillCheckPanel({ skey }: { skey: string }) {
         <Button size="sm" onClick={() => { setStart(Date.now()); setNow(Date.now()); setTicks([]); setResult("") }}><Timer />{passed ? "Take it again" : "Start the check"}</Button>
       ) : (
         <div className="space-y-3">
-          <p className={cn("text-3xl font-medium tabular-nums", over && "text-destructive")} role="timer">{fmtSecs(secs)} <span className="text-muted-foreground text-sm font-normal">of {c.limit}:00</span></p>
+          <p className={cn("text-stat font-medium tabular-nums", over && "text-destructive")} role="timer">{fmtSecs(secs)} <span className="text-muted-foreground text-sm font-normal">of {c.limit}:00</span></p>
           <ul className="space-y-2">
             {c.checks.map((t, i) => (
               <li key={i} className="flex items-start gap-2">

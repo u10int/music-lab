@@ -40,7 +40,7 @@ export function PushPage() {
       <PageHeader title="Push 3">The hardware, pad layouts for drums and notes, Session and Mix, recording, and the shortcuts worth learning.</PageHeader>
       <section aria-labelledby="vp-h" className="space-y-6">
         <div className="space-y-2">
-          <h2 id="vp-h" className="font-sans text-xl font-medium">Practice on a virtual Push</h2>
+          <h2 id="vp-h" className="font-sans text-heading font-medium">Practice on a virtual Push</h2>
           <p className="max-w-3xl text-pretty">Push 3 as it’s laid out on the hardware, so the muscle memory carries over. Use it to try an idea away from the studio, or to learn where things sit. Hover over any control to see what it does.</p>
         </div>
         <VirtualPush />

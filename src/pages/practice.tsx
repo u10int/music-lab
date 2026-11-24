@@ -80,9 +80,9 @@ export function PracticePage() {
       <PageHeader title="Practice log">Log each session, or run the timer while you practice. Streaks count days in a row with any practice.</PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card><CardContent className="space-y-1"><p className="text-muted-foreground text-sm">Current streak</p><p className="font-display text-3xl font-medium tabular-nums">{current} day{current === 1 ? "" : "s"}</p><p className="text-muted-foreground text-sm">Longest: {longest}</p></CardContent></Card>
-        <Card><CardContent className="space-y-2"><p className="text-muted-foreground text-sm">This week</p><p className="font-display text-3xl font-medium tabular-nums">{fmtMinutes(week)}</p><Progress value={Math.min(100, (week / WEEKLY_GOAL_MIN) * 100)} aria-label="Weekly practice goal" /><p className="text-muted-foreground text-sm">Plan: about {WEEKLY_GOAL_MIN / 60} hours a week</p></CardContent></Card>
-        <Card><CardContent className="space-y-1"><p className="text-muted-foreground text-sm">Sessions logged</p><p className="font-display text-3xl font-medium tabular-nums">{p.sessions.length}</p><p className="text-muted-foreground text-sm">{fmtMinutes(p.sessions.reduce((a, s) => a + s.minutes, 0))} in total</p></CardContent></Card>
+        <Card><CardContent className="space-y-1"><p className="text-muted-foreground text-sm">Current streak</p><p className="text-stat font-medium tabular-nums">{current} day{current === 1 ? "" : "s"}</p><p className="text-muted-foreground text-sm">Longest: {longest}</p></CardContent></Card>
+        <Card><CardContent className="space-y-2"><p className="text-muted-foreground text-sm">This week</p><p className="text-stat font-medium tabular-nums">{fmtMinutes(week)}</p><Progress value={Math.min(100, (week / WEEKLY_GOAL_MIN) * 100)} aria-label="Weekly practice goal" /><p className="text-muted-foreground text-sm">Plan: about {WEEKLY_GOAL_MIN / 60} hours a week</p></CardContent></Card>
+        <Card><CardContent className="space-y-1"><p className="text-muted-foreground text-sm">Sessions logged</p><p className="text-stat font-medium tabular-nums">{p.sessions.length}</p><p className="text-muted-foreground text-sm">{fmtMinutes(p.sessions.reduce((a, s) => a + s.minutes, 0))} in total</p></CardContent></Card>
       </div>
 
       <Block title="Timer"><PracticeTimer label="Practice log" onStop={(m) => { setMinutes(String(m)); setDate(todayISO()); requestAnimationFrame(() => minRef.current?.focus()) }} /></Block>

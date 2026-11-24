@@ -36,7 +36,7 @@ function Review({ queue: initial, onDone }: { queue: FlashCard[]; onDone: () => 
   if (!card)
     return (
       <Card className="max-w-2xl"><CardContent className="space-y-3">
-        <p className="font-display text-2xl font-medium">Done for now</p>
+        <p className="text-headline font-medium">Done for now</p>
         <p className="text-muted-foreground">You reviewed {done} card{done === 1 ? "" : "s"}. Cards you knew come back in a few days; the ones you missed come back sooner.</p>
         <Button onClick={onDone}>Back to decks</Button>
       </CardContent></Card>
