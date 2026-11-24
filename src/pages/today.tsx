@@ -171,7 +171,7 @@ export function TodayPage() {
             )}
             {!future && (
               <div className="flex flex-wrap items-center gap-3 pt-1">
-                <PracticeTimer onStop={(m) => { setMins(String(m)); requestAnimationFrame(() => minsRef.current?.focus()) }} />
+                <PracticeTimer label={`Sprint ${s.n} · ${slotName}, ${selDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}`} onStop={(m) => { setMins(String(m)); requestAnimationFrame(() => minsRef.current?.focus()) }} />
                 <Button variant={markedDone ? "default" : allSteps ? "default" : "outline"} size="sm" aria-pressed={markedDone} onClick={() => update((d) => { d.daysDone ??= {}; d.daysDone[sel] = !markedDone })}>
                   <Check />{markedDone ? "Day marked done" : "Mark this day done"}
                 </Button>

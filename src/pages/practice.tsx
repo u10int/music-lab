@@ -85,7 +85,7 @@ export function PracticePage() {
         <Card><CardContent className="space-y-1"><p className="text-muted-foreground text-sm">Sessions logged</p><p className="font-display text-3xl font-medium tabular-nums">{p.sessions.length}</p><p className="text-muted-foreground text-sm">{fmtMinutes(p.sessions.reduce((a, s) => a + s.minutes, 0))} in total</p></CardContent></Card>
       </div>
 
-      <Block title="Timer"><PracticeTimer onStop={(m) => { setMinutes(String(m)); setDate(todayISO()); requestAnimationFrame(() => minRef.current?.focus()) }} /></Block>
+      <Block title="Timer"><PracticeTimer label="Practice log" onStop={(m) => { setMinutes(String(m)); setDate(todayISO()); requestAnimationFrame(() => minRef.current?.focus()) }} /></Block>
 
       <Block title="Log a session">
         <form onSubmit={add} noValidate className="grid max-w-4xl items-start gap-3 sm:grid-cols-2 lg:grid-cols-[10rem_7rem_minmax(0,14rem)_minmax(0,1fr)_auto]">
