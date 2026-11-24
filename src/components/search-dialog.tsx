@@ -14,7 +14,7 @@ const PAGES: [string, string][] = [
   ["Rules and rhythm", "/plan"], ["Track planner", "/planner"], ["Scales and chords", "/labs/theory"], ["Chord progressions", "/labs/progressions"],
   ["Play along", "/labs/play-along"], ["Sound design", "/labs/sound-design"], ["Drums and sampling", "/labs/drums"], ["Step sequencer", "/labs/sequencer"],
   ["Arrangement", "/labs/arrangement"], ["Mixing", "/labs/mixing"], ["Ear training", "/labs/ear"], ["Timing trainer", "/labs/timing"],
-  ["Loop builder", "/labs/loop-builder"], ["Sampler", "/labs/sampler"], ["Reference notebook", "/notebook"], ["Genres", "/genres"],
+  ["Loop builder", "/labs/loop-builder"], ["Melody", "/labs/melody"], ["Weekly review", "/review"], ["Sampler", "/labs/sampler"], ["Reference notebook", "/notebook"], ["Genres", "/genres"],
   ["Circle of fifths", "/labs/theory?tab=circle"], ["Modes", "/labs/theory?tab=modes"], ["Borrowed chords", "/labs/theory?tab=borrowed"], ["Find the key", "/labs/theory?tab=find"],
   ["Live instruments and effects", "/instruments"], ["Push 3 guide", "/push"], ["Settings and data", "/settings"],
 ]

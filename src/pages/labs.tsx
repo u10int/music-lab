@@ -14,6 +14,7 @@ import { TimingTrainer } from "@/components/labs/timing-trainer"
 import { ProgressionBuilder } from "@/components/labs/progression-builder"
 import { LoopBuilder } from "@/components/labs/loop-builder"
 import { Sampler } from "@/components/labs/sampler"
+import { MelodyLab as MelodyWriter } from "@/components/labs/melody-lab"
 import { MixEar } from "@/components/labs/mix-ear"
 import { MatchSound } from "@/components/labs/match-sound"
 import { BorrowedChords, CircleOfFifths, FindKey, ModesExplorer } from "@/components/labs/theory-tools"
@@ -140,6 +141,15 @@ export function SamplerLab() {
     <div className="space-y-10">
       <PageHeader title="Sampler">Load a drum loop, a vocal or any sound and slice it onto 16 pads, the way Simpler does on Push. Play the pads from your keyboard or controller, pitch and reverse slices, and shuffle them into new grooves.</PageHeader>
       <Sampler />
+    </div>
+  )
+}
+
+export function MelodyLab() {
+  return (
+    <div className="space-y-10">
+      <PageHeader title="Melody">Write a hook over a chord progression. Chord tones are shaded so you can see which notes sit on the harmony, suggestions give you a starting point in a genre’s style, and feedback shows how it’s shaping up.</PageHeader>
+      <MelodyWriter />
     </div>
   )
 }

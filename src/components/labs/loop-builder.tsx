@@ -274,7 +274,12 @@ export function LoopBuilder() {
                     </SelectContent>
                   </Select>
                 ) : soundSelect(p)}
-                {p === "lead" && loop.sounds.lead && (
+                {p === "lead" && loop.sounds.lead && loop.melody?.length ? (
+                  <p className="text-muted-foreground pt-1 text-sm">
+                    Playing <Link className="underline" to="/labs/melody">your melody</Link>.{" "}
+                    <button type="button" className="underline" onClick={() => setLoop({ melody: null })}>Use the sound’s phrase</button>
+                  </p>
+                ) : p === "lead" && loop.sounds.lead && (
                   <div className="flex items-center gap-2 pt-1">
                     <Switch id="lb-follow" checked={loop.follow} onCheckedChange={(v) => setLoop({ follow: v })} />
                     <Label htmlFor="lb-follow" className="font-normal">Follow the chords</Label>

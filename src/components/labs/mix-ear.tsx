@@ -6,7 +6,9 @@ import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
 import { Button } from "@/components/ui/button"
-import { update, useProgress } from "@/lib/store"
+import { recordEar, update, useProgress, usePref } from "@/lib/store"
+import { weightedPick } from "@/lib/adaptive"
+import { WeakSpots } from "@/components/labs/ear-training"
 import { fmtHz } from "@/lib/theory"
 import { cn } from "@/lib/utils"
 
@@ -104,11 +106,11 @@ function match(b: AudioBuffer, ref: AudioBuffer) {
 }
 const pass = (_c: BaseAudioContext, i: AudioNode, o: AudioNode) => { i.connect(o) }
 
-async function makeQuestion(mode: Mode, source: Source, bands: number[]): Promise<Q> {
+async function makeQuestion(mode: Mode, source: Source, bands: number[], pickBand: () => number): Promise<Q> {
   const sec = source === "noise" ? 2 : 4.1
   const noise = source === "noise" ? pinkNoise(new OfflineAudioContext(1, 1, SR), 2) : undefined
   if (mode === "eq") {
-    const band = Math.floor(Math.random() * bands.length)
+    const band = pickBand()
     const flat = await render(source, sec, pass, false, noise)
     const boosted = await render(source, sec, (c, i, o) => {
       const f = c.createBiquadFilter()
@@ -157,6 +159,7 @@ export function MixEar() {
   const [mode, setMode] = useState<Mode>("eq")
   const [source, setSource] = useState<Source>("music")
   const [level, setLevel] = useState("4")
+  const [focus, setFocus] = usePref("ear-focus", true)
   const [q, setQ] = useState<Q | null>(null)
   const [picked, setPicked] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
@@ -170,7 +173,7 @@ export function MixEar() {
     stop()
     if (!audio()) return
     setBusy(true)
-    const nq = await makeQuestion(mode, source, bands)
+    const nq = await makeQuestion(mode, source, bands, () => weightedPick(progress.earDetail?.[key], bands.map((f) => fmtHz(f)), focus))
     setBusy(false)
     setQ(nq)
     setPicked(null)
@@ -179,11 +182,7 @@ export function MixEar() {
   const answer = (i: number) => {
     if (!q || picked !== null) return
     setPicked(i)
-    update((d) => {
-      const s = (d.ear[key] ??= { right: 0, total: 0 })
-      s.total++
-      if (i === q.answer) s.right++
-    })
+    update((d) => recordEar(d, key, mode === "eq" ? q.options[q.answer] : mode === "comp" ? "Compressed" : "Sidechained", i === q.answer))
     requestAnimationFrame(() => nextRef.current?.focus())
   }
   const reset = (fn: () => void) => { stop(); fn(); setQ(null); setPicked(null) }
@@ -197,6 +196,7 @@ export function MixEar() {
         {mode === "eq" && <Seg label="Bands" value={level} onChange={(l) => reset(() => setLevel(l))} options={[["4", "4 bands"], ["7", "7 bands"], ["10", "10 bands"]]} />}
       </div>
       <Caption>{HELP[mode]}</Caption>
+      {mode === "eq" && <WeakSpots detail={progress.earDetail?.[key]} focus={focus} setFocus={setFocus} id="mix-focus" />}
       <div className="flex flex-wrap items-center gap-2">
         {!q ? (
           <Button variant="outline" size="sm" disabled={busy} onClick={() => void next()}><Play className="size-3 fill-current" />{busy ? "Preparing…" : "Start"}</Button>

@@ -7,7 +7,10 @@ import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
 import { Button } from "@/components/ui/button"
 import { INTERVALS, QUALS } from "@/data/labs"
-import { update, useProgress } from "@/lib/store"
+import { recordEar, update, useProgress, usePref } from "@/lib/store"
+import { weakSpots, weightedPick } from "@/lib/adaptive"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import { chordMidi, theory } from "@/lib/theory"
 import { cn } from "@/lib/utils"
 
@@ -46,16 +49,25 @@ function progLabel(i: number) {
   return p.d.map((d) => T.chords[d].roman).join("–")
 }
 
-function makeQuestion(mode: Mode): Question {
+/** Answer labels per quiz, used to track which ones you miss. */
+const KEYS_OF: Record<Mode, () => string[]> = {
+  chords: () => QUALS.map((q) => q[0]),
+  intervals: () => INTERVALS,
+  degrees: () => DEGREES,
+  keys: () => ["Major", "Minor"],
+  progressions: () => PROGS.map((_, i) => progLabel(i)),
+}
+
+function makeQuestion(mode: Mode, pick: (keys: string[]) => number): Question {
   const base = 55 + rnd(10), root = rnd(12)
-  if (mode === "chords") return { a: rnd(4), base, root, options: QUALS.map((q) => q[0]) }
-  if (mode === "intervals") return { a: rnd(12), base, root, options: INTERVALS }
-  if (mode === "degrees") return { a: rnd(7), base, root, options: DEGREES }
-  if (mode === "keys") return { a: rnd(2), base, root, options: ["Major", "Minor"], extra: rnd(2) }
+  if (mode === "chords") return { a: pick(KEYS_OF.chords()), base, root, options: QUALS.map((q) => q[0]) }
+  if (mode === "intervals") return { a: pick(INTERVALS), base, root, options: INTERVALS }
+  if (mode === "degrees") return { a: pick(DEGREES), base, root, options: DEGREES }
+  if (mode === "keys") return { a: pick(["Major", "Minor"]), base, root, options: ["Major", "Minor"], extra: rnd(2) }
   // Progressions: the answer plus three others from the same mode, in random order.
-  const minor = Math.random() < 0.5
+  const answer = pick(KEYS_OF.progressions())
+  const minor = PROGS[answer].minor
   const pool = PROGS.map((p, i) => ({ p, i })).filter((x) => x.p.minor === minor).map((x) => x.i)
-  const answer = pool[rnd(pool.length)]
   const picks = shuffle([answer, ...shuffle(pool.filter((i) => i !== answer)).slice(0, 3)])
   return { a: picks.indexOf(answer), base, root, options: picks.map(progLabel), extra: answer }
 }
@@ -106,6 +118,7 @@ function schedule(mode: Mode, q: Question) {
 export function EarTraining() {
   const progress = useProgress()
   const [mode, setMode] = useState<Mode>("chords")
+  const [focus, setFocus] = usePref("ear-focus", true)
   const [q, setQ] = useState<Question | null>(null)
   const [picked, setPicked] = useState<number | null>(null)
   const nextRef = useRef<HTMLButtonElement>(null)
@@ -118,7 +131,7 @@ export function EarTraining() {
   }
   const next = () => {
     stop()
-    const nq = makeQuestion(mode)
+    const nq = makeQuestion(mode, (keys) => weightedPick(progress.earDetail?.[mode], keys, focus))
     setQ(nq)
     setPicked(null)
     play(nq)
@@ -126,11 +139,7 @@ export function EarTraining() {
   const answer = (i: number) => {
     if (!q || picked !== null) return
     setPicked(i)
-    update((d) => {
-      const s = (d.ear[mode] ??= { right: 0, total: 0 })
-      s.total++
-      if (i === q.a) s.right++
-    })
+    update((d) => recordEar(d, mode, q.options[q.a], i === q.a))
     requestAnimationFrame(() => nextRef.current?.focus())
   }
   const many = opts.length > 4
@@ -138,6 +147,7 @@ export function EarTraining() {
     <div className="space-y-4">
       <Seg label="Quiz type" value={mode} onChange={(m) => { stop(); setMode(m); setQ(null); setPicked(null) }} options={MODES} />
       <Caption>{HELP[mode]}</Caption>
+      <WeakSpots detail={progress.earDetail?.[mode]} focus={focus} setFocus={setFocus} id="ear-focus" />
       <div className="flex flex-wrap items-center gap-2">
         {q ? <PlayButton id="ear" label="Play again" onPlay={() => play()} /> : <Button variant="outline" size="sm" onClick={next}><Play className="size-3 fill-current" />Start</Button>}
         {q && picked !== null && <Button ref={nextRef} variant="outline" size="sm" onClick={next}>Next question</Button>}
@@ -164,6 +174,22 @@ export function EarTraining() {
       <p className="text-sm" role="status">
         {q && picked !== null && (picked === q.a ? `Right, that was ${opts[q.a]}.` : `Not quite. You picked ${opts[picked]}, and it was ${opts[q.a]}. Play it again to compare.`)}
       </p>
+    </div>
+  )
+}
+
+/** Your weakest answers in this quiz, and the switch that makes questions favor them. */
+export function WeakSpots({ detail, focus, setFocus, id, fmt = (k) => k }: { detail?: Record<string, { right: number; total: number }>; focus: boolean; setFocus: (v: boolean) => void; id: string; fmt?: (k: string) => string }) {
+  const weak = weakSpots(detail).slice(0, 4)
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+      <div className="flex items-center gap-2">
+        <Switch id={id} checked={focus} onCheckedChange={setFocus} />
+        <Label htmlFor={id} className="font-normal">Focus on weak spots</Label>
+      </div>
+      <span className="text-muted-foreground">
+        {weak.length ? <>Weakest: {weak.map((w) => `${fmt(w.key)} (${Math.round(w.acc * 100)}%)`).join(", ")}</> : "No weak spots yet. Answer a few more to find them."}
+      </span>
     </div>
   )
 }

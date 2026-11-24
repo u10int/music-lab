@@ -1,4 +1,4 @@
-import { AudioWaveform, Library, NotebookPen, Repeat, Scissors, BookOpen, CalendarCheck, Columns3, Disc3, Drum, Ear, Grid2x2, Grid3x3, Layers, LayoutDashboard, ListMusic, Metronome, Music2, PencilRuler, Piano, Settings, SlidersHorizontal, Sun, Timer, Upload } from "lucide-react"
+import { AudioWaveform, AudioLines, ClipboardCheck, Library, NotebookPen, Repeat, Scissors, BookOpen, CalendarCheck, Columns3, Disc3, Drum, Ear, Grid2x2, Grid3x3, Layers, LayoutDashboard, ListMusic, Metronome, Music2, PencilRuler, Piano, Settings, SlidersHorizontal, Sun, Timer, Upload } from "lucide-react"
 import { NavLink, useLocation } from "react-router"
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader,
@@ -17,11 +17,13 @@ const PLAN: Item[] = [
   { to: "/practice", label: "Practice log", icon: Timer },
   { to: "/flashcards", label: "Flashcards", icon: Layers },
   { to: "/exports", label: "Weekly exports", icon: Upload },
+  { to: "/review", label: "Weekly review", icon: ClipboardCheck },
   { to: "/plan", label: "Rules and rhythm", icon: CalendarCheck },
 ]
 const LABS: Item[] = [
   { to: "/labs/loop-builder", label: "Loop builder", icon: Repeat },
   { to: "/labs/theory", label: "Scales and chords", icon: Music2 },
+  { to: "/labs/melody", label: "Melody", icon: AudioLines },
   { to: "/labs/progressions", label: "Chord progressions", icon: ListMusic },
   { to: "/labs/play-along", label: "Play along", icon: Piano },
   { to: "/labs/sound-design", label: "Sound design", icon: AudioWaveform },

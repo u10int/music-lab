@@ -73,7 +73,7 @@ export function TodayPage() {
               <span className="text-muted-foreground">· {slotName}</span>
             </p>
             <h2 id="focus-h" className="font-display max-w-2xl text-2xl leading-tight font-bold text-balance sm:text-3xl">{s.weeks[weekInSprint][slot]}</h2>
-            {day === 0 && <p className="text-sm">It’s Sunday: export something, even 30 seconds, and <Link to="/exports" className="underline">log the export</Link>.</p>}
+            {day === 0 && <p className="text-sm">It’s Sunday: export something, even 30 seconds, and <Link to="/exports" className="underline">log the export</Link>, then do your <Link to="/review" className="underline">weekly review</Link>.</p>}
             <div className="pt-2"><PracticeTimer onStop={(m) => { setMins(String(m)); requestAnimationFrame(() => minsRef.current?.focus()) }} /></div>
           </div>
           <div className="flex items-center gap-5 lg:flex-col lg:gap-3">

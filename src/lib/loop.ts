@@ -72,9 +72,13 @@ export function degreeMidi(root: number, iv: number[], oct: number, deg: number,
  * Bass and chords take the rhythm of their sound's first bar and move it to each
  * bar's chord. The lead plays its own two-bar phrase, or follows the chords too.
  */
-export function partNotes(part: SynthPart, s: GenreSound, prog: number[], root: number, iv: number[], follow: boolean): LoopNote[] {
+export function partNotes(part: SynthPart, s: GenreSound, prog: number[], root: number, iv: number[], follow: boolean, melody?: LoopState["melody"]): LoopNote[] {
   const out: LoopNote[] = []
   const push = (step: number, len: number, deg: number, shift: number) => out.push({ part, step, len, midi: degreeMidi(root, iv, s.oct, deg, shift), mono: !!s.mono })
+  if (part === "lead" && melody?.length) {
+    for (const n of melody) push(n.step, n.len, n.deg, 0)
+    return out
+  }
   if (part === "lead" && !follow) {
     for (const half of [0, 32]) for (const [start, len, deg, shift = 0] of s.phrase) for (const d of [deg].flat()) push(half + start, len, d, shift)
     return out
@@ -121,7 +125,7 @@ export function buildLoop(l: LoopState, root: number, iv: number[]) {
   const notes: LoopNote[] = []
   for (const part of SYNTH_PARTS) {
     const s = soundById(l.sounds[part])
-    if (s) notes.push(...partNotes(part, s, l.prog, root, iv, l.follow))
+    if (s) notes.push(...partNotes(part, s, l.prog, root, iv, l.follow, l.melody))
   }
   return { notes, hits: drumHits(patternById(l.drums)) }
 }

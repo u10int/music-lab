@@ -14,7 +14,7 @@ import { Slider } from "@/components/ui/slider"
 import { GENRE_SOUNDS, type GenreSound, type Macro } from "@/data/genre-sounds"
 import { SCALES } from "@/data/labs"
 import { degreeMidi } from "@/lib/loop"
-import { update, useProgress } from "@/lib/store"
+import { recordEar, update, useProgress } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
 /** Sliders whose range spans a lot (frequencies, times) feel right on a log scale. */
@@ -101,11 +101,7 @@ export function MatchSound() {
     if (!r) return
     const pts = score(r, vals)
     setChecked(pts)
-    update((d) => {
-      const s = (d.ear.match ??= { right: 0, total: 0 })
-      s.total++
-      if (pts >= 80) s.right++
-    })
+    update((d) => recordEar(d, "match", r.s.name, pts >= 80))
   }
 
   return (

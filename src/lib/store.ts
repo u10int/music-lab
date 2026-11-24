@@ -19,6 +19,8 @@ export interface LoopState {
   follow: boolean
   mix: Record<LoopPart, { vol: number; mute: boolean }>
   solo: LoopPart | null
+  /** A melody from the melody lab that replaces the lead sound's own phrase. */
+  melody?: { step: number; len: number; deg: number }[] | null
 }
 export interface SavedLoop { id: string; name: string; date: string; root: number; scale: string; loop: LoopState }
 export interface RefMarker { id: string; t: number; label: string; energy: number; note: string }
@@ -44,9 +46,17 @@ export interface Progress {
   notebook: RefNote[]
   /** Walkthrough steps ticked off, per skill ("s1-0" → step indexes). */
   skillSteps: Record<string, number[]>
+  /** Ear training results per quiz and answer ("intervals" → "Major 3rd" → score), for adaptive questions. */
+  earDetail: Record<string, Record<string, Score>>
+  /** Ear training results per day and quiz, for the weekly review. */
+  earDays: Record<string, Record<string, Score>>
+  /** When each skill or deliverable was ticked off. */
+  doneAt: Record<string, string>
+  /** Weekly review notes, keyed by the week's Monday. */
+  reviews: Record<string, { well: string; hard: string; goal: string }>
 }
+export interface Score { right: number; total: number }
 
-const KEY = "music-lab-progress-v1"
 const isoDate = (d: Date) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0")
 export const todayISO = () => isoDate(new Date())
 function nextMonday() {
@@ -55,8 +65,10 @@ function nextMonday() {
   d.setDate(d.getDate() + ((8 - d.getDay()) % 7))
   return isoDate(d)
 }
-const blank = (): Progress => ({ start: nextMonday(), done: {}, shipped: {}, log: {}, genre: "all", refs: {}, exports: [], ear: {}, push: "p3", sessions: [], cards: {}, plan: null, loops: [], notebook: [], skillSteps: {} })
+const blank = (): Progress => ({ start: nextMonday(), done: {}, shipped: {}, log: {}, genre: "all", refs: {}, exports: [], ear: {}, push: "p3", sessions: [], cards: {}, plan: null, loops: [], notebook: [], skillSteps: {}, earDetail: {}, earDays: {}, doneAt: {}, reviews: {} })
 
+const BASE_KEY = "music-lab-progress-v1"
+let KEY = BASE_KEY
 function load(): Progress {
   try {
     const raw = localStorage.getItem(KEY)
@@ -69,19 +81,28 @@ function load(): Progress {
 
 let state = load()
 const listeners = new Set<() => void>()
-function commit(next: Progress) {
-  state = next
+const commitListeners = new Set<(p: Progress) => void>()
+function save() {
   try {
     localStorage.setItem(KEY, JSON.stringify(state))
   } catch {
     /* storage full or blocked; keep in memory */
   }
+}
+function commit(next: Progress, notify = true) {
+  state = next
+  save()
   listeners.forEach((l) => l())
+  if (notify) commitListeners.forEach((l) => l(state))
 }
 
 export function update(fn: (draft: Progress) => void) {
   const next = structuredClone(state)
   fn(next)
+  // Remember when skills and deliverables were ticked off, for the weekly review.
+  next.doneAt ??= {}
+  for (const [k, v] of Object.entries(next.done)) if (v && !state.done[k]) next.doneAt[k] = todayISO()
+  for (const [k, v] of Object.entries(next.shipped)) if (v && !state.shipped[k]) next.doneAt["ship-" + k] = todayISO()
   commit(next)
 }
 export function useProgress() {
@@ -92,6 +113,52 @@ export function useProgress() {
     },
     () => state,
   )
+}
+
+/** Record one ear training answer: overall score, per-answer detail and per-day totals. */
+export function recordEar(d: Progress, quiz: string, answer: string, right: boolean) {
+  const bump = (s: Score) => { s.total++; if (right) s.right++ }
+  bump((d.ear[quiz] ??= { right: 0, total: 0 }))
+  d.earDetail ??= {}
+  bump(((d.earDetail[quiz] ??= {})[answer] ??= { right: 0, total: 0 }))
+  d.earDays ??= {}
+  bump(((d.earDays[todayISO()] ??= {})[quiz] ??= { right: 0, total: 0 }))
+}
+
+/* ---------- Accounts and sync ---------- */
+/** The current progress, for sync code outside React. */
+export const getProgress = () => state
+/** Called after every local change. */
+export function onCommit(fn: (p: Progress) => void) {
+  commitListeners.add(fn)
+  return () => { commitListeners.delete(fn) }
+}
+/**
+ * Switch storage to a signed-in user's own slot (or back to this browser's guest
+ * slot with null). Returns that slot's saved progress, or null if it's empty.
+ */
+export function switchStorage(userId: string | null) {
+  KEY = userId ? `${BASE_KEY}:${userId}` : BASE_KEY
+  let has = false
+  try { has = localStorage.getItem(KEY) !== null } catch { /* ignore */ }
+  commit(load(), false)
+  return has
+}
+/** Replace progress with data from the cloud without sending it back. */
+export function replaceProgress(p: Partial<Progress>) {
+  commit({ ...blank(), ...p }, false)
+}
+/** The guest progress saved in this browser before signing in, if any. */
+export function guestProgress(): Progress | null {
+  try {
+    const raw = localStorage.getItem(BASE_KEY)
+    if (!raw) return null
+    const p = { ...blank(), ...JSON.parse(raw) } as Progress
+    const used = Object.keys(p.done).length || p.sessions.length || p.exports.length || Object.keys(p.ear).length || p.loops.length || p.notebook.length
+    return used ? p : null
+  } catch {
+    return null
+  }
 }
 
 /** Accepts this app's export or the old tracker's JSON. Returns an error message or null. */
