@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useSearchParams } from "react-router"
 import { tone } from "@/audio/engine"
 import { toggle } from "@/audio/playback"
 import { useKey } from "@/components/key-picker"
@@ -27,8 +28,10 @@ function Knob({ id, label, value, display, min, max, step, onChange }: { id: str
 
 export function SynthLab() {
   const { root } = useKey()
-  const [presetId, setPresetId] = useState("pluck")
-  const [p, setP] = useState<SynthPreset>(structuredClone(PRESETS.pluck))
+  const [params] = useSearchParams()
+  const first = params.get("preset") && PRESETS[params.get("preset")!] ? params.get("preset")! : "pluck"
+  const [presetId, setPresetId] = useState(first)
+  const [p, setP] = useState<SynthPreset>(() => structuredClone(PRESETS[first]))
   const set = (patch: Partial<SynthPreset>) => setP((x) => ({ ...x, ...patch }))
   const setEnv = (k: keyof SynthPreset["env"], v: number) => setP((x) => ({ ...x, env: { ...x.env, [k]: v } }))
   const cutPos = Math.log(p.cutoff / 40) / Math.log(16000 / 40)

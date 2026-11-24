@@ -226,16 +226,19 @@ export function usePref<T>(key: string, initial: T): [T, (v: T) => void] {
     },
     () => readPref(k, initial),
   )
-  const set = (v: T) => {
-    prefCache.set(k, v)
-    try {
-      localStorage.setItem(k, JSON.stringify(v))
-    } catch {
-      /* ignore */
-    }
-    prefListeners.forEach((l) => l())
-  }
+  const set = (v: T) => setPref(key, v)
   return [value, set]
+}
+/** Write a preference from outside a component (deep links, for example). */
+export function setPref<T>(key: string, v: T) {
+  const k = "music-lab-pref-" + key
+  prefCache.set(k, v)
+  try {
+    localStorage.setItem(k, JSON.stringify(v))
+  } catch {
+    /* ignore */
+  }
+  prefListeners.forEach((l) => l())
 }
 const prefListeners = new Set<() => void>()
 const prefCache = new Map<string, unknown>()

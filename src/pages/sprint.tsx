@@ -135,11 +135,14 @@ export function SprintPage() {
                 <div className="text-sm"><b className="block">Week {wn}</b><span className="text-muted-foreground">{fmtDay.format(weekStart(p, wn))}</span></div>
                 {slots.map(([d, t], ci) => {
                   const today = isThis && dayCol === ci
+                  const first = weekStart(p, wn)
+                  first.setDate(first.getDate() + [0, 1, 4, 5][ci])
                   return (
-                    <div key={d} className={cn("rounded-lg border bg-card p-3 text-sm", today && "border-foreground")}>
+                    <Link key={d} to={`/today?day=${isoOf(first)}`} className={cn("group flex flex-col border bg-card p-3 text-sm transition-[border-color] duration-150 hover:border-foreground", today && "border-foreground")}>
                       <div className="text-muted-foreground mb-1 flex justify-between text-xs"><span>{d}</span>{today && <span className="text-foreground font-semibold">Today</span>}</div>
                       <div className="text-pretty">{t}</div>
-                    </div>
+                      <span className="text-muted-foreground mt-auto pt-2 text-xs group-hover:text-foreground group-hover:underline">Open the plan</span>
+                    </Link>
                   )
                 })}
               </div>

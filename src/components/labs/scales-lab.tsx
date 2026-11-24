@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router"
 import { useState } from "react"
 import { tone } from "@/audio/engine"
 import { toggle } from "@/audio/playback"
@@ -60,7 +61,8 @@ const bassOpts = { wave: "sine" as const, env: { a: 0.01, d: 0.5, s: 0.7, r: 0.3
 export function ScalesLab({ hideKey = false }: { hideKey?: boolean }) {
   const { root, scale } = useKey()
   const [layout, setLayout] = usePref<Layout>("layout", "key")
-  const [chord, setChord] = useState(0)
+  const [params] = useSearchParams()
+  const [chord, setChord] = useState(() => Math.min(6, Math.max(0, Number(params.get("chord")) || 0)))
   const T = theory(root, scale), ch = T.chords[Math.min(chord, 6)]
   const keyName = T.names[0] + " " + T.sc.name.toLowerCase()
 

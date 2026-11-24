@@ -3,6 +3,10 @@ import { HomeRoute, RequireAccount } from "@/components/account"
 import { createBrowserRouter, Outlet, RouterProvider, useLocation } from "react-router"
 import { keepsPlaying, stop } from "@/audio/playback"
 import { NowPlayingBar } from "@/components/now-playing"
+import { ArrowLeft } from "lucide-react"
+import { Link } from "react-router"
+import { setPref } from "@/lib/store"
+import { SCALES } from "@/data/labs"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -44,6 +48,15 @@ const PlannerPage = lazy(() => import("@/pages/planner").then((m) => ({ default:
 function Layout() {
   useTheme()
   const { pathname, hash, search } = useLocation()
+  const q = new URLSearchParams(search)
+  // Links from a day's plan can set the key: ?key=9&scale=minor.
+  const keyParam = q.get("key"), scaleParam = q.get("scale")
+  useEffect(() => {
+    if (keyParam !== null && /^\d+$/.test(keyParam) && +keyParam < 12) setPref("root", +keyParam)
+    if (scaleParam && SCALES.some((s) => s.id === scaleParam)) setPref("scale", scaleParam)
+  }, [keyParam, scaleParam])
+  const fromDay = q.get("from") === "today" ? q.get("day") : null
+  const fromToday = q.get("from") === "today"
   useEffect(() => {
     if (!keepsPlaying()) stop()
     if (!hash) window.scrollTo(0, 0)
@@ -75,6 +88,9 @@ function Layout() {
             <span className="font-display font-medium">Music Lab</span>
           </header>
           <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+            {fromToday && pathname !== "/today" && (
+              <Link to={fromDay ? `/today?day=${fromDay}` : "/today"} className="text-muted-foreground mb-6 inline-flex items-center gap-1 text-sm hover:underline"><ArrowLeft className="size-4" />Back to {fromDay ? "that day’s" : "today’s"} plan</Link>
+            )}
             <Suspense fallback={<p className="text-muted-foreground text-sm">Loading…</p>}>
               <Outlet />
             </Suspense>

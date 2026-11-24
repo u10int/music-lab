@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import { useSearchParams } from "react-router"
 import { Play } from "lucide-react"
 import { tone, type ToneOptions } from "@/audio/engine"
 import { stop, toggle } from "@/audio/playback"
@@ -117,7 +118,8 @@ function schedule(mode: Mode, q: Question) {
 
 export function EarTraining() {
   const progress = useProgress()
-  const [mode, setMode] = useState<Mode>("chords")
+  const [params] = useSearchParams()
+  const [mode, setMode] = useState<Mode>(() => (MODES.some(([m]) => m === params.get("quiz")) ? (params.get("quiz") as Mode) : "chords"))
   const [focus, setFocus] = usePref("ear-focus", true)
   const [q, setQ] = useState<Question | null>(null)
   const [picked, setPicked] = useState<number | null>(null)

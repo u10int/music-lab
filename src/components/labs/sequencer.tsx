@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { useSearchParams } from "react-router"
 import { horizon, startClock, stopClock } from "@/audio/clock"
 import { Download, Eraser } from "lucide-react"
 import { audio, drum, KIND_OF, masterBus, tone, type DrumKind } from "@/audio/engine"
@@ -172,6 +173,16 @@ export function Sequencer() {
     }
     setSeq({ ...seq, drums, tempo: p.tempo, swing: p.swing ?? 0, bars: p.length === 32 ? 2 : 1 })
   }
+  // ?pattern=house from a day's plan loads that pattern once.
+  const [params, setParams] = useSearchParams()
+  const askedPattern = params.get("pattern")
+  const loaded = useRef<string | null>(null)
+  useEffect(() => {
+    if (!askedPattern || loaded.current === askedPattern) return
+    loaded.current = askedPattern
+    loadPreset(askedPattern)
+    setParams((sp) => { sp.delete("pattern"); return sp }, { replace: true })
+  })
   const exportMidi = (what: "drums" | "melody") => {
     const notes = []
     for (let i = 0; i < N; i++) {
