@@ -26,11 +26,11 @@ export function Toolbar({ transport, children, actions, className }: { transport
   return (
     <div ref={ref} role="group" aria-label="Playback and settings"
       className={cn("z-20 rounded-xl border bg-card/95 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/85 md:sticky md:top-3 sm:p-4", className)}>
-      <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
-        <div className="flex items-center gap-2">{transport}</div>
+      <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
+        <div className="flex [&_[data-transport]]:h-[3.625rem]">{transport}</div>
         {children}
-        {actions && <div className="flex flex-wrap items-center gap-2 md:ml-auto">{actions}</div>}
       </div>
+      {actions && <div className="-mx-3 mt-3 flex flex-wrap items-center justify-end gap-2 border-t px-3 pt-3 sm:-mx-4 sm:px-4">{actions}</div>}
     </div>
   )
 }

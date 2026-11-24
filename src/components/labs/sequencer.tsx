@@ -8,7 +8,6 @@ import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { FAMILIES, PATTERNS } from "@/data/patterns"
@@ -18,6 +17,7 @@ import { noteName, theory } from "@/lib/theory"
 import { cn } from "@/lib/utils"
 import { MidiOutPicker } from "@/components/midi-out-picker"
 import { Toolbar } from "@/components/toolbar"
+import { Field } from "@/components/field"
 import { browserSound, sendNote } from "@/midi/midi-out"
 
 const MAX_STEPS = 32
@@ -162,29 +162,25 @@ export function Sequencer() {
       <Toolbar
         transport={<PlayButton id="seq" label="Play loop" primary onPlay={play} />}
         actions={<>
-          <Button variant="outline" onClick={() => exportMidi("drums")}><Download />Export drums</Button>
-          <Button variant="outline" onClick={() => exportMidi("melody")}><Download />Export melody</Button>
+          <Button variant="outline" size="sm" onClick={() => exportMidi("drums")}><Download />Export drums</Button>
+          <Button variant="outline" size="sm" onClick={() => exportMidi("melody")}><Download />Export melody</Button>
         </>}
       >
-        <div className="grid w-40 gap-2">
-          <div className="flex justify-between text-sm"><Label htmlFor="tempo">Tempo</Label><output className="text-muted-foreground tabular-nums">{seq.tempo} BPM</output></div>
+        <Field label="Tempo" htmlFor="tempo" value={<>{seq.tempo} BPM</>} className="w-40">
           <Slider id="tempo" min={70} max={180} step={1} value={[seq.tempo]} onValueChange={([v]) => setSeq({ ...seq, tempo: v })} aria-label="Tempo" />
-        </div>
-        <div className="grid w-40 gap-2">
-          <div className="flex justify-between text-sm"><Label htmlFor="swing">Swing</Label><output className="text-muted-foreground tabular-nums">{Math.round(seq.swing * 100)}%</output></div>
+        </Field>
+        <Field label="Swing" htmlFor="swing" value={<>{Math.round(seq.swing * 100)}%</>} className="w-40">
           <Slider id="swing" min={0} max={0.6} step={0.01} value={[seq.swing]} onValueChange={([v]) => setSeq({ ...seq, swing: v })} aria-label="Swing" />
-        </div>
-        <div className="grid gap-1.5">
-          <span className="text-sm font-medium">Length</span>
+        </Field>
+        <Field label="Length">
           <Seg label="Pattern length" value={String(seq.bars ?? 1)} onChange={(v) => {
             const two = v === "2"
             // Going to two bars copies bar 1 into an empty bar 2, so there's something to vary.
             const empty2 = LANES.every((l) => seq.drums[l.id].slice(16).every((x) => !x)) && seq.melody.slice(16).every((x) => x === null)
             setSeq(two && empty2 ? { ...seq, bars: 2, drums: Object.fromEntries(LANES.map((l) => [l.id, [...seq.drums[l.id].slice(0, 16), ...seq.drums[l.id].slice(0, 16)]])), melody: [...seq.melody.slice(0, 16), ...seq.melody.slice(0, 16)] } : { ...seq, bars: two ? 2 : 1 })
           }} options={[["1", "1 bar"], ["2", "2 bars"]]} />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="preset">Start from</Label>
+        </Field>
+        <Field label="Start from" htmlFor="preset">
           <Select value="" onValueChange={loadPreset}>
             <SelectTrigger id="preset" size="sm" className="w-48"><SelectValue placeholder="A genre pattern" /></SelectTrigger>
             <SelectContent>
@@ -196,8 +192,10 @@ export function Sequencer() {
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => setSeq({ ...empty(), tempo: seq.tempo, swing: seq.swing, sound: seq.sound })}><Eraser />Clear</Button>
+        </Field>
+        <Field>
+          <Button variant="ghost" size="sm" onClick={() => setSeq({ ...empty(), tempo: seq.tempo, swing: seq.swing, sound: seq.sound })}><Eraser />Clear</Button>
+        </Field>
       </Toolbar>
       {playing && <Caption>Edits play on the next pass, so you can build the loop while it runs.</Caption>}
 

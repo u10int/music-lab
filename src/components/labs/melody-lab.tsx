@@ -8,6 +8,7 @@ import { toggle, usePlayingId } from "@/audio/playback"
 import { KeyPicker, useKey } from "@/components/key-picker"
 import { MidiOutPicker } from "@/components/midi-out-picker"
 import { Toolbar } from "@/components/toolbar"
+import { Field } from "@/components/field"
 import { Block, Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
@@ -222,13 +223,12 @@ export function MelodyLab() {
       <Toolbar
         transport={<PlayButton id="melody" label="Play" primary onPlay={play} />}
         actions={<>
-          <Button variant="outline" disabled={!st.notes.length} onClick={toLoop}><Repeat />Use in loop builder</Button>
-          <Button variant="outline" disabled={!st.notes.length} onClick={exportMidi}><Download />Export .mid</Button>
+          <Button variant="outline" size="sm" disabled={!st.notes.length} onClick={toLoop}><Repeat />Use in loop builder</Button>
+          <Button variant="outline" size="sm" disabled={!st.notes.length} onClick={exportMidi}><Download />Export .mid</Button>
         </>}
       >
         <KeyPicker idPrefix="ml" />
-        <div className="grid gap-1.5">
-          <Label htmlFor="ml-sound">Sound</Label>
+        <Field label="Sound" htmlFor="ml-sound">
           <Select value={snd.id} onValueChange={(v) => set({ sound: v })}>
             <SelectTrigger id="ml-sound" size="sm" className="w-56"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -240,11 +240,10 @@ export function MelodyLab() {
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className="grid w-40 gap-2">
-          <div className="flex justify-between text-sm"><Label htmlFor="ml-tempo">Tempo</Label><output className="text-muted-foreground tabular-nums">{st.tempo} BPM</output></div>
+        </Field>
+        <Field label="Tempo" htmlFor="ml-tempo" value={<>{st.tempo} BPM</>} className="w-40">
           <Slider id="ml-tempo" aria-label="Tempo" min={60} max={180} step={1} value={[st.tempo]} onValueChange={([v]) => set({ tempo: v })} />
-        </div>
+        </Field>
       </Toolbar>
 
       <Block title="Chords" description="The melody is written over these. Rows that are notes of the bar’s chord are shaded on the grid.">

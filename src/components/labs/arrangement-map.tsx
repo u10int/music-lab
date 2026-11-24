@@ -9,6 +9,7 @@ import { useKey } from "@/components/key-picker"
 import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Toolbar } from "@/components/toolbar"
+import { Field } from "@/components/field"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -240,7 +241,7 @@ export function ArrangementMap() {
       <Toolbar
         transport={<PlayButton id="arrangement" label={cur === 0 ? "Play" : `Play from ${cs.name.toLowerCase()}`} primary onPlay={() => play(cur)} />}
         actions={!confirming ? (
-          <Button variant="outline" onClick={() => (progress.plan ? setConfirming(true) : toPlanner())}><PencilRuler />Use as track plan</Button>
+          <Button variant="outline" size="sm" onClick={() => (progress.plan ? setConfirming(true) : toPlanner())}><PencilRuler />Use as track plan</Button>
         ) : (
           <>
             <span className="text-sm">Replace your current track plan?</span>
@@ -249,21 +250,19 @@ export function ArrangementMap() {
           </>
         )}
       >
-        <div className="grid gap-1.5">
-          <Label htmlFor="arr-tpl">Template</Label>
+        <Field label="Template" htmlFor="arr-tpl">
           <Select value={arr.template} onValueChange={(v) => { setSt(fromTemplate(v)); setSel(0) }}>
             <SelectTrigger id="arr-tpl" size="sm" className="w-48"><SelectValue /></SelectTrigger>
             <SelectContent>{ARR_TEMPLATES.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
           </Select>
-        </div>
-        <div className="grid w-40 gap-2">
-          <div className="flex justify-between text-sm"><Label htmlFor="arr-tempo">Tempo</Label><output className="text-muted-foreground tabular-nums">{arr.tempo} BPM</output></div>
+        </Field>
+        <Field label="Tempo" htmlFor="arr-tempo" value={<>{arr.tempo} BPM</>} className="w-40">
           <Slider id="arr-tempo" aria-label="Tempo" min={70} max={180} step={1} value={[arr.tempo]} onValueChange={([v]) => set({ tempo: v })} />
-        </div>
-        <div className="flex h-8 items-center gap-2">
+        </Field>
+        <Field label="Loop section" htmlFor="arr-loop">
           <Switch id="arr-loop" checked={loopSec} onCheckedChange={setLoopSec} />
-          <Label htmlFor="arr-loop" className="font-normal">Loop the selected section</Label>
-        </div>
+          <span className="text-muted-foreground text-sm whitespace-nowrap">{loopSec ? `Repeating ${cs.name.toLowerCase()}` : "Off"}</span>
+        </Field>
       </Toolbar>
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-sm font-medium tabular-nums">{total} bars · {mmss(total * barS)}</span>

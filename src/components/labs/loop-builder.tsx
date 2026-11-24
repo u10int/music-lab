@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { horizon, startClock, stopClock } from "@/audio/clock"
 import { Check, Download, RotateCcw, Save, Shuffle, Trash2 } from "lucide-react"
 import { Toolbar } from "@/components/toolbar"
+import { Field } from "@/components/field"
 import { Link, useSearchParams } from "react-router"
 import { drum } from "@/audio/engine"
 import { fxChain, voice } from "@/audio/patch"
@@ -215,26 +216,23 @@ export function LoopBuilder() {
       <Toolbar
         transport={<PlayButton id="loop" label="Play loop" primary onPlay={play} />}
         actions={<>
-          <Button variant="outline" onClick={save}>{saved ? <Check /> : <Save />}{saved ? "Saved" : "Save loop"}</Button>
-          <Button variant="outline" onClick={exportMidi}><Download />Export .mid</Button>
+          <Button variant="outline" size="sm" onClick={save}>{saved ? <Check /> : <Save />}{saved ? "Saved" : "Save loop"}</Button>
+          <Button variant="outline" size="sm" onClick={exportMidi}><Download />Export .mid</Button>
         </>}
       >
-        <div className="grid gap-1.5">
-          <Label htmlFor="lb-genre">Genre</Label>
+        <Field label="Genre" htmlFor="lb-genre">
           <Select value={loop.family} onValueChange={(f) => { setStored(defaultLoop(f)); setScale(genreInfo(f)!.scale) }}>
             <SelectTrigger id="lb-genre" size="sm" className="w-44"><SelectValue /></SelectTrigger>
             <SelectContent>{GENRE_INFO.map((g) => <SelectItem key={g.id} value={g.id}>{famName(g.id)}</SelectItem>)}</SelectContent>
           </Select>
-        </div>
+        </Field>
         <KeyPicker idPrefix="lb" />
-        <div className="grid w-36 gap-2">
-          <div className="flex justify-between text-sm"><Label htmlFor="lb-tempo">Tempo</Label><output className="text-muted-foreground tabular-nums">{loop.tempo} BPM</output></div>
+        <Field label="Tempo" htmlFor="lb-tempo" value={<>{loop.tempo} BPM</>} className="w-36">
           <Slider id="lb-tempo" aria-label="Tempo" min={60} max={180} step={1} value={[loop.tempo]} onValueChange={([v]) => setLoop({ tempo: v })} />
-        </div>
-        <div className="grid w-28 gap-2">
-          <div className="flex justify-between text-sm"><Label htmlFor="lb-swing">Swing</Label><output className="text-muted-foreground tabular-nums">{Math.round(loop.swing * 100)}%</output></div>
+        </Field>
+        <Field label="Swing" htmlFor="lb-swing" value={<>{Math.round(loop.swing * 100)}%</>} className="w-28">
           <Slider id="lb-swing" aria-label="Swing" min={0} max={0.6} step={0.01} value={[loop.swing]} onValueChange={([v]) => setLoop({ swing: v })} />
-        </div>
+        </Field>
       </Toolbar>
       <Caption>
         {info.blurb} Typical tempo {info.tempo[0]}–{info.tempo[1]} BPM. <Link className="underline" to={`/genres/${loop.family}`}>More about {famName(loop.family).toLowerCase()}</Link>

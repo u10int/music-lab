@@ -20,6 +20,7 @@ import { theory, type Theory } from "@/lib/theory"
 import { cn } from "@/lib/utils"
 import { MidiOutPicker } from "@/components/midi-out-picker"
 import { Toolbar } from "@/components/toolbar"
+import { Field } from "@/components/field"
 import { browserSound, sendNote } from "@/midi/midi-out"
 
 type Sound = "keys" | "pad" | "pluck"
@@ -163,15 +164,13 @@ export function ProgressionBuilder() {
     <div className="space-y-8" style={{ ["--c" as string]: "var(--s2)" }}>
       <Toolbar
         transport={<PlayButton id="prog-builder" label="Play loop" primary onPlay={play} />}
-        actions={<Button variant="outline" disabled={!st.chords.length} onClick={exportMidi}><Download />Export .mid</Button>}
+        actions={<Button variant="outline" size="sm" disabled={!st.chords.length} onClick={exportMidi}><Download />Export .mid</Button>}
       >
         <KeyPicker idPrefix="pb" />
-        <div className="grid w-40 gap-2">
-          <div className="flex justify-between text-sm"><Label htmlFor="pb-tempo">Tempo</Label><output className="text-muted-foreground tabular-nums">{st.tempo} BPM</output></div>
+        <Field label="Tempo" htmlFor="pb-tempo" value={<>{st.tempo} BPM</>} className="w-40">
           <Slider id="pb-tempo" min={70} max={175} step={1} value={[st.tempo]} onValueChange={([v]) => set({ tempo: v })} aria-label="Tempo" />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="pb-drums">Drums</Label>
+        </Field>
+        <Field label="Drums" htmlFor="pb-drums">
           <Select value={st.pattern} onValueChange={(v) => { const p = PATTERNS.find((x) => x.id === v); set({ pattern: v, ...(p ? { tempo: p.tempo } : {}) }) }}>
             <SelectTrigger id="pb-drums" size="sm" className="w-48"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -181,7 +180,7 @@ export function ProgressionBuilder() {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
       </Toolbar>
       <div className="flex flex-wrap items-end gap-3">
         <div className="grid gap-1.5">
