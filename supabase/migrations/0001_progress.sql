@@ -23,3 +23,7 @@ create policy "Update own progress" on public.progress
 drop policy if exists "Delete own progress" on public.progress;
 create policy "Delete own progress" on public.progress
   for delete to authenticated using ((select auth.uid()) = user_id);
+
+revoke all on public.progress from anon;
+grant select, insert, update, delete on public.progress to authenticated;
+revoke truncate, trigger, references on public.progress from authenticated;
