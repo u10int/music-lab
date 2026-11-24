@@ -11,7 +11,7 @@ import { slug } from "@/lib/utils"
 
 const PAGES: [string, string][] = [
   ["Today", "/today"], ["Dashboard", "/"], ["Practice log", "/practice"], ["Flashcards", "/flashcards"], ["Weekly exports", "/exports"],
-  ["Rules and rhythm", "/plan"], ["Track planner", "/planner"], ["Scales and chords", "/labs/theory"], ["Chord progressions", "/labs/progressions"],
+  ["How the plan works", "/plan"], ["Track planner", "/planner"], ["Scales and chords", "/labs/theory"], ["Chord progressions", "/labs/progressions"],
   ["Play along", "/labs/play-along"], ["Sound design", "/labs/sound-design"], ["Drums and sampling", "/labs/drums"], ["Step sequencer", "/labs/sequencer"],
   ["Arrangement", "/labs/arrangement"], ["Mixing", "/labs/mixing"], ["Ear training", "/labs/ear"], ["Timing trainer", "/labs/timing"],
   ["Loop builder", "/labs/loop-builder"], ["Melody", "/labs/melody"], ["Weekly review", "/review"], ["Sampler", "/labs/sampler"], ["Reference notebook", "/notebook"], ["Genres", "/genres"],

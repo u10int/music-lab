@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Check, CloudAlert, LogIn, LogOut, Mail, RefreshCw, UserRound } from "lucide-react"
+import { Check, CloudAlert, LogOut, Mail, RefreshCw, UserRound } from "lucide-react"
 import { Link } from "react-router"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -73,15 +73,8 @@ const SYNC: Record<SyncState, string> = { idle: "", loading: "Loading your progr
 export function AccountMenu() {
   const a = useAuth()
   if (a.status === "disabled" || a.status === "loading") return null
-  if (a.status === "signed-out") {
-    return (
-      <SidebarMenuItem>
-        <SignInDialog>
-          <SidebarMenuButton tooltip="Sign in"><LogIn /><span>Sign in</span></SidebarMenuButton>
-        </SignInDialog>
-      </SidebarMenuItem>
-    )
-  }
+  // Signed out, the sidebar offers sign-in at the top instead.
+  if (a.status === "signed-out") return null
   const name = (a.user?.user_metadata?.user_name as string) || (a.user?.user_metadata?.full_name as string) || a.user?.email || "Account"
   const SyncIcon = a.sync === "error" ? CloudAlert : a.sync === "saving" || a.sync === "loading" ? RefreshCw : Check
   return (
@@ -124,4 +117,11 @@ export function RequireAccount({ children, what }: { children: React.ReactNode; 
       <p className="text-muted-foreground text-sm">Just exploring? The <Link className="underline" to="/labs/loop-builder">labs</Link>, <Link className="underline" to="/genres">genres</Link> and <Link className="underline" to="/instruments">guides</Link> work without an account.</p>
     </div>
   )
+}
+
+/** The front page: your dashboard when signed in, an overview of the app when not. */
+export function HomeRoute({ dashboard, home }: { dashboard: React.ReactNode; home: React.ReactNode }) {
+  const a = useAuth()
+  if (a.status === "loading") return <p className="text-muted-foreground text-sm" role="status">Loading…</p>
+  return <>{a.status === "signed-out" ? home : dashboard}</>
 }

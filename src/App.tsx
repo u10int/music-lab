@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from "react"
-import { RequireAccount } from "@/components/account"
+import { HomeRoute, RequireAccount } from "@/components/account"
 import { createBrowserRouter, Outlet, RouterProvider, useLocation } from "react-router"
 import { stop } from "@/audio/playback"
 import { AppSidebar } from "@/components/app-sidebar"
@@ -38,6 +38,7 @@ const GenresPage = lazy(() => import("@/pages/genres").then((m) => ({ default: m
 const GenrePage = lazy(() => import("@/pages/genres").then((m) => ({ default: m.GenrePage })))
 const NotebookPage = lazy(() => import("@/pages/notebook").then((m) => ({ default: m.NotebookPage })))
 const ReviewPage = lazy(() => import("@/pages/review").then((m) => ({ default: m.ReviewPage })))
+const HomePage = lazy(() => import("@/pages/home").then((m) => ({ default: m.HomePage })))
 const PlannerPage = lazy(() => import("@/pages/planner").then((m) => ({ default: m.PlannerPage })))
 function Layout() {
   useTheme()
@@ -84,14 +85,14 @@ function Layout() {
 }
 
 function NotFound() {
-  return <p>That page doesn't exist. <a className="underline" href="/">Go to the dashboard</a>.</p>
+  return <p>That page doesn't exist. <a className="underline" href="/">Go home</a>.</p>
 }
 
 const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: "/", element: <RequireAccount what="your dashboard"><Dashboard /></RequireAccount> },
+      { path: "/", element: <HomeRoute dashboard={<Dashboard />} home={<HomePage />} /> },
       { path: "/today", element: <RequireAccount what="today’s session"><TodayPage /></RequireAccount> },
       { path: "/sprints/:n", element: <RequireAccount what="your sprints"><SprintPage /></RequireAccount> },
       { path: "/exports", element: <RequireAccount what="your exports"><ExportsPage /></RequireAccount> },
