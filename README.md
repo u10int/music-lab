@@ -24,6 +24,8 @@ npm run lint
 | `src/audio/` | `engine.ts` (tone, drum, shared context), `playback.ts` (one sound at a time, `usePlayingId`), `previews.ts` (recipe sketches). |
 | `src/midi/midi.ts` | Web MIDI input: connect, held notes, note listeners (`useMidi`, `onNote`). |
 | `src/lib/midi-file.ts` | Writes Standard MIDI Files for the sequencer's export. |
+| `src/lib/cards.ts` | Flashcard decks and spaced-repetition scheduling. |
+| `src/data/patterns.ts` | The drum pattern library: 23 styles, with ghost notes and swing. |
 | `src/lib/store.ts` | Progress saved to `localStorage`, with import and export. `usePref` keeps small per-browser settings like the selected key. |
 | `src/lib/theory.ts` | Scale spelling, diatonic chords, progressions. |
 | `src/components/` | Shared pieces: `PadGrid`, `Piano`, `PlayButton`, `Seg`, diagrams, and `ui/` for shadcn components. |

@@ -1,4 +1,4 @@
-import { AudioWaveform, BookOpen, CalendarCheck, Disc3, Drum, Ear, Grid2x2, Grid3x3, LayoutDashboard, ListMusic, Music2, Piano, Settings, SlidersHorizontal, Timer, Upload } from "lucide-react"
+import { AudioWaveform, BookOpen, CalendarCheck, Columns3, Disc3, Drum, Ear, Grid2x2, Grid3x3, Layers, LayoutDashboard, ListMusic, Metronome, Music2, PencilRuler, Piano, Settings, SlidersHorizontal, Sun, Timer, Upload } from "lucide-react"
 import { NavLink, useLocation } from "react-router"
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader,
@@ -7,24 +7,30 @@ import {
 import { SPRINTS } from "@/data/sprints"
 import { useProgress } from "@/lib/store"
 import { MidiStatus } from "@/components/midi-status"
+import { QuickSearch } from "@/components/quick-search"
 
 type Item = { to: string; label: string; icon?: React.ComponentType<{ className?: string }>; dot?: string; done?: boolean }
 
 const PLAN: Item[] = [
+  { to: "/today", label: "Today", icon: Sun },
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/practice", label: "Practice log", icon: Timer },
+  { to: "/flashcards", label: "Flashcards", icon: Layers },
   { to: "/exports", label: "Weekly exports", icon: Upload },
   { to: "/plan", label: "Rules and rhythm", icon: CalendarCheck },
 ]
 const LABS: Item[] = [
   { to: "/labs/theory", label: "Scales and chords", icon: Music2 },
+  { to: "/labs/progressions", label: "Chord progressions", icon: ListMusic },
   { to: "/labs/play-along", label: "Play along", icon: Piano },
   { to: "/labs/sound-design", label: "Sound design", icon: AudioWaveform },
   { to: "/labs/drums", label: "Drums and sampling", icon: Drum },
   { to: "/labs/sequencer", label: "Step sequencer", icon: Grid2x2 },
-  { to: "/labs/arrangement", label: "Arrangement", icon: ListMusic },
+  { to: "/labs/arrangement", label: "Arrangement", icon: Columns3 },
+  { to: "/planner", label: "Track planner", icon: PencilRuler },
   { to: "/labs/mixing", label: "Mixing", icon: SlidersHorizontal },
   { to: "/labs/ear", label: "Ear training", icon: Ear },
+  { to: "/labs/timing", label: "Timing trainer", icon: Metronome },
 ]
 const GUIDES: Item[] = [
   { to: "/instruments", label: "Live instruments and effects", icon: BookOpen },
@@ -40,7 +46,7 @@ function Group({ label, items }: { label: string; items: Item[] }) {
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((it) => {
-            const active = it.to === "/" ? pathname === "/" : pathname.startsWith(it.to)
+            const active = it.to === "/" ? pathname === "/" : pathname === it.to || pathname.startsWith(it.to + "/")
             return (
               <SidebarMenuItem key={it.to}>
                 <SidebarMenuButton asChild isActive={active} tooltip={it.label}>
@@ -74,6 +80,7 @@ export function AppSidebar() {
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          <QuickSearch />
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>

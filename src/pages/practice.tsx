@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react"
-import { Pause, Play } from "lucide-react"
-import { Block, Caption, PageHeader } from "@/components/page"
+import { useRef, useState } from "react"
+import { Block, PageHeader } from "@/components/page"
+import { PracticeTimer } from "@/components/practice-timer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,34 +10,11 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { SPRINTS } from "@/data/sprints"
 import {
   currentWeek, fmtDay, fmtMinutes, isoOf, minutesByDay, minutesThisWeek, mondayOf, sprintForWeek, streaks, todayISO, uid, update,
-  usePref, useProgress, WEEKLY_GOAL_MIN, type Session,
+  useProgress, WEEKLY_GOAL_MIN, type Session,
 } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
 const LAB_FOCUS = ["Scales and chords", "Ear training", "Play along", "Sound design", "Drums and sampling", "Step sequencer", "Arrangement", "Mixing", "Push practice", "Making a track", "Other"]
-
-function Timer({ onStop }: { onStop: (minutes: number) => void }) {
-  const [start, setStart] = usePref<number | null>("timer-start", null)
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    if (!start) return
-    const t = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(t)
-  }, [start])
-  const secs = start ? Math.max(0, Math.floor((now - start) / 1000)) : 0
-  const mmss = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`
-  return (
-    <div className="flex flex-wrap items-center gap-4">
-      <span className="font-display text-4xl font-extrabold tabular-nums" aria-live="off">{mmss}</span>
-      {start ? (
-        <Button onClick={() => { onStop(Math.max(1, Math.round(secs / 60))); setStart(null) }}><Pause className="fill-current" />Stop and log</Button>
-      ) : (
-        <Button variant="outline" onClick={() => { setNow(Date.now()); setStart(Date.now()) }}><Play className="fill-current" />Start practice timer</Button>
-      )}
-      {start && <Caption>The timer keeps running if you switch pages.</Caption>}
-    </div>
-  )
-}
 
 /** 12 weeks of days, Monday at the top, oldest week on the left. */
 function Heatmap() {
@@ -108,7 +85,7 @@ export function PracticePage() {
         <Card><CardContent className="space-y-1"><p className="text-muted-foreground text-sm">Sessions logged</p><p className="font-display text-3xl font-extrabold tabular-nums">{p.sessions.length}</p><p className="text-muted-foreground text-sm">{fmtMinutes(p.sessions.reduce((a, s) => a + s.minutes, 0))} in total</p></CardContent></Card>
       </div>
 
-      <Block title="Timer"><Timer onStop={(m) => { setMinutes(String(m)); setDate(todayISO()); requestAnimationFrame(() => minRef.current?.focus()) }} /></Block>
+      <Block title="Timer"><PracticeTimer onStop={(m) => { setMinutes(String(m)); setDate(todayISO()); requestAnimationFrame(() => minRef.current?.focus()) }} /></Block>
 
       <Block title="Log a session">
         <form onSubmit={add} noValidate className="grid max-w-4xl items-start gap-3 sm:grid-cols-2 lg:grid-cols-[10rem_7rem_minmax(0,14rem)_minmax(0,1fr)_auto]">

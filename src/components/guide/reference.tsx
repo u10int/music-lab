@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CHAINS, FEAT, FX, FXGROUPS, FXPICK, GLOSS, IGROUPS, INSTR, ITAGS, QS, RECIPES, type Instrument } from "@/data/guide"
 import { VIZ } from "@/data/viz"
 import { GlossText, INAME } from "./links"
+import { slug } from "@/lib/utils"
 import { PickTable } from "./sounds"
 
 const recipeCount = (id: string) => RECIPES.filter((r) => r.use.includes(id) || r.alt.includes(id)).length
@@ -84,7 +85,7 @@ export function Effects() {
             {FX.filter((f) => f.g === g).map((f) => {
               const used = new Set<string>()
               return (
-                <article key={f.n} className="flex flex-col gap-3 rounded-xl border bg-card p-4">
+                <article key={f.n} id={"fx-" + slug(f.n)} tabIndex={-1} className="flex scroll-mt-24 flex-col gap-3 rounded-xl border bg-card p-4 outline-none transition-[box-shadow] duration-300 data-[flash=true]:ring-2 data-[flash=true]:ring-ring">
                   <div>
                     <h3 className="font-semibold">{f.n}</h3>
                     <p className="text-muted-foreground text-sm">{f.what}</p>

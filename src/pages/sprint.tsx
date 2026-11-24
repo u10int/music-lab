@@ -1,4 +1,4 @@
-import { Navigate, useParams } from "react-router"
+import { Link, Navigate, useParams } from "react-router"
 import { ArrangementMap } from "@/components/labs/arrangement-map"
 import { DrumPatterns } from "@/components/labs/drum-lab"
 import { EarTraining } from "@/components/labs/ear-training"
@@ -25,7 +25,7 @@ const LAB: Record<string, [string, () => React.ReactNode]> = {
   s2: ["Scales and chords on the grid", () => <ScalesLab />],
   s3: ["Synth playground", () => <SynthLab />],
   s4: ["How Slice mode maps a loop to pads", () => <SliceLab />],
-  s5: ["Arrangement map", () => <ArrangementMap />],
+  s5: ["Arrangement map", () => <div className="space-y-4"><ArrangementMap /><p className="text-sm">Ready to plan your own? <Link to="/planner" className="underline">Open the track planner</Link>.</p></div>],
   s6: ["Mix references", () => <MixLab />],
 }
 

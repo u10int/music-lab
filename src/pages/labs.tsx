@@ -7,6 +7,8 @@ import { ScalesLab } from "@/components/labs/scales-lab"
 import { SliceLab } from "@/components/labs/slice-lab"
 import { SynthLab } from "@/components/labs/synth-lab"
 import { Sequencer } from "@/components/labs/sequencer"
+import { TimingTrainer } from "@/components/labs/timing-trainer"
+import { ProgressionBuilder } from "@/components/labs/progression-builder"
 import { Block, PageHeader } from "@/components/page"
 import { DrumLayouts, NoteRepeat } from "@/components/push/drum-layouts"
 import { PlayableGrid } from "@/components/push/notes-lab"
@@ -82,6 +84,24 @@ export function SequencerLab() {
     <div className="space-y-10">
       <PageHeader title="Step sequencer">Program a one-bar drum loop and a melody in your key, hear them loop, then export each as a MIDI file to drag into a Live clip.</PageHeader>
       <Sequencer />
+    </div>
+  )
+}
+
+export function TimingLab() {
+  return (
+    <div className="space-y-10">
+      <PageHeader title="Timing trainer">Play along to a click on Push, a keyboard or your computer keys. Each hit shows how early or late it landed, so you can tighten up your finger drumming.</PageHeader>
+      <TimingTrainer />
+    </div>
+  )
+}
+
+export function ProgressionLab() {
+  return (
+    <div className="space-y-10">
+      <PageHeader title="Chord progressions">Build a progression from the chords in your key, hear it loop over any drum pattern, and export the chords and bassline as MIDI clips for Live.</PageHeader>
+      <ProgressionBuilder />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react"
 import { Link } from "react-router"
 import { PageHeader } from "@/components/page"
+import { Button } from "@/components/ui/button"
 import { ProgressBoard } from "@/components/progress-board"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -50,7 +51,10 @@ export function Dashboard() {
             {slot && cur.week >= 1 && cur.week <= 12 && (
               <p className="text-sm"><span className="font-semibold">{slot[1]}:</span> {s.weeks[weekInSprint][slot[0]]}</p>
             )}
-            <Link to={`/sprints/${s.n}`} className="inline-flex items-center gap-1.5 text-sm font-medium underline">Open sprint {s.n} <ArrowRight className="size-4" /></Link>
+            <div className="flex flex-wrap items-center gap-4 pt-1">
+              <Button asChild><Link to="/today">Start today's session</Link></Button>
+              <Link to={`/sprints/${s.n}`} className="inline-flex items-center gap-1.5 text-sm font-medium underline">Open sprint {s.n} <ArrowRight className="size-4" /></Link>
+            </div>
           </CardContent>
         </Card>
         <Card>

@@ -26,7 +26,8 @@ try {
   /* ignore */
 }
 const listeners = new Set<() => void>()
-const noteListeners = new Set<(note: number, velocity: number) => void>()
+/** Listeners get the note, its velocity and when it happened (performance.now() milliseconds). */
+const noteListeners = new Set<(note: number, velocity: number, at: number) => void>()
 const set = (patch: Partial<MidiState>) => {
   state = { ...state, ...patch }
   listeners.forEach((l) => l())
@@ -43,7 +44,7 @@ function onMessage(e: MIDIMessageEvent) {
   if (cmd === 0x90 && vel > 0) {
     set({ held: [...state.held.filter((n) => n !== note), note], hits: state.hits + 1, lastNote: note, lastVelocity: vel })
     if (state.monitor) playNote(note, { level: 0.12 + (vel / 127) * 0.22 })
-    noteListeners.forEach((l) => l(note, vel))
+    noteListeners.forEach((l) => l(note, vel, e.timeStamp || performance.now()))
   } else if (cmd === 0x80 || (cmd === 0x90 && vel === 0)) {
     set({ held: state.held.filter((n) => n !== note) })
   } else if (cmd === 0xb0 && (note === 123 || note === 120)) {
@@ -86,7 +87,7 @@ export function setMonitor(on: boolean) {
 }
 
 /** Subscribe to note-on events. Returns an unsubscribe function. */
-export function onNote(fn: (note: number, velocity: number) => void) {
+export function onNote(fn: (note: number, velocity: number, at: number) => void) {
   noteListeners.add(fn)
   return () => {
     noteListeners.delete(fn)
@@ -106,6 +107,6 @@ export function useMidi() {
 /** Feed a note from an on-screen pad or key, as if it came from a controller. */
 export function tapNote(note: number, velocity = 100, holdMs = 220) {
   set({ held: [...state.held.filter((n) => n !== note), note], hits: state.hits + 1, lastNote: note, lastVelocity: velocity })
-  noteListeners.forEach((l) => l(note, velocity))
+  noteListeners.forEach((l) => l(note, velocity, performance.now()))
   setTimeout(() => set({ held: state.held.filter((n) => n !== note) }), holdMs)
 }

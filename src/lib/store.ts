@@ -4,6 +4,9 @@ import { SPRINTS } from "@/data/sprints"
 /** Same shape as the original Push Sprint Tracker, so its JSON imports directly. */
 export interface RefTrack { id: string; track: string; borrow: string; url: string }
 export interface ExportEntry { id: string; date: string; note: string }
+export interface PlanSection { id: string; name: string; bars: number; energy: number }
+export interface PlanLane { id: string; name: string; fx?: boolean; cells: Record<string, string> }
+export interface TrackPlan { title: string; tempo: number; sections: PlanSection[]; lanes: PlanLane[] }
 export interface Session { id: string; date: string; minutes: number; focus: string; note: string }
 export interface Progress {
   start: string
@@ -16,6 +19,10 @@ export interface Progress {
   ear: Record<string, { right: number; total: number }>
   push: "p3" | "p2"
   sessions: Session[]
+  /** Flashcard scheduling: Leitner box and next due date per card. */
+  cards: Record<string, { box: number; due: string; intro?: string }>
+  /** The person's own track plan (see the Track planner). */
+  plan: TrackPlan | null
 }
 
 const KEY = "music-lab-progress-v1"
@@ -27,7 +34,7 @@ function nextMonday() {
   d.setDate(d.getDate() + ((8 - d.getDay()) % 7))
   return isoDate(d)
 }
-const blank = (): Progress => ({ start: nextMonday(), done: {}, shipped: {}, log: {}, genre: "all", refs: {}, exports: [], ear: {}, push: "p3", sessions: [] })
+const blank = (): Progress => ({ start: nextMonday(), done: {}, shipped: {}, log: {}, genre: "all", refs: {}, exports: [], ear: {}, push: "p3", sessions: [], cards: {}, plan: null })
 
 function load(): Progress {
   try {

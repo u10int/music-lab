@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useLocation } from "react-router"
 import { drum, KIND_OF } from "@/audio/engine"
 import { toggle } from "@/audio/playback"
 import { Caption } from "@/components/page"
@@ -37,7 +38,7 @@ export function PatternView({ p }: { p: Pattern }) {
     </div>
   )
   return (
-    <figure className="min-w-0 space-y-3 rounded-xl border bg-card p-4">
+    <figure id={"pat-" + p.id} tabIndex={-1} className="min-w-0 scroll-mt-24 space-y-3 rounded-xl border bg-card p-4 outline-none transition-[box-shadow] duration-300 data-[flash=true]:ring-2 data-[flash=true]:ring-ring">
       <figcaption className="flex flex-wrap items-center justify-between gap-2">
         <span><span className="font-semibold">{p.name}</span> <span className="text-muted-foreground text-sm">{p.bpm}{p.swing ? ", swung" : ""}</span></span>
         <PlayButton id={id} label="Play" onPlay={play} />
@@ -67,6 +68,12 @@ export function PatternView({ p }: { p: Pattern }) {
 
 export function DrumPatterns({ only }: { only?: Family }) {
   const [fam, setFam] = usePref<Family | "all">("pattern-family", "all")
+  const { hash } = useLocation()
+  useEffect(() => {
+    const id = hash.startsWith("#pat-") ? hash.slice(5) : null
+    const p = id && PATTERNS.find((x) => x.id === id)
+    if (p && fam !== "all" && p.family !== fam) setFam("all")
+  }, [hash])
   const f = only ?? fam
   const list = PATTERNS.filter((p) => f === "all" || p.family === f)
   return (
