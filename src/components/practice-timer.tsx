@@ -4,6 +4,7 @@ import { Pause, Play } from "lucide-react"
 import { Caption } from "@/components/page"
 import { Button } from "@/components/ui/button"
 import { setPref, usePref } from "@/lib/store"
+import { cn } from "@/lib/utils"
 
 /** Where the running timer was started, so the bottom bar can link back to it. */
 export interface TimerSession { href: string; label: string }
@@ -34,7 +35,7 @@ export function stopTimer(secs: number) {
 }
 
 /** A stopwatch that survives page changes. Stopping hands back whole minutes. */
-export function PracticeTimer({ onStop, label }: { onStop: (minutes: number) => void; label?: string }) {
+export function PracticeTimer({ onStop, label, compact }: { onStop: (minutes: number) => void; label?: string; compact?: boolean }) {
   const [, setStart] = usePref<number | null>("timer-start", null)
   const [stopped, setStopped] = usePref<number | null>("timer-stopped", null)
   const { running, secs } = useTimer()
@@ -46,17 +47,17 @@ export function PracticeTimer({ onStop, label }: { onStop: (minutes: number) => 
     setStopped(null)
   })
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <span className="font-display text-4xl font-medium tabular-nums" aria-live="off">{fmtClock(secs)}</span>
+    <div className={cn("flex flex-wrap items-center", compact ? "gap-2" : "gap-4")}>
+      <span className={cn("font-display font-medium tabular-nums", compact ? "text-xl" : "text-4xl")} aria-live="off">{fmtClock(secs)}</span>
       {running ? (
-        <Button onClick={() => { onStop(Math.max(1, Math.round(secs / 60))); setStart(null) }}><Pause className="fill-current" />Stop and log</Button>
+        <Button size={compact ? "sm" : "default"} onClick={() => { onStop(Math.max(1, Math.round(secs / 60))); setStart(null) }}><Pause className="fill-current" />Stop and log</Button>
       ) : (
         <Button onClick={() => {
           setPref<TimerSession>("timer-session", { href: loc.pathname + loc.search, label: label ?? "Practice session" })
           setStart(Date.now())
-        }} variant="outline"><Play />Start practice timer</Button>
+        }} variant="outline" size={compact ? "sm" : "default"}><Play />{compact ? "Start timer" : "Start practice timer"}</Button>
       )}
-      {running && <Caption>The timer keeps running if you switch pages.</Caption>}
+      {running && !compact && <Caption>The timer keeps running if you switch pages.</Caption>}
     </div>
   )
 }

@@ -95,7 +95,7 @@ export function ProofList({ proofs, compact }: { proofs: Proof[]; compact?: bool
 }
 
 /** Attach a note, an image or an audio file to a day as proof of what you made. */
-export function ProofBox({ p, date, sprintId, titles }: { p: Progress; date: string; sprintId: string; titles: string[] }) {
+export function ProofBox({ p, date, sprintId, titles, bare }: { p: Progress; date: string; sprintId: string; titles: string[]; bare?: boolean }) {
   const [title, setTitle] = useState(titles[0] ?? "")
   const [note, setNote] = useState("")
   const [file, setFile] = useState<File | null>(null)
@@ -124,10 +124,10 @@ export function ProofBox({ p, date, sprintId, titles }: { p: Progress; date: str
     }
   }
   return (
-    <section aria-labelledby="proof-h" className="space-y-3">
-      <h2 id="proof-h" className={SECTION_TITLE}>Proof of work</h2>
-      <p className="text-muted-foreground text-sm">Attach what you made today: a screenshot of the clip, a recording of the loop, or a note. Each sprint page collects them.</p>
-      <form onSubmit={add} className="grid gap-3 border p-4">
+    <section aria-labelledby={bare ? undefined : "proof-h"} aria-label={bare ? "Proof of work" : undefined} className="space-y-3">
+      {!bare && <h2 id="proof-h" className={SECTION_TITLE}>Proof of work</h2>}
+      <p className="text-muted-foreground text-sm">Attach what you made: a screenshot of the clip, a recording of the loop, or a note. Each sprint page collects them.</p>
+      <form onSubmit={add} className={cn("grid gap-3", !bare && "border p-4")}>
         <div className="grid gap-1.5">
           <Label htmlFor="pr-title">For</Label>
           <Input id="pr-title" list="pr-titles" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Which step or idea" className="text-base sm:text-sm" />
@@ -153,7 +153,7 @@ export function ProofBox({ p, date, sprintId, titles }: { p: Progress; date: str
 /* ---------------- Reflection ---------------- */
 
 /** After the day: what clicked, what was hard, and how confident you feel about each skill. Low ratings come back in warm-ups. */
-export function ReflectionCard({ p, date, skills }: { p: Progress; date: string; skills: { key: string; name: string }[] }) {
+export function ReflectionCard({ p, date, skills, bare }: { p: Progress; date: string; skills: { key: string; name: string }[]; bare?: boolean }) {
   const saved = p.reflections?.[date]
   const [clicked, setClicked] = useState(saved?.clicked ?? "")
   const [hard, setHard] = useState(saved?.hard ?? "")
@@ -169,8 +169,8 @@ export function ReflectionCard({ p, date, skills }: { p: Progress; date: string;
     setDone(true)
   }
   return (
-    <section aria-labelledby="refl-h" className="space-y-3 border border-foreground p-5">
-      <h2 id="refl-h" className={SECTION_TITLE}>How did it go?</h2>
+    <section aria-labelledby={bare ? undefined : "refl-h"} aria-label={bare ? "Reflection" : undefined} className={cn("space-y-3", !bare && "border border-foreground p-5")}>
+      {!bare && <h2 id="refl-h" className={SECTION_TITLE}>How did it go?</h2>}
       <p className="text-muted-foreground text-sm">Two lines and a rating. Skills you rate 1 or 2 come back in your warm-ups, and your notes show up in the weekly review.</p>
       <form onSubmit={save} className="grid gap-4">
         <div className="grid gap-4 md:grid-cols-2">
@@ -209,10 +209,10 @@ export function WeeklyChallenge({ p, week, sel, isToday }: { p: Progress; week: 
     <section aria-labelledby="ch-h" className="space-y-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="ch-h" className={SECTION_TITLE}>Week {week} challenge</h2>
-        <span className="text-muted-foreground text-sm tabular-nums">{c.minutes} min, any day this week</span>
+        <span className="text-muted-foreground text-sm tabular-nums">{c.minutes} min</span>
       </div>
       <div className="space-y-3 border p-4">
-        <p className="text-lg font-medium">{c.title}</p>
+        <p className="font-medium">{c.title} <span className="text-muted-foreground text-sm font-normal">· any day this week</span></p>
         <p className="text-pretty">{c.brief}</p>
         <ul className="text-muted-foreground list-disc space-y-0.5 pl-5 text-sm">{c.rules.map((r) => <li key={r}>{r}</li>)}</ul>
         <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -220,7 +220,6 @@ export function WeeklyChallenge({ p, week, sel, isToday }: { p: Progress; week: 
           <Button size="sm" variant={done ? "default" : "outline"} aria-pressed={!!done} onClick={() => update((d) => { d.challenges ??= {}; if (done) delete d.challenges[String(week)]; else d.challenges[String(week)] = todayISO() })}>
             {done ? `Done ${fmtDay.format(new Date(done + "T00:00:00"))}` : "Mark challenge done"}
           </Button>
-          <span className="text-muted-foreground text-sm">Attach the result below as proof.</span>
         </div>
       </div>
     </section>
