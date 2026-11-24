@@ -157,21 +157,13 @@ export function VirtualPush() {
   }
   const onNotePad = (r: number, c: number) => { const { m } = noteAt(r, c); playNote(m); tapNote(m); flash(setLitNotes, m, 180) }
 
-  const display = mode === "drums" ? (
-    <div className="grid gap-1">
-      <p className="flex justify-between gap-4"><span className="font-medium">Drum Rack · {DRUM_PADS[sel].name}</span><span className="tabular-nums">{seq.tempo} BPM</span></p>
-      <p className="text-[13px] tabular-nums">{noteName(36 + sel)} · velocity {accent ? "127 (Accent)" : vel} · {playing ? `step ${step + 1} of 32` : "stopped"}</p>
-      <p className="text-[12px] text-[#555]">Top half: steps · bottom left: pads · bottom right: velocity. Tap Tempo to set the tempo, Delete clears the pad.</p>
-    </div>
-  ) : (
-    <div className="grid gap-1">
-      <p className="flex justify-between gap-4"><span className="font-medium">{names[0]} {sc.name.toLowerCase()} · In Key · 4ths</span><span className="tabular-nums">from {noteName(base)}</span></p>
-      <p className="text-[12px] text-[#555]">Blue pads are the root. Up a row is a fourth. Octave buttons move the range; Note switches back to drums.</p>
-    </div>
-  )
+  const status = mode === "drums"
+    ? `${DRUM_PADS[sel].name} pad (${noteName(36 + sel)}) · velocity ${accent ? "127, Accent on" : vel} · ${seq.tempo} BPM${playing ? ` · step ${step + 1} of 32` : ""}`
+    : `${names[0]} ${sc.name.toLowerCase()}, In Key in 4ths, from ${noteName(base)}`
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Track type">
         {(["drums", "notes"] as const).map((m) => (
           <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)}
@@ -180,8 +172,10 @@ export function VirtualPush() {
           </button>
         ))}
       </div>
-      <Push3 pad={mode === "drums" ? drumPad : notePad} onPad={mode === "drums" ? onDrumPad : onNotePad} onControl={onControl} display={display}
-        lit={{ play: playing ? "#23782b" : false, note: "#ffffff", accent: accent ? "#ffffff" : false, tapTempo: false, delete: false, octaveUp: false, octaveDown: false }} />
+      <p className="text-muted-foreground text-sm tabular-nums" aria-live="polite">{status}</p>
+      </div>
+      <Push3 pad={mode === "drums" ? drumPad : notePad} onPad={mode === "drums" ? onDrumPad : onNotePad} onControl={onControl}
+        lit={{ play: playing ? "#23782b" : false, note: true, accent, tapTempo: false, delete: false, octaveUp: false, octaveDown: false }} />
     </div>
   )
 }

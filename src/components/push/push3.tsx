@@ -1,15 +1,15 @@
-import { useId, useState } from "react"
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { PUSH3_INFO, type ControlId } from "@/data/push3"
 
 /**
  * Push 3, drawn from Ableton's hardware layout. One component for the
  * hardware guide and the virtual Push: pads and buttons can be lit and pressed,
- * the display shows whatever you pass in, and a help overlay labels every
- * control and section the way Ableton's diagram does.
+ * the display shows whatever you pass in, and hovering or focusing a control
+ * shows a tooltip with its name and what it does.
  *
  * Coordinates are in the diagram's own space: the device body runs from
- * (185, 158) to (1213, 1017), and the help labels sit around it.
+ * (185, 158) to (1213, 1017).
  */
 
 export type { ControlId }
@@ -37,47 +37,15 @@ const HIT: Partial<Record<ControlId, Box>> = {
   display: B(382, 320, 628, 112),
 }
 
+const BODY = "#262626", CTRL = "#3b3b3b", LIT = "#6b6b6b", INK = "#d4d4d4"
 const EX = Array.from({ length: 8 }, (_, i) => 421 + i * 78.5)
 const PAD_X = (c: number) => 385 + c * 78.5, PAD_Y = (r: number) => 516 + r * 59
 const SCENES = ["1/32t", "1/32", "1/16t", "1/16", "1/8t", "1/8", "1/4t", "1/4"]
 
-/** Help labels and their dotted leader lines, as in Ableton's diagram. */
-type Label = { id: ControlId; text: string; sub?: string; x: number; y: number; end: "start" | "end" | "middle"; path: string }
-const LEFT = 132, RIGHT = 1266
-const LABELS: Label[] = [
-  { id: "user", text: "User", x: LEFT, y: 207, end: "end", path: `M${LEFT + 6} 207 H339 V256` },
-  { id: "learn", text: "Learn", x: LEFT, y: 238, end: "end", path: `M${LEFT + 6} 238 H299 V256` },
-  { id: "sets", text: "Sets", x: LEFT, y: 271, end: "end", path: `M${LEFT + 6} 272 H203` },
-  { id: "setup", text: "Setup", x: LEFT, y: 308, end: "end", path: `M${LEFT + 6} 309 H262 V292` },
-  { id: "volume", text: "Volume", sub: "Press", x: LEFT, y: 377, end: "end", path: `M${LEFT + 6} 378 H207` },
-  { id: "mute", text: "Mute", x: LEFT, y: 428, end: "end", path: `M${LEFT + 6} 429 H299 V460` },
-  { id: "stopClip", text: "Stop Clip", x: LEFT, y: 450, end: "end", path: `M${LEFT + 6} 451 H262 V460` },
-  { id: "lock", text: "Lock", x: LEFT, y: 479, end: "end", path: `M${LEFT + 6} 480 H203` },
-  { id: "solo", text: "Solo", x: LEFT, y: 504, end: "end", path: `M${LEFT + 6} 505 H339 V496` },
-  { id: "swing", text: "Swing & Tempo", sub: "Press", x: LEFT, y: 540, end: "end", path: `M${LEFT + 6} 541 H218` },
-  { id: "metronome", text: "Metronome", x: LEFT, y: 640, end: "end", path: `M${LEFT + 6} 641 H203` },
-  { id: "capture", text: "Capture", x: LEFT, y: 857, end: "end", path: `M${LEFT + 6} 858 H203` },
-  { id: "record", text: "Record", x: LEFT, y: 897, end: "end", path: `M${LEFT + 6} 898 H203` },
-  { id: "play", text: "Play", x: LEFT, y: 957, end: "end", path: `M${LEFT + 6} 958 H203` },
-  { id: "touchStrip", text: "Touch Strip", x: 331, y: 1080, end: "middle", path: "M329 985 V1060" },
-  { id: "device", text: "Device", x: RIGHT, y: 208, end: "start", path: `M${RIGHT - 6} 209 H1055 V256` },
-  { id: "mix", text: "Mix", x: RIGHT, y: 237, end: "start", path: `M${RIGHT - 6} 238 H1094 V256` },
-  { id: "sessionView", text: "Session", x: RIGHT, y: 275, end: "start", path: `M${RIGHT - 6} 276 H1190` },
-  { id: "clip", text: "Clip", x: RIGHT, y: 309, end: "start", path: `M${RIGHT - 6} 310 H1131 V292` },
-  { id: "add", text: "Add", x: RIGHT, y: 338, end: "start", path: `M${RIGHT - 6} 339 H1070` },
-  { id: "jog", text: "Jog Wheel", sub: "Nudge & press", x: RIGHT, y: 377, end: "start", path: `M${RIGHT - 6} 378 H1194` },
-  { id: "swap", text: "Swap", x: RIGHT, y: 416, end: "start", path: `M${RIGHT - 6} 417 H1070` },
-  { id: "master", text: "Master Track", x: RIGHT, y: 451, end: "start", path: `M${RIGHT - 6} 452 H1052 V460` },
-  { id: "dpad", text: "Session D-Pad", x: RIGHT, y: 516, end: "start", path: `M${RIGHT - 6} 517 H1195` },
-  { id: "session", text: "Session", x: RIGHT, y: 590, end: "start", path: `M${RIGHT - 6} 591 H1170` },
-  { id: "note", text: "Note", x: RIGHT, y: 616, end: "start", path: `M${RIGHT - 6} 617 H1103 V600` },
-  { id: "scenes", text: "Scenes & Repeat Intervals", x: 1055, y: 1080, end: "middle", path: "M1052 985 V1060" },
-]
-
 export interface PadLook { fill: string; label?: string; ink?: string; aria: string; pressed?: boolean }
 
 export function Push3({
-  pad, onPad, onControl, lit = {}, selected, display, help: helpProp, onHelp, className, interactive = true,
+  pad, onPad, onControl, lit = {}, selected, display, className,
 }: {
   /** How each pad looks, by row (0 is the top) and column. Omit for plain white pads. */
   pad?: (r: number, c: number) => PadLook
@@ -86,60 +54,55 @@ export function Push3({
   /** Buttons to light: true for white, or a color. */
   lit?: Partial<Record<ControlId, boolean | string>>
   selected?: ControlId | null
-  /** Lines of text for the display. */
+  /** What the display shows. */
   display?: React.ReactNode
-  help?: boolean
-  onHelp?: (v: boolean) => void
   className?: string
-  interactive?: boolean
 }) {
-  const [helpLocal, setHelpLocal] = useState(false)
-  const help = helpProp ?? helpLocal
-  const setHelp = (v: boolean) => (onHelp ? onHelp(v) : setHelpLocal(v))
   const [hover, setHover] = useState<ControlId | null>(null)
-  const clip = "push3-body-" + useId().replace(/:/g, "")
-  const mark = selected ?? hover
-  const vb = help ? "0 150 1410 950" : "180 153 1038 869"
+  const mark = hover ?? selected
+  const VB = { x: 180, y: 153, w: 1038, h: 869 }
 
   const hit = (id: ControlId, box: Box) => (
     <rect key={"h" + id} x={box.x} y={box.y} width={box.w} height={box.h} fill="transparent"
-      className={cn(interactive && onControl && "cursor-pointer outline-none")}
-      role={onControl ? "button" : undefined} tabIndex={onControl ? 0 : undefined} aria-label={onControl ? PUSH3_INFO[id][0] : undefined}
+      className={cn("outline-none", onControl && "cursor-pointer")}
+      role={onControl ? "button" : "img"} tabIndex={0} aria-label={`${PUSH3_INFO[id][0]}: ${PUSH3_INFO[id][1]}`}
       aria-pressed={onControl && lit[id] !== undefined ? !!lit[id] : undefined}
       onPointerEnter={() => setHover(id)} onPointerLeave={() => setHover((h) => (h === id ? null : h))}
+      onFocus={() => setHover(id)} onBlur={() => setHover((h) => (h === id ? null : h))}
       onClick={() => onControl?.(id)}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onControl?.(id) } }} />
   )
-  const litFill = (id: ControlId) => (typeof lit[id] === "string" ? (lit[id] as string) : lit[id] ? "#ffffff" : undefined)
-  // A white button face, lit when asked.
+  const litFill = (id: ControlId) => (typeof lit[id] === "string" ? (lit[id] as string) : lit[id] ? LIT : undefined)
+  // A button face, a little lighter than the body, brighter when lit.
   const face = (x: number, y: number, w: number, h: number, id?: ControlId) => (
-    <rect x={x} y={y} width={w} height={h} fill={id && litFill(id) ? litFill(id) : "#f4f4f4"} className={cn("transition-[fill] duration-100", id && lit[id] === undefined && "opacity-95")} />
+    <rect x={x} y={y} width={w} height={h} fill={id && litFill(id) ? litFill(id) : CTRL} className="transition-[fill] duration-100" />
   )
-  const ink = "#1a1a1a"
+  const ink = INK
   const stroke = { stroke: ink, strokeWidth: 1.6, fill: "none" }
   const T = (x: number, y: number, s: string, size = 8.5, anchor: "start" | "middle" = "start") => <text x={x} y={y} fontSize={size} fill={ink} textAnchor={anchor} fontFamily="var(--font-sans)">{s}</text>
   const box = mark ? HIT[mark] ?? groupBox(mark) : null
+  // The tooltip sits above the control, or below it near the top edge.
+  const below = box ? box.y < 330 : false
+  const tipStyle = box ? {
+    left: `${Math.min(84, Math.max(16, ((box.x + box.w / 2 - VB.x) / VB.w) * 100))}%`,
+    top: `${(((below ? box.y + box.h + 8 : box.y - 8) - VB.y) / VB.h) * 100}%`,
+    transform: `translate(-50%, ${below ? "0" : "-100%"})`,
+  } : undefined
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <div className="flex justify-end">
-        <button type="button" aria-pressed={help} onClick={() => setHelp(!help)}
-          className={cn("h-7 border px-3 text-xs transition-[background-color,color] duration-150", help ? "border-foreground bg-foreground text-background" : "border-foreground/30 hover:border-foreground")}>
-          {help ? "Hide labels" : "Show labels"}
-        </button>
-      </div>
-      <svg viewBox={vb} className="block h-auto w-full select-none" role="group" aria-label="Push 3">
-        {/* Body */}
-        <clipPath id={clip}><rect x={185} y={158} width={1028} height={859} /></clipPath>
-        <rect x={185} y={158} width={1028} height={859} fill="#262626" />
+    <div className={cn("relative", className)}>
+      <svg viewBox={`${VB.x} ${VB.y} ${VB.w} ${VB.h}`} className="block h-auto w-full select-none" role="group" aria-label="Push 3. Hover or focus a control to see what it does.">
+        <rect x={185} y={158} width={1028} height={859} fill={BODY} />
 
         {/* Encoders and display buttons */}
-        {EX.map((x, i) => <circle key={"e" + i} cx={x} cy={217} r={17} fill="#f4f4f4" />)}
+        {EX.map((x, i) => <circle key={"e" + i} cx={x} cy={217} r={17} fill={CTRL} />)}
         {EX.map((x, i) => <g key={"u" + i}>{face(x - 35, 258, 70, 32)}<line x1={x - 27} x2={x + 27} y1={281} y2={281} stroke={ink} strokeWidth={2.5} /></g>)}
-        <rect x={382} y={320} width={628} height={112} fill="#f4f4f4" />
-        <foreignObject x={390} y={326} width={612} height={100}>
-          <div className="flex h-full w-full flex-col justify-center overflow-hidden px-3 font-sans text-[15px] leading-snug text-[#1a1a1a]">{display}</div>
-        </foreignObject>
+        <rect x={382} y={320} width={628} height={112} fill="#000" />
+        {display && (
+          <foreignObject x={390} y={326} width={612} height={100}>
+            <div className="flex h-full w-full flex-col justify-center overflow-hidden px-3 font-sans text-[15px] leading-snug text-white">{display}</div>
+          </foreignObject>
+        )}
         {EX.map((x, i) => <g key={"l" + i}>{face(x - 35, 462, 70, 32)}<line x1={x - 27} x2={x + 27} y1={471} y2={471} stroke={ink} strokeWidth={2.5} /></g>)}
 
         {/* Left column */}
@@ -151,7 +114,7 @@ export function Push3({
           <rect x={334} y={272} width={10} height={9} /><path d="M336 272 v-4 a3 3 0 0 1 6 0" />
         </g>
         {[243, 281, 319].map((x) => <line key={x} x1={x} x2={x} y1={264} y2={284} stroke={ink} strokeWidth={1.6} />)}
-        <circle cx={242} cy={377} r={33} fill="#f4f4f4" />
+        <circle cx={242} cy={377} r={33} fill={CTRL} />
         {face(323, 320, 34, 34, "undo")}{T(340, 340, "Undo", 8, "middle")}
         {face(323, 399, 34, 34, "save")}{T(340, 419, "Save", 8, "middle")}
         {face(205, 462, 152, 32)}
@@ -162,7 +125,7 @@ export function Push3({
           {[243, 281, 319].map((x) => <line key={x} x1={x} x2={x} y1={468} y2={488} stroke={ink} strokeWidth={1.6} />)}
           {(["mute", "solo", "stopClip", "lock"] as ControlId[]).map((id) => litFill(id) && <rect key={id} x={HIT[id]!.x + 4} y={489} width={30} height={3} fill={litFill(id)} />)}
         </g>
-        <circle cx={242} cy={540} r={22} fill="#f4f4f4" />
+        <circle cx={242} cy={540} r={22} fill={CTRL} />
         {face(205, 577, 73, 110)}
         {T(213, 591, "Tap")}{T(213, 601, "Tempo")}
         <line x1={213} x2={270} y1={626} y2={626} stroke={ink} strokeWidth={1.4} />
@@ -178,7 +141,7 @@ export function Push3({
         <circle cx={219} cy={898} r={6} fill={lit.record ? "#d33" : "none"} stroke={ink} strokeWidth={1.4} />
         {face(205, 931, 73, 51, "play")}
         <path d="M214 948 L228 957 L214 966 Z" fill={lit.play ? "#fff" : "none"} stroke={lit.play ? "#fff" : ink} strokeWidth={1.4} />
-        <rect x={302} y={516} width={54} height={467} fill="#f4f4f4" />
+        <rect x={302} y={516} width={54} height={467} fill={CTRL} />
         <line x1={344} x2={344} y1={528} y2={970} stroke={ink} strokeWidth={1.6} />
 
         {/* Pads */}
@@ -188,7 +151,7 @@ export function Push3({
             <g key={"p" + i}>
               <rect x={PAD_X(c)} y={PAD_Y(r)} width={72} height={56} className="transition-[fill] duration-75"
                 role={onPad ? "button" : undefined} tabIndex={onPad ? 0 : undefined} aria-label={p?.aria} aria-pressed={p?.pressed}
-                style={{ fill: p?.fill ?? "#f4f4f4", ...(onPad ? { cursor: "pointer", touchAction: "none" } : {}) }}
+                style={{ fill: p?.fill ?? CTRL, ...(onPad ? { cursor: "pointer", touchAction: "none" } : {}) }}
                 onPointerDown={onPad ? (e) => { if (e.pointerType !== "mouse" || e.button === 0) onPad(r, c) } : undefined}
                 onKeyDown={onPad ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPad(r, c) } } : undefined} />
               {p?.label && <text x={PAD_X(c) + 36} y={PAD_Y(r) + 33} fontSize={14} textAnchor="middle" fill={p.ink ?? "#fff"} fontFamily="var(--font-sans)" pointerEvents="none">{p.label}</text>}
@@ -212,7 +175,7 @@ export function Push3({
         {[1074, 1112, 1150].map((x) => <line key={x} x1={x} x2={x} y1={264} y2={284} stroke={ink} strokeWidth={1.6} />)}
         {face(1036, 320, 32, 34, "add")}<path d="M1052 330 v14 M1045 337 h14" {...stroke} />
         {face(1036, 399, 32, 34, "swap")}<path d="M1046 413 a7 7 0 0 1 12 -2 M1058 419 a7 7 0 0 1 -12 2 M1056 409 l2 2 l-3 1 M1048 423 l-2 -2 l3 -1" {...stroke} strokeWidth={1.3} />
-        <circle cx={1140} cy={377} r={52} fill="#f4f4f4" />
+        <circle cx={1140} cy={377} r={52} fill={CTRL} />
         {face(1036, 462, 32, 32, "master")}<line x1={1043} x2={1061} y1={471} y2={471} stroke={ink} strokeWidth={2.5} />
         {face(1088, 462, 105, 106)}
         <g {...stroke}><path d="M1135 482 l5 -5 l5 5 M1135 550 l5 5 l5 -5 M1105 510 l-5 5 l5 5 M1175 510 l5 5 l-5 5" /><rect x={1122} y={497} width={36} height={36} strokeWidth={1.2} /></g>
@@ -239,35 +202,21 @@ export function Push3({
         {box && <rect x={box.x - 3} y={box.y - 3} width={box.w + 6} height={box.h + 6} fill="none" stroke="var(--primary)" strokeWidth={4} pointerEvents="none" />}
 
         {/* Hit areas */}
-        {onControl && (Object.keys(HIT) as ControlId[]).map((id) => hit(id, HIT[id]!))}
-        {onControl && (["encoders", "upperButtons", "lowerButtons", "volume", "swing", "jog", "scenes"] as ControlId[]).map((id) => hit(id, groupBox(id)))}
-        {onControl && !onPad && hit("pads", groupBox("pads"))}
+        {(Object.keys(HIT) as ControlId[]).map((id) => hit(id, HIT[id]!))}
+        {(["encoders", "upperButtons", "lowerButtons", "volume", "swing", "jog", "scenes"] as ControlId[]).map((id) => hit(id, groupBox(id)))}
+        {!onPad && hit("pads", groupBox("pads"))}
 
-        {/* Help labels */}
-        {help && (
-          <g fontFamily="var(--font-sans)">
-            <path d="M421 196 V184 H640 M756 184 H971 V196" {...dots} stroke="#fff" />
-            <text x={698} y={190} fontSize={19} textAnchor="middle" fill="#fff">Encoders</text>
-            <path d="M421 293 V303 H600 M796 303 H971 V293" {...dots} stroke="#fff" />
-            <text x={698} y={310} fontSize={17} textAnchor="middle" fill="#fff">Upper display buttons</text>
-            <path d="M421 457 V447 H600 M796 447 H971 V457" {...dots} stroke="#fff" />
-            <text x={698} y={453} fontSize={17} textAnchor="middle" fill="#fff">Lower display buttons</text>
-            {LABELS.map((l) => (
-              <g key={l.id + l.y} className="cursor-pointer" onClick={() => onControl?.(l.id)} onPointerEnter={() => setHover(l.id)} onPointerLeave={() => setHover(null)}>
-                <path d={l.path} {...dots} />
-                <path d={l.path} {...dots} stroke="#fff" clipPath={`url(#${clip})`} />
-                <text x={l.x} y={l.y + 7} fontSize={21} textAnchor={l.end} fill="currentColor" fontWeight={mark === l.id ? 600 : 400}>{l.text}</text>
-                {l.sub && <text x={l.x} y={l.y + 22} fontSize={12} textAnchor={l.end} fill="currentColor" opacity={0.7}>{l.sub}</text>}
-              </g>
-            ))}
-          </g>
-        )}
       </svg>
+      {hover && (
+        <div role="tooltip" className="bg-popover text-popover-foreground pointer-events-none absolute z-20 w-64 max-w-[70%] border border-foreground p-3 shadow-md" style={tipStyle}>
+          <p className="text-sm font-medium">{PUSH3_INFO[hover][0]}</p>
+          <p className="text-muted-foreground mt-0.5 text-xs leading-snug text-pretty">{PUSH3_INFO[hover][1]}</p>
+        </div>
+      )}
     </div>
   )
 }
 
-const dots = { fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeDasharray: "1.5 4", strokeLinecap: "round" as const }
 
 /** Areas for controls that span a group or are round. */
 function groupBox(id: ControlId): Box {
