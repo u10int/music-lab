@@ -3,6 +3,8 @@ import { Block, Caption, PageHeader } from "@/components/page"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { Piano } from "@/components/piano"
+import { cn } from "@/lib/utils"
 import { allCards, DECKS, deckSize, dueCards, learned, schedule, type Card as FlashCard, type DeckId, type Grade } from "@/lib/cards"
 import { update, useProgress } from "@/lib/store"
 
@@ -46,12 +48,36 @@ function Review({ queue: initial, onDone }: { queue: FlashCard[]; onDone: () => 
         <div className="text-muted-foreground flex justify-between text-sm"><span>{DECKS.find((d) => d[0] === card.deck)![1]}</span><span className="tabular-nums">{done} of {total}</span></div>
         <Progress value={(done / total) * 100} aria-label="Session progress" />
       </div>
-      <Card className="min-h-64">
-        <CardContent className="flex min-h-56 flex-col justify-center gap-6 text-center">
-          <p className="font-display text-2xl font-medium text-balance">{card.front}</p>
-          {shown && <p className="border-t pt-6 text-lg text-pretty" aria-live="polite">{card.back}</p>}
-        </CardContent>
-      </Card>
+      <div className="[perspective:1400px]">
+        <button type="button" onClick={() => setShown((x) => !x)} aria-label={shown ? "Show the question" : "Flip to the answer"}
+          className={cn("grid w-full text-left transition-[rotate] duration-500 ease-[cubic-bezier(0.2,0,0,1)] [transform-style:preserve-3d] motion-reduce:transition-none", shown && "[rotate:y_180deg]")}>
+          <div className="flex min-h-72 flex-col items-center justify-center gap-4 border bg-card p-8 text-center [backface-visibility:hidden] [grid-area:1/1]" aria-hidden={shown}>
+            <span className="text-muted-foreground text-xs">{DECKS.find((d) => d[0] === card.deck)![1]}</span>
+            <p className="font-display text-2xl font-medium text-balance">{card.front}</p>
+            <span className="text-muted-foreground text-xs">Click or press Space to flip</span>
+          </div>
+          <div className="flex min-h-72 flex-col items-center justify-center gap-5 border border-foreground bg-card p-8 text-center [backface-visibility:hidden] [grid-area:1/1] [rotate:y_180deg]" aria-hidden={!shown}>
+            <p className="text-muted-foreground text-sm text-balance">{card.front}</p>
+            <p className="text-2xl font-medium text-pretty" aria-live="polite">{shown ? card.back : ""}</p>
+            {card.keys && (
+              <div className="w-full max-w-md" style={{ ["--c" as string]: "var(--s5)" }}>
+                <Piano scale={card.keys.pcs} names={card.keys.names} root={card.keys.root} chord={card.keys.chord ? card.keys.pcs : []} label={`${card.back} on a keyboard`} />
+              </div>
+            )}
+            {card.buttons && card.deck === "push" && card.buttons.length > 0 && (
+              <div className="flex flex-wrap items-center justify-center gap-2" aria-hidden="true">
+                {card.buttons.map((b, i) => (
+                  <span key={i} className="flex items-center gap-2">
+                    {i > 0 && <span className="text-muted-foreground">+</span>}
+                    <kbd className="inline-flex h-10 min-w-10 items-center justify-center border-2 border-foreground bg-background px-3 font-sans text-sm font-medium">{b.replace(/^Hold\s+/i, "")}</kbd>
+                    {/^Hold\s/i.test(b) && <span className="text-muted-foreground text-xs">hold</span>}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </button>
+      </div>
       {shown ? (
         <div className="grid grid-cols-3 gap-2">
           <Button variant="outline" onClick={() => grade("again")}>Missed it <span className="text-muted-foreground text-xs">1</span></Button>

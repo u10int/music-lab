@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
+import { Scope } from "@/components/scope"
 
 /**
  * The control bar at the top of a builder: the main play button first, the
@@ -30,7 +31,10 @@ export function Toolbar({ transport, children, actions, className }: { transport
         <div className="flex [&_[data-transport]]:h-[3.625rem]">{transport}</div>
         {children}
       </div>
-      {actions && <div className="-mx-3 mt-3 flex flex-wrap items-center justify-end gap-2 border-t px-3 pt-3 sm:-mx-4 sm:px-4">{actions}</div>}
+      <div className="-mx-3 mt-3 flex flex-wrap items-center justify-end gap-2 border-t px-3 pt-3 sm:-mx-4 sm:px-4">
+        <div className="mr-auto hidden h-8 w-48 shrink-0 border bg-background sm:block" aria-hidden="true"><Scope /></div>
+        {actions}
+      </div>
     </div>
   )
 }

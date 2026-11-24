@@ -16,6 +16,7 @@ let ctx: AudioContext | null = null
 let master: GainNode | null = null
 let comp: DynamicsCompressorNode | null = null
 let probe: AnalyserNode | null = null
+let scope: AnalyserNode | null = null
 let noise: AudioBuffer | null = null
 const probeBuf = new Float32Array(256)
 
@@ -31,7 +32,13 @@ function buildOutput(c: AudioContext) {
   master!.connect(comp)
   comp.connect(c.destination)
   comp.connect(probe)
+  scope = c.createAnalyser()
+  scope.fftSize = 2048
+  scope.smoothingTimeConstant = 0.78
+  comp.connect(scope)
 }
+/** The analyser on the final output, for scopes. Null until audio has started. */
+export const scopeNode = () => scope
 
 /**
  * A single NaN or infinite sample (an unstable filter, say) puts a compressor
@@ -254,4 +261,18 @@ export function hit(kind: DrumKind, vel = 1) {
   const c = audio()
   if (!c) return
   drum(c, masterBus(), c.currentTime + 0.02, kind, vel)
+}
+
+/** Start a note that sounds until the returned release function is called (or 8 seconds pass). */
+export function holdNote(midi: number, o: ToneOptions = {}) {
+  const c = audio()
+  if (!c) return () => {}
+  const opts: ToneOptions = { wave: "triangle", env: { a: 0.005, d: 0.4, s: 0.5, r: 0.35 }, cutoff: 2600, level: 0.26, ...o }
+  const g = tone(c, masterBus(), c.currentTime + 0.005, midi, 8, opts)
+  return () => {
+    const now = c.currentTime
+    g.gain.cancelScheduledValues(now)
+    g.gain.setValueAtTime(g.gain.value, now)
+    g.gain.setTargetAtTime(0, now, Math.max(opts.env?.r ?? 0.3, 0.03) / 3)
+  }
 }

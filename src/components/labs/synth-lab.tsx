@@ -4,6 +4,7 @@ import { toggle } from "@/audio/playback"
 import { useKey } from "@/components/key-picker"
 import { EnvelopeSVG, FilterSVG, qOf } from "@/components/diagrams"
 import { Caption } from "@/components/page"
+import { QwertyPiano } from "@/components/qwerty-piano"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
 import { Label } from "@/components/ui/label"
@@ -53,7 +54,9 @@ export function SynthLab() {
         />
         <PlayButton id="synth" label="Play note" onPlay={play} />
       </div>
-      <Caption>Pick a preset to see how it's built, then change any control and play it again. These match Drift's oscillator, filter and envelope.</Caption>
+      <Caption>Pick a preset to see how it's built, then change any control and play it again, or hold keys on the piano below to hear how the envelope responds. These match Drift's oscillator, filter and envelope.</Caption>
+      <QwertyPiano base={12 * (p.oct + 1)} label={`Piano playing the ${PRESETS[presetId]?.name ?? "synth"} sound`}
+        tone={{ wave: p.wave, env: p.env, cutoff: p.cutoff, q: qOf(p.res), detune: p.detune, level: p.oct < 3 ? 0.3 : 0.18 }} />
 
       <div className="space-y-3">
         <h3 className="font-semibold">Oscillator</h3>

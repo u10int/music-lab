@@ -4,6 +4,9 @@ import { Sounds } from "@/components/guide/sounds"
 import { PageHeader } from "@/components/page"
 import { BeatSteps, DrumLayouts, NoteRepeat } from "@/components/push/drum-layouts"
 import { HardwareMap } from "@/components/push/hardware-map"
+import { VirtualPush } from "@/components/push/virtual-push"
+import { KeyPicker } from "@/components/key-picker"
+import { MidiOutPicker } from "@/components/midi-out-picker"
 import { PlayableGrid, SequencingLayouts } from "@/components/push/notes-lab"
 import { Recording, ShortcutTable } from "@/components/push/recording"
 import { MixMode, SessionGrid } from "@/components/push/session-mix"
@@ -35,6 +38,18 @@ export function PushPage() {
   return (
     <div className="space-y-8">
       <PageHeader title="Push 3">The hardware, pad layouts for drums and notes, Session and Mix, recording, and the shortcuts worth learning.</PageHeader>
+      <section aria-labelledby="vp-h" className="grid items-start gap-8 lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)]">
+        <VirtualPush />
+        <div className="space-y-4 text-sm text-pretty">
+          <h2 id="vp-h" className="font-sans text-xl font-medium">Practice on a virtual Push</h2>
+          <p>The same pad layouts as the hardware, so the muscle memory carries over. Use it to try an idea away from the studio, or to learn where things sit before you sit down at Push.</p>
+          <dl className="grid gap-3">
+            <div><dt className="font-medium">Drum mode</dt><dd className="text-muted-foreground">The bottom-left 16 pads play the kit. Press one to select it, then press steps in the top four rows to program two bars for that pad. The bottom-right pads set the velocity of new steps, like Push’s 16 Velocities.</dd></div>
+            <div><dt className="font-medium">Note mode</dt><dd className="text-muted-foreground">The In Key layout in the key below. Blue pads are the root, up a row is a fourth.</dd><div className="pt-2"><KeyPicker idPrefix="vp" /></div></div>
+            <div><dt className="font-medium">With your Push connected</dt><dd className="text-muted-foreground">Pads you press on the hardware light up here. Pick an output to send the drum pattern to Live as MIDI on channel 10, on Drum Rack pad notes.</dd><div className="pt-2"><MidiOutPicker idPrefix="vp" /></div></div>
+          </dl>
+        </div>
+      </section>
       <UrlTabs
         label="Push guide section"
         tabs={[

@@ -6,6 +6,8 @@ import { drum, KIND_OF } from "@/audio/engine"
 import { fxChain, voice, type FxSettings, type Patch } from "@/audio/patch"
 import { toggle } from "@/audio/playback"
 import { InstLink } from "@/components/guide/links"
+import { AmpShape, FilterCurve } from "@/components/diagrams"
+import { mtof } from "@/audio/engine"
 import { useKey } from "@/components/key-picker"
 import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
@@ -120,9 +122,20 @@ export function SoundCard({ s }: { s: GenreSound }) {
 
       <div aria-hidden="true" className="grid grid-cols-[repeat(32,minmax(0,1fr))] gap-px">
         {Array.from({ length: 32 }, (_, i) => (
-          <span key={i} className={cn("h-1.5 rounded-none", notes.has(i) ? "bg-foreground/60" : "bg-pad-empty", i % 4 === 0 && !notes.has(i) && "bg-border", playing && step === i && "bg-[var(--s3)]")} />
+          <span key={i} data-ph={(playing && step === i) || undefined} data-on={notes.has(i) || undefined} className={cn("h-1.5 rounded-none", notes.has(i) ? "bg-foreground/60" : "bg-pad-empty", i % 4 === 0 && !notes.has(i) && "bg-border")} />
         ))}
       </div>
+
+      {(() => {
+        const { patch } = resolve(s, vals), f = patch.filter
+        const cutoff = f.track ? mtof(degreeMidi(root, iv, s.oct, 0)) * f.track : f.cutoff
+        return (
+          <div className="grid grid-cols-2 gap-4 border-y py-3" style={{ ["--c" as string]: "var(--primary)" }}>
+            <figure className="min-w-0 space-y-1"><figcaption className="text-muted-foreground text-xs">Filter</figcaption><FilterCurve type={f.type} cutoff={Math.min(18000, cutoff)} q={f.q} sweep={f.env} /></figure>
+            <figure className="min-w-0 space-y-1"><figcaption className="text-muted-foreground text-xs">Amp envelope</figcaption><AmpShape env={patch.amp} /></figure>
+          </div>
+        )
+      })()}
 
       <div className="grid gap-4 sm:grid-cols-3">
         {s.macros.map((m) => (

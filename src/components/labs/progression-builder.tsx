@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect } from "react"
 import { horizon, startClock, stopClock } from "@/audio/clock"
 import { Download, Eraser, X } from "lucide-react"
 import { drum, KIND_OF, tone, type ToneOptions } from "@/audio/engine"
-import { toggle } from "@/audio/playback"
+import { bindTempo, setPos, toggle, usePos } from "@/audio/playback"
 import { KeyPicker, useKey } from "@/components/key-picker"
 import { Caption, SECTION_TITLE } from "@/components/page"
 import { Piano } from "@/components/piano"
@@ -82,16 +82,18 @@ function voicings(T: Theory, prog: number[], sevenths: boolean, lead: boolean) {
 }
 const bassOf = (T: Theory, d: number) => 36 + ((T.pc + T.sc.iv[d]) % 12)
 
+const live: { current: { st: ProgState; T: ReturnType<typeof theory>; voiced: ReturnType<typeof voicings> } | null } = { current: null }
+
 export function ProgressionBuilder() {
   const { root, scale } = useKey()
   const T = theory(root, scale)
   const [st, setSt] = usePref<ProgState>("progression", INIT)
   const set = (patch: Partial<ProgState>) => setSt({ ...st, ...patch })
-  const [bar, setBar] = useState(-1)
+  const bar = usePos("prog-builder")
   const voiced = voicings(T, st.chords, st.sevenths, st.lead)
-  const ref = useRef({ st, T, voiced })
+  live.current ??= { st, T, voiced }
   useEffect(() => {
-    ref.current = { st, T, voiced }
+    live.current = { st, T, voiced }
   })
 
   const play = () => {
@@ -100,7 +102,7 @@ export function ProgressionBuilder() {
     toggle("prog-builder", 3600, (c, bus, t0) => {
       let next = t0, k = 0
       const tick = () => {
-        const { st: s, T: th, voiced: vs } = ref.current
+        const { st: s, T: th, voiced: vs } = live.current!
         if (!s.chords.length) return
         const sixteenth = 60 / s.tempo / 4
         const pat = PATTERNS.find((p) => p.id === s.pattern)
@@ -136,10 +138,11 @@ export function ProgressionBuilder() {
     }, (el) => {
       let cur = -1
       for (const q of queue) if (q.at <= el) cur = q.bar
-      setBar(cur)
-    }, () => {
-      stopClock(timer)
-      setBar(-1)
+      setPos(cur)
+    }, () => stopClock(timer))
+    bindTempo("prog-builder", {
+      get: () => live.current!.st.tempo, min: 70, max: 175,
+      set: (v) => { const n = { ...live.current!.st, tempo: v }; live.current = { ...live.current!, st: n }; setSt(n) },
     })
   }
 

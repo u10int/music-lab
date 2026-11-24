@@ -4,7 +4,13 @@ import { REC, SHORT } from "@/data/push"
 import { isoOf, todayISO, type Progress } from "./store"
 import { theory } from "./theory"
 
-export interface Card { id: string; deck: DeckId; front: string; back: string }
+export interface Card {
+  id: string; deck: DeckId; front: string; back: string
+  /** For chord and scale cards: the notes to show on a keyboard. */
+  keys?: { pcs: number[]; names: string[]; root: number; chord: boolean }
+  /** For Push cards: the buttons involved. */
+  buttons?: string[]
+}
 export type DeckId = "push" | "chords" | "scales" | "glossary" | "effects" | "instruments"
 export const DECKS: [DeckId, string, string][] = [
   ["push", "Push 3 controls", "Button combos and what the main buttons do."],
@@ -24,17 +30,17 @@ let cache: Card[] | null = null
 export function allCards(): Card[] {
   if (cache) return cache
   const out: Card[] = []
-  for (const [combo, effect] of SHORT) out.push({ id: "push-" + combo, deck: "push", front: `On Push 3, how do you: ${effect.charAt(0).toLowerCase() + effect.slice(1)}?`, back: combo })
-  for (const [btn, desc] of REC) out.push({ id: "pushbtn-" + btn, deck: "push", front: `What does the ${btn} button do?`, back: desc })
+  for (const [combo, effect] of SHORT) out.push({ id: "push-" + combo, deck: "push", front: `On Push 3, how do you: ${effect.charAt(0).toLowerCase() + effect.slice(1)}?`, back: combo, buttons: combo.split(/\s*\+\s*/) })
+  for (const [btn, desc] of REC) out.push({ id: "pushbtn-" + btn, deck: "push", front: `What does the ${btn} button do?`, back: desc, buttons: [btn] })
   for (const pc of ROOT_PCS)
     for (const sc of ["major", "minor"] as const) {
       const T = theory(pc, sc), ch = T.chords[0]
-      out.push({ id: `chord-${pc}-${sc}`, deck: "chords", front: `Notes in a ${T.names[0]} ${sc} chord`, back: ch.notes.join(" – ") })
+      out.push({ id: `chord-${pc}-${sc}`, deck: "chords", front: `Notes in a ${T.names[0]} ${sc} chord`, back: ch.notes.join(" – "), keys: { pcs: ch.pcs, names: ch.notes, root: pc, chord: true } })
     }
   for (const pc of ROOT_PCS)
     for (const id of ["major", "minor"]) {
       const sc = SCALES.find((s) => s.id === id)!, T = theory(pc, id)
-      out.push({ id: `scale-${pc}-${id}`, deck: "scales", front: `${T.names[0]} ${sc.name.toLowerCase()} scale`, back: T.names.join(" ") })
+      out.push({ id: `scale-${pc}-${id}`, deck: "scales", front: `${T.names[0]} ${sc.name.toLowerCase()} scale`, back: T.names.join(" "), keys: { pcs: T.pcs, names: T.names, root: pc, chord: false } })
     }
   for (const [id, term, , def] of GLOSS) out.push({ id: "gl-" + id, deck: "glossary", front: term, back: def })
   for (const [job, fx] of FXPICK) out.push({ id: "fx-" + job, deck: "effects", front: `Effect to reach for: ${job.toLowerCase()}`, back: fx })

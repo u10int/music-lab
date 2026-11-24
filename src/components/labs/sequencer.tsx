@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { horizon, startClock, stopClock } from "@/audio/clock"
 import { Download, Eraser } from "lucide-react"
 import { audio, drum, KIND_OF, masterBus, tone, type DrumKind } from "@/audio/engine"
-import { toggle, usePlayingId } from "@/audio/playback"
+import { bindTempo, setPos, toggle, usePlayingId, usePos } from "@/audio/playback"
 import { KeyPicker, useKey } from "@/components/key-picker"
 import { Caption, SECTION_TITLE } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
@@ -40,7 +40,7 @@ const SOUND: Record<Sound, { oct: number; o: Parameters<typeof tone>[5] }> = {
   bass: { oct: -2, o: { wave: "sawtooth", env: { a: 0.005, d: 0.15, s: 0.6, r: 0.08 }, cutoff: 700, q: 1.5, detune: 12, level: 0.3 } },
   lead: { oct: 0, o: { wave: "square", env: { a: 0.01, d: 0.2, s: 0.6, r: 0.15 }, cutoff: 3200, detune: 6, level: 0.11 } },
 }
-/** 0 = off, 1 = on, 2 = accent. */
+/** Drum steps hold 0 for off, otherwise velocity × 2: 1 is a quiet hit and 2 a full one. */
 type Seq = { tempo: number; swing: number; drums: Record<string, number[]>; melody: (number | null)[]; sound: Sound; bars?: 1 | 2 }
 const empty = (): Seq => ({ tempo: 124, swing: 0, drums: Object.fromEntries(LANES.map((l) => [l.id, Array(MAX_STEPS).fill(0)])), melody: Array(MAX_STEPS).fill(null), sound: "pluck", bars: 1 })
 /** Older saved patterns were one bar long; pad everything to two bars. */
@@ -48,7 +48,9 @@ function normalize(s: Seq): Seq {
   const pad = <T,>(xs: T[] | undefined, fill: T) => Array.from({ length: MAX_STEPS }, (_, i) => xs?.[i] ?? fill)
   return { ...s, bars: s.bars ?? 1, drums: Object.fromEntries(LANES.map((l) => [l.id, pad(s.drums?.[l.id], 0)])), melody: pad(s.melody, null) }
 }
-const VEL = [0, 60, 120]
+/** MIDI velocity for a drum step. */
+const velOf = (v: number) => Math.max(1, Math.min(127, Math.round((v / 2) * 127)))
+const live: { current: { seq: Seq; T: ReturnType<typeof theory> } | null } = { current: null }
 
 export function Sequencer() {
   const { root, scale } = useKey()
@@ -56,12 +58,65 @@ export function Sequencer() {
   const [stored, setSeq] = usePref<Seq>("sequencer", empty())
   const seq = normalize(stored)
   const N = (seq.bars ?? 1) * 16
-  const [step, setStep] = useState(-1)
+  const step = usePos("seq")
   const playing = usePlayingId() === "seq"
-  const ref = useRef({ seq, T })
+  live.current ??= { seq, T }
   useEffect(() => {
-    ref.current = { seq, T }
+    live.current = { seq, T }
   })
+  const [velLane, setVelLane] = useState<DrumKind>("hat")
+  // Drag to paint: the first cell decides whether the drag adds or clears.
+  const drag = useRef<{ mode: boolean; work: Seq } | null>(null)
+  useEffect(() => {
+    const up = () => { drag.current = null }
+    window.addEventListener("pointerup", up)
+    window.addEventListener("pointercancel", up)
+    return () => {
+      window.removeEventListener("pointerup", up)
+      window.removeEventListener("pointercancel", up)
+    }
+  }, [])
+  const withDrum = (base: Seq, lane: string, i: number, v: number): Seq => ({ ...base, drums: { ...base.drums, [lane]: base.drums[lane].map((x, j) => (j === i ? v : x)) } })
+  const withNote = (base: Seq, deg: number, i: number, on: boolean): Seq => ({ ...base, melody: base.melody.map((x, j) => (j !== i ? x : on ? deg : x === deg ? null : x)) })
+  const paint = (start: (base: Seq) => [boolean, Seq], cont: (base: Seq, mode: boolean) => Seq) => ({
+    onPointerDown: (e: React.PointerEvent<HTMLElement>) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return
+      e.currentTarget.releasePointerCapture?.(e.pointerId)
+      const [mode, work] = start(seq)
+      drag.current = { mode, work }
+      setSeq(work)
+    },
+    onPointerEnter: () => {
+      const d = drag.current
+      if (!d) return
+      d.work = cont(d.work, d.mode)
+      setSeq(d.work)
+    },
+    onClick: (e: React.MouseEvent) => {
+      // Keyboard presses arrive as clicks with no pointer behind them.
+      if (e.detail === 0) setSeq(start(seq)[1])
+    },
+  })
+  const drumCell = (lane: DrumKind, i: number) => paint(
+    (b) => { const on = !(b.drums[lane][i] > 0); setVelLane(lane); return [on, withDrum(b, lane, i, on ? 2 : 0)] },
+    (b, on) => withDrum(b, lane, i, on ? (b.drums[lane][i] || 2) : 0),
+  )
+  const noteCell = (deg: number, i: number) => paint(
+    (b) => { const on = b.melody[i] !== deg; return [on, withNote(b, deg, i, on)] },
+    (b, on) => withNote(b, deg, i, on),
+  )
+  // Velocity lane: press and drag across it to set how hard each hit plays.
+  const setVel = (e: React.PointerEvent<HTMLElement>) => {
+    const cell = (document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null)?.closest<HTMLElement>("[data-vstep]")
+    if (!cell) return
+    const i = +cell.dataset.vstep!, r = cell.getBoundingClientRect()
+    const cur = (drag.current?.work ?? seq).drums[velLane][i]
+    if (!cur) return
+    const v = Math.max(0.1, Math.min(2, (1 - (e.clientY - r.top) / r.height) * 2))
+    const work = withDrum(drag.current?.work ?? seq, velLane, i, Math.round(v * 20) / 20)
+    drag.current = { mode: true, work }
+    setSeq(work)
+  }
 
   const midiFor = (deg: number, s = seq.sound) => 48 + T.pc + (deg === 7 ? 12 : T.sc.iv[deg]) + SOUND[s].oct * 12 - (T.pc > 7 ? 12 : 0)
 
@@ -71,7 +126,7 @@ export function Sequencer() {
     toggle("seq", 3600, (c, bus, t0) => {
       let next = t0, k = 0
       const tick = () => {
-        const { seq: s, T: th } = ref.current
+        const { seq: s, T: th } = live.current!
         const sixteenth = 60 / s.tempo / 4
         while (next < horizon(c)) {
           const i = k % ((s.bars ?? 1) * 16), at = next + (i % 2 ? s.swing * sixteenth : 0)
@@ -79,8 +134,8 @@ export function Sequencer() {
           for (const l of LANES) {
             const v = s.drums[l.id]?.[i] ?? 0
             if (!v) continue
-            if (local) drum(c, bus, at, l.id, v === 2 ? 1 : 0.45)
-            sendNote(c, at, l.note, VEL[v], sixteenth * 0.5, 9)
+            if (local) drum(c, bus, at, l.id, v / 2)
+            sendNote(c, at, l.note, velOf(v), sixteenth * 0.5, 9)
           }
           const deg = s.melody[i]
           if (deg !== null && deg !== undefined) {
@@ -99,15 +154,14 @@ export function Sequencer() {
     }, (el) => {
       let cur = -1
       for (const q of queue) if (q.at <= el) cur = q.step
-      setStep(cur)
-    }, () => {
-      stopClock(timer)
-      setStep(-1)
+      setPos(cur)
+    }, () => stopClock(timer))
+    bindTempo("seq", {
+      get: () => live.current!.seq.tempo, min: 70, max: 180,
+      set: (v) => { const n = { ...live.current!.seq, tempo: v }; live.current = { ...live.current!, seq: n }; setSeq(n) },
     })
   }
 
-  const cycle = (lane: string, i: number) => setSeq({ ...seq, drums: { ...seq.drums, [lane]: seq.drums[lane].map((v: number, j: number) => (j === i ? (v + 1) % 3 : v)) } })
-  const setNote = (deg: number, i: number) => setSeq({ ...seq, melody: seq.melody.map((v, j) => (j === i ? (v === deg ? null : deg) : v)) })
   const loadPreset = (id: string) => {
     const p = PATTERNS.find((x) => x.id === id)
     if (!p) return
@@ -123,7 +177,7 @@ export function Sequencer() {
     for (let i = 0; i < N; i++) {
         const tick = i * TICKS_PER_16TH + (i % 2 ? Math.round(seq.swing * TICKS_PER_16TH) : 0)
         if (what === "drums") {
-          for (const l of LANES) { const v = seq.drums[l.id]?.[i] ?? 0; if (v) notes.push({ tick, note: l.note, velocity: VEL[v], duration: TICKS_PER_16TH / 2, channel: 9 }) }
+          for (const l of LANES) { const v = seq.drums[l.id]?.[i] ?? 0; if (v) notes.push({ tick, note: l.note, velocity: velOf(v), duration: TICKS_PER_16TH / 2, channel: 9 }) }
         } else {
           const d = seq.melody[i]
           if (d !== null) notes.push({ tick, note: midiFor(d), velocity: 100, duration: TICKS_PER_16TH - 2 })
@@ -155,14 +209,14 @@ export function Sequencer() {
       ))}
     </div>
   )
-  const cellCls = (on: boolean, i: number) => cn("block aspect-square w-full rounded-none border-[1.5px] border-pad-edge transition-[background-color,scale] duration-100 active:scale-[0.96]", on && "border-transparent", step === i && "outline-2 outline-offset-1 outline-foreground")
+  const cellCls = (on: boolean) => cn("block aspect-square w-full touch-manipulation rounded-none border-[1.5px] border-pad-edge transition-[background-color] duration-75 select-none", on && "border-transparent")
 
   return (
     <div className="space-y-8">
       <Toolbar
         transport={<PlayButton id="seq" label="Play loop" primary onPlay={play} />}
         actions={<>
-          <Button variant="ghost" size="sm" className="mr-auto" onClick={() => setSeq({ ...empty(), tempo: seq.tempo, swing: seq.swing, sound: seq.sound })}><Eraser />Clear</Button>
+          <Button variant="ghost" size="sm" onClick={() => setSeq({ ...empty(), tempo: seq.tempo, swing: seq.swing, sound: seq.sound })}><Eraser />Clear</Button>
           <Button variant="outline" size="sm" onClick={() => exportMidi("drums")}><Download />Export drums</Button>
           <Button variant="outline" size="sm" onClick={() => exportMidi("melody")}><Download />Export melody</Button>
         </>}
@@ -211,15 +265,36 @@ export function Sequencer() {
                 {cells((i) => {
                   const v = seq.drums[l.id]?.[i] ?? 0
                   return (
-                    <button key={i} type="button" aria-label={`${l.name}, step ${i + 1}: ${["off", "quiet", "full"][v]}`} aria-pressed={v > 0} onClick={() => cycle(l.id, i)}
-                      className={cn(cellCls(v > 0, i), v === 1 && "bg-[color-mix(in_oklab,var(--s1)_35%,var(--card))]", v === 2 && "bg-[var(--s1)]")} />
+                    <button key={i} type="button" aria-label={`${l.name}, step ${i + 1}: ${v ? `velocity ${velOf(v)}` : "off"}`} aria-pressed={v > 0} {...drumCell(l.id, i)} data-ph={step === i || undefined}
+                      className={cellCls(v > 0)} style={v ? { background: `color-mix(in oklab, var(--s1) ${Math.round(25 + 75 * (v / 2))}%, var(--card))` } : undefined} />
                   )
                 })}
               </div>
             ))}
+            <div className="grid grid-cols-[88px_minmax(0,1fr)] items-stretch gap-2 pt-2 text-sm">
+              <div className="grid content-start gap-1">
+                <span className="text-muted-foreground text-xs">Velocity</span>
+                <Select value={velLane} onValueChange={(v) => setVelLane(v as DrumKind)}>
+                  <SelectTrigger size="sm" className="h-7 w-full px-2 text-xs" aria-label="Velocity lane"><SelectValue /></SelectTrigger>
+                  <SelectContent>{LANES.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="cursor-ns-resize touch-none select-none" role="group" aria-label={`Velocity of ${LANES.find((l) => l.id === velLane)!.name.toLowerCase()} hits: drag up or down`}
+                onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); setVel(e) }}
+                onPointerMove={(e) => { if (e.currentTarget.hasPointerCapture(e.pointerId)) setVel(e) }}>
+                {cells((i) => {
+                  const v = seq.drums[velLane]?.[i] ?? 0
+                  return (
+                    <span key={i} data-vstep={i} className={cn("relative block h-14 border-b", v ? "bg-pad-empty" : "")}>
+                      {v > 0 && <span className="absolute inset-x-0 bottom-0 bg-[var(--s1)]" style={{ height: `${(v / 2) * 100}%` }} />}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </div>
-        <Caption>Click a step for a quiet hit, again for a full hit, again to clear. Exported drums use Drum Rack pad notes, so kick lands on C1.</Caption>
+        <Caption>Click a step to add a hit, or drag across steps to paint several; start on a hit to erase. Drag up and down in the velocity lane to set how hard each hit plays. Exported drums use Drum Rack pad notes, so kick lands on C1.</Caption>
       </section>
 
       <section className="space-y-3">
@@ -239,8 +314,8 @@ export function Sequencer() {
                 {cells((i) => {
                   const on = seq.melody[i] === deg
                   return (
-                    <button key={i} type="button" aria-label={`${T.names[deg % 7]}, step ${i + 1}${on ? ", on" : ""}`} aria-pressed={on} onClick={() => setNote(deg, i)}
-                      className={cn(cellCls(on, i), "aspect-[1.4]", on && "bg-[var(--s5)]", !on && deg % 7 === 0 && "bg-[color-mix(in_oklab,var(--s4)_14%,var(--card))]")} />
+                    <button key={i} type="button" aria-label={`${T.names[deg % 7]}, step ${i + 1}${on ? ", on" : ""}`} aria-pressed={on} {...noteCell(deg, i)} data-ph={step === i || undefined}
+                      className={cn(cellCls(on), "aspect-[1.4]", on && "bg-[var(--s5)]", !on && deg % 7 === 0 && "bg-[color-mix(in_oklab,var(--s4)_14%,var(--card))]")} />
                   )
                 })}
               </div>

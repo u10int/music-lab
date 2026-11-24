@@ -121,6 +121,7 @@ export function EarTraining() {
   const [focus, setFocus] = usePref("ear-focus", true)
   const [q, setQ] = useState<Question | null>(null)
   const [picked, setPicked] = useState<number | null>(null)
+  const [streak, setStreak] = useState({ now: 0, best: 0 })
   const nextRef = useRef<HTMLButtonElement>(null)
   const sc = progress.ear[mode] ?? { right: 0, total: 0 }
   const opts = q?.options ?? (mode === "chords" ? QUALS.map((x) => x[0]) : mode === "intervals" ? INTERVALS : mode === "degrees" ? DEGREES : mode === "keys" ? ["Major", "Minor"] : [])
@@ -139,6 +140,7 @@ export function EarTraining() {
   const answer = (i: number) => {
     if (!q || picked !== null) return
     setPicked(i)
+    setStreak((s) => (i === q.a ? { now: s.now + 1, best: Math.max(s.best, s.now + 1) } : { now: 0, best: s.best }))
     update((d) => recordEar(d, mode, q.options[q.a], i === q.a))
     requestAnimationFrame(() => nextRef.current?.focus())
   }
@@ -152,6 +154,12 @@ export function EarTraining() {
         {q ? <PlayButton id="ear" label="Play again" onPlay={() => play()} /> : <Button onClick={next}><Play className="size-3.5 fill-current" />Start</Button>}
         {q && picked !== null && <Button ref={nextRef} onClick={next}>Next question</Button>}
         <span className="text-muted-foreground text-sm tabular-nums">{sc.total ? `${sc.right} of ${sc.total} right` : "No answers yet"}</span>
+        {(streak.now > 0 || streak.best > 0) && (
+          <span className="ml-auto flex items-baseline gap-3 text-sm tabular-nums" aria-label={`Streak ${streak.now}, best this session ${streak.best}`}>
+            <span><span key={streak.now} className={cn("inline-block text-2xl font-medium", streak.now > 0 && "animate-[pop_300ms_ease-out]")}>{streak.now}</span> in a row</span>
+            <span className="text-muted-foreground">best {streak.best}</span>
+          </span>
+        )}
       </div>
       <div className={cn("grid gap-2", many ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-6" : opts.length === 2 ? "max-w-sm grid-cols-2" : "grid-cols-2 sm:grid-cols-4")}>
         {opts.map((o, i) => {
@@ -171,9 +179,9 @@ export function EarTraining() {
           )
         })}
       </div>
-      <p className="text-sm" role="status">
-        {q && picked !== null && (picked === q.a ? `Right, that was ${opts[q.a]}.` : `Not quite. You picked ${opts[picked]}, and it was ${opts[q.a]}. Play it again to compare.`)}
-      </p>
+      <div role="status">
+        {q && picked !== null && <Feedback mode={mode} q={q} picked={picked} opts={opts} />}
+      </div>
     </div>
   )
 }
@@ -190,6 +198,58 @@ export function WeakSpots({ detail, focus, setFocus, id, fmt = (k) => k }: { det
       <span className="text-muted-foreground">
         {weak.length ? <>Weakest: {weak.map((w) => `${fmt(w.key)} (${Math.round(w.acc * 100)}%)`).join(", ")}</> : "No weak spots yet. Answer a few more to find them."}
       </span>
+    </div>
+  )
+}
+
+const NAMES = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]
+
+/** A small keyboard with the question's notes filled in. */
+function NoteKeys({ notes, label }: { notes: number[]; label: string }) {
+  const lo = Math.floor(Math.min(...notes) / 12) * 12, n = Math.max(...notes) - lo < 12 ? 12 : 24
+  const whites: number[] = [], blacks: { m: number; at: number }[] = []
+  for (let m = lo; m < lo + n; m++) [1, 3, 6, 8, 10].includes(m % 12) ? blacks.push({ m, at: whites.length }) : whites.push(m)
+  return (
+    <div className="relative flex h-16 w-full max-w-sm" role="img" aria-label={label}>
+      {whites.map((m) => <span key={m} className={cn("flex flex-1 items-end justify-center border border-l-0 border-pad-edge pb-1 text-[10px] first:border-l", notes.includes(m) ? "bg-[var(--s5)] font-semibold text-white" : "bg-card")}>{notes.includes(m) ? NAMES[m % 12] : ""}</span>)}
+      {blacks.map(({ m, at }) => <span key={m} className={cn("absolute top-0 z-10 flex h-[58%] -translate-x-1/2 items-end justify-center pb-0.5 text-[9px]", notes.includes(m) ? "bg-[var(--s5)] font-semibold text-white" : "bg-[var(--key-black)]")} style={{ left: `${(at / whites.length) * 100}%`, width: `${60 / whites.length}%` }}>{notes.includes(m) ? NAMES[m % 12] : ""}</span>)}
+    </div>
+  )
+}
+
+/** After an answer: right or wrong, what the answer looks like, and a way to hear your pick next to it. */
+function Feedback({ mode, q, picked, opts }: { mode: Mode; q: Question; picked: number; opts: string[] }) {
+  const right = picked === q.a
+  const notesOf = (a: number) => (mode === "chords" ? QUALS[a][1].map((x) => q.base + x) : [q.base, q.base + a + 1])
+  const compare = () => toggle("ear-compare", 6, (c, bus, t) => {
+    ;[notesOf(picked), notesOf(q.a)].forEach((ns, k) => ns.forEach((n) => tone(c, bus, t + k * 1.3, n, 1, KEYS)))
+    return 2.6
+  })
+  let detail: React.ReactNode = null
+  if (mode === "chords" || mode === "intervals") {
+    const ns = notesOf(q.a), gaps = ns.slice(1).map((n, i) => n - ns[i])
+    detail = (
+      <div className="space-y-2">
+        <NoteKeys notes={ns} label={`${opts[q.a]}: ${ns.map((n) => NAMES[n % 12]).join(", ")}`} />
+        <p className="text-muted-foreground text-sm">{mode === "chords" ? `Stacked ${gaps.join(" + ")} semitones from the root.` : `${gaps[0]} ${gaps[0] === 1 ? "semitone" : "semitones"} apart.`}</p>
+      </div>
+    )
+  } else if (mode === "degrees") {
+    const T = theory(q.root, "major")
+    detail = (
+      <ol className="grid max-w-sm grid-cols-7 gap-1" aria-label={`Degree ${q.a + 1} of ${T.names[0]} major is ${T.names[q.a]}`}>
+        {T.names.map((nm, i) => <li key={i} className={cn("grid place-items-center border py-1.5 text-xs leading-tight", i === q.a ? "border-transparent bg-[var(--s5)] font-semibold text-white" : "border-foreground/20")}><b className="text-sm">{i + 1}</b>{nm}</li>)}
+      </ol>
+    )
+  } else if (mode === "progressions") {
+    const p = PROGS[q.extra!], T = theory(q.root, p.minor ? "minor" : "major")
+    detail = <p className="text-sm">In {T.names[0]} {p.minor ? "minor" : "major"}: {p.d.map((d) => `${T.chords[d].roman} ${T.chords[d].name}`).join(" → ")}</p>
+  }
+  return (
+    <div className={cn("animate-[fade-in_200ms_ease-out] space-y-3 border-t-2 pt-3", right ? "border-[var(--s3)]" : "border-destructive")}>
+      <p className="text-sm"><span className="mr-2 text-lg font-medium">{right ? "Right." : "Not quite."}</span>{right ? `That was ${opts[q.a]}.` : `You picked ${opts[picked]}; it was ${opts[q.a]}.`}</p>
+      {detail}
+      {!right && (mode === "chords" || mode === "intervals") && <Button variant="outline" size="sm" onClick={compare}><Play className="size-3 fill-current" />Hear yours, then the answer</Button>}
     </div>
   )
 }

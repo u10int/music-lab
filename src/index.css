@@ -168,6 +168,13 @@
 .hw-n circle { fill: var(--foreground); }
 .hw-n text { fill: var(--background); font-size: 13px; font-weight: 600; font-family: var(--font-sans); }
 
+@keyframes pop { from { scale: 1.35; } to { scale: 1; } }
+@keyframes fade-in { from { opacity: 0; translate: 0 4px; } to { opacity: 1; translate: 0 0; } }
+
+/* Playhead: the step a loop is on. One look for every step grid. */
+[data-ph] { box-shadow: inset 0 0 0 100vmax color-mix(in oklab, var(--foreground) 18%, transparent); }
+[data-ph][aria-pressed="true"], [data-ph][data-on] { box-shadow: inset 0 0 0 100vmax color-mix(in oklab, var(--background) 45%, transparent); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
 }

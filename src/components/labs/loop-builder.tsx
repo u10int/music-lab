@@ -6,7 +6,7 @@ import { Field } from "@/components/field"
 import { Link, useSearchParams } from "react-router"
 import { drum } from "@/audio/engine"
 import { fxChain, voice } from "@/audio/patch"
-import { toggle, usePlayingId } from "@/audio/playback"
+import { bindTempo, setPos, toggle, usePlayingId, usePos } from "@/audio/playback"
 import { KeyPicker, useKey } from "@/components/key-picker"
 import { MidiOutPicker } from "@/components/midi-out-picker"
 import { Block, Caption } from "@/components/page"
@@ -39,6 +39,9 @@ function normalizeLoop(l: LoopState | null, fallback: string): LoopState {
   return { ...d, ...l, sounds: { ...d.sounds, ...l.sounds }, mix: { ...d.mix, ...l.mix }, prog: l.prog?.length === 4 ? l.prog : d.prog }
 }
 
+/** What the playing loop reads on each tick. It lives outside the component so the loop keeps up after you leave the page and come back. */
+const live: { current: { loop: LoopState; events: ReturnType<typeof buildLoop> } | null } = { current: null }
+
 export function LoopBuilder() {
   const { root, scale, setRoot, setScale } = useKey()
   const iv = (SCALES.find((x) => x.id === scale) ?? SCALES[0]).iv
@@ -48,7 +51,7 @@ export function LoopBuilder() {
   const setLoop = (patch: Partial<LoopState>) => setStored({ ...loop, ...patch })
   const [params, setParams] = useSearchParams()
   const progress = useProgress()
-  const [step, setStep] = useState(-1)
+  const step = usePos("loop")
   const playing = usePlayingId() === "loop"
   const info = genreInfo(loop.family)!
 
@@ -67,7 +70,7 @@ export function LoopBuilder() {
   }, [asked, setStored, setParams, setScale])
 
   const events = buildLoop(loop, root, iv)
-  const live = useRef({ loop, events })
+  live.current ??= { loop, events }
   useEffect(() => {
     live.current = { loop, events }
   })
@@ -85,7 +88,7 @@ export function LoopBuilder() {
       const prev: Partial<Record<SynthPart, number>> = {}
       let next = t0, k = 0
       const tick = () => {
-        const { loop: l, events: ev } = live.current
+        const { loop: l, events: ev } = live.current!
         const sixteenth = 60 / l.tempo / 4
         const local = browserSound()
         const sounds = Object.fromEntries(SYNTH_PARTS.map((p) => {
@@ -128,10 +131,11 @@ export function LoopBuilder() {
     }, (el) => {
       let cur = -1
       for (const q of queue) if (q.at <= el) cur = q.step
-      setStep(cur)
-    }, () => {
-      stopClock(timer)
-      setStep(-1)
+      setPos(cur)
+    }, () => stopClock(timer))
+    bindTempo("loop", {
+      get: () => live.current!.loop.tempo, min: 60, max: 180,
+      set: (v) => { const l = { ...live.current!.loop, tempo: v }; live.current = { ...live.current!, loop: l }; setStored(l) },
     })
   }
 
@@ -188,7 +192,7 @@ export function LoopBuilder() {
           <div key={bar} className="grid grid-cols-16 gap-px">
             {Array.from({ length: 16 }, (_, j) => {
               const i = bar * 16 + j
-              return <span key={j} className={cn("h-3 rounded-none", on.has(i) ? "bg-foreground/60" : j % 4 === 0 ? "bg-border" : "bg-pad-empty", playing && step === i && "bg-[var(--s3)]")} />
+              return <span key={j} data-ph={step === i || undefined} data-on={on.has(i) || undefined} className={cn("h-3 rounded-none", on.has(i) ? "bg-foreground/60" : j % 4 === 0 ? "bg-border" : "bg-pad-empty")} />
             })}
           </div>
         ))}
@@ -244,7 +248,7 @@ export function LoopBuilder() {
             <div key={bar} className="grid gap-1.5">
               <Label htmlFor={`lb-bar-${bar}`} className="text-muted-foreground font-normal">Bar {bar + 1}</Label>
               <Select value={String(d)} onValueChange={(v) => setLoop({ prog: loop.prog.map((x, j) => (j === bar ? +v : x)) })}>
-                <SelectTrigger id={`lb-bar-${bar}`} size="sm" className={cn("w-full", playing && Math.floor(step / 16) === bar && "ring-2 ring-[var(--s3)]")}><SelectValue /></SelectTrigger>
+                <SelectTrigger id={`lb-bar-${bar}`} size="sm" className={cn("w-full", playing && Math.floor(step / 16) === bar && "ring-2 ring-foreground")}><SelectValue /></SelectTrigger>
                 <SelectContent>{T.chords.map((ch) => <SelectItem key={ch.d} value={String(ch.d)}>{ch.roman} · {ch.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>

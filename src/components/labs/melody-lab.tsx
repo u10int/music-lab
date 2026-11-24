@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { Download, Eraser, Repeat, Sparkles } from "lucide-react"
 import { Link, useNavigate } from "react-router"
 import { horizon, startClock, stopClock } from "@/audio/clock"
-import { drum, tone, type ToneOptions } from "@/audio/engine"
+import { audio, drum, masterBus, tone, type ToneOptions } from "@/audio/engine"
 import { fxChain, voice } from "@/audio/patch"
-import { toggle, usePlayingId } from "@/audio/playback"
+import { QwertyPiano } from "@/components/qwerty-piano"
+import { bindTempo, setPos, toggle, usePlayingId, usePos } from "@/audio/playback"
 import { KeyPicker, useKey } from "@/components/key-picker"
 import { MidiOutPicker } from "@/components/midi-out-picker"
 import { Toolbar } from "@/components/toolbar"
@@ -113,6 +114,15 @@ const PAD: ToneOptions = { wave: "sawtooth", env: { a: 0.08, d: 0.4, s: 0.7, r: 
 const BASS: ToneOptions = { wave: "sine", env: { a: 0.01, d: 0.3, s: 0.8, r: 0.15 }, cutoff: 3000, level: 0.24 }
 const DEFAULT: MelState = { notes: [], prog: [0, 5, 2, 6], tempo: 124, sound: LEADS.find((s) => s.role === "Pluck")?.id ?? LEADS[0].id, style: "hook", drums: true, chords: true, len: 2 }
 
+type Note = MelState["notes"][number]
+/** Make room for a note at `at` of length `len`: trim or drop anything it overlaps. */
+const place = (notes: Note[], at: number, len: number, deg: number) => [...notes.flatMap((n) => {
+  if (n.step + n.len <= at || n.step >= at + len) return [n]
+  if (n.step < at) return [{ ...n, len: at - n.step }]
+  return []
+}), { step: at, len, deg }].sort((a, b) => a.step - b.step)
+const live: { current: { st: MelState; snd: (typeof LEADS)[number]; root: number; iv: number[] } | null } = { current: null }
+
 export function MelodyLab() {
   const { root, scale } = useKey()
   const iv = (SCALES.find((x) => x.id === scale) ?? SCALES[0]).iv
@@ -122,11 +132,11 @@ export function MelodyLab() {
   const set = (patch: Partial<MelState>) => setStored({ ...st, ...patch })
   const [loopPref, setLoopPref] = usePref<LoopState | null>("loop-builder", null)
   const navigate = useNavigate()
-  const [step, setStep] = useState(-1)
+  const step = usePos("melody")
   const playing = usePlayingId() === "melody"
   const snd = soundById(st.sound) ?? LEADS[0]
   const midiOf = (deg: number) => degreeMidi(root, iv, snd.oct, deg)
-  const live = useRef({ st, snd, root, iv })
+  live.current ??= { st, snd, root, iv }
   useEffect(() => {
     live.current = { st, snd, root, iv }
   })
@@ -134,14 +144,11 @@ export function MelodyLab() {
   const toggleAt = (stepAt: number, deg: number) => {
     const hit = st.notes.find((n) => n.deg === deg && stepAt >= n.step && stepAt < n.step + n.len)
     if (hit) return set({ notes: st.notes.filter((n) => n !== hit) })
-    const len = Math.min(st.len, STEPS - stepAt)
-    // One note at a time: trim or remove anything it overlaps.
-    const kept = st.notes.flatMap((n) => {
-      if (n.step + n.len <= stepAt || n.step >= stepAt + len) return [n]
-      if (n.step < stepAt) return [{ ...n, len: stepAt - n.step }]
-      return []
-    })
-    set({ notes: [...kept, { step: stepAt, len, deg }].sort((a, b) => a.step - b.step) })
+    set({ notes: place(st.notes, stepAt, Math.min(st.len, STEPS - stepAt), deg) })
+    audition(deg)
+  }
+  const audition = (deg: number) => {
+    if (playing) return
     toggle("melody-note", 0.6, (ac, bus, t) => {
       const { patch, fx } = resolveSound(snd)
       const ch = fxChain(ac, bus)
@@ -157,7 +164,7 @@ export function MelodyLab() {
       const chain = fxChain(c, bus)
       let next = t0, k = 0, prev: number | undefined
       const tick = () => {
-        const { st: s, snd: sd, root: r, iv: v } = live.current
+        const { st: s, snd: sd, root: r, iv: v } = live.current!
         const sixteenth = 60 / s.tempo / 4, local = browserSound()
         const { patch, fx } = resolveSound(sd)
         chain.set(fx, s.tempo)
@@ -197,12 +204,55 @@ export function MelodyLab() {
     }, (el) => {
       let cur = -1
       for (const q of queue) if (q.at <= el) cur = q.s
-      setStep(cur)
-    }, () => {
-      stopClock(timer)
-      setStep(-1)
+      setPos(cur)
+    }, () => stopClock(timer))
+    bindTempo("melody", {
+      get: () => live.current!.st.tempo, min: 60, max: 180,
+      set: (v) => { const n = { ...live.current!.st, tempo: v }; live.current = { ...live.current!, st: n }; setStored(n) },
     })
   }
+
+  // Drawing on the grid: press on an empty cell and drag right to set the note's length;
+  // press on a note and drag to erase everything you pass over.
+  const drag = useRef<{ mode: "draw" | "erase"; base: Note[]; at: number; deg: number; notes: Note[] } | null>(null)
+  const cellAt = (x: number, y: number) => {
+    const el = (document.elementFromPoint(x, y) as HTMLElement | null)?.closest<HTMLElement>("[data-bar]")
+    if (!el) return null
+    const r = el.getBoundingClientRect(), bar = +el.dataset.bar!
+    const s = Math.max(0, Math.min(15, Math.floor(((x - r.left) / r.width) * 16)))
+    const row = Math.max(0, Math.min(ROWS.length - 1, Math.floor(((y - r.top) / r.height) * ROWS.length)))
+    return { at: bar * 16 + s, deg: ROWS[row] }
+  }
+  const onDown = (e: React.PointerEvent<HTMLElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return
+    const c = cellAt(e.clientX, e.clientY)
+    if (!c) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const hit = st.notes.find((n) => n.deg === c.deg && c.at >= n.step && c.at < n.step + n.len)
+    if (hit) {
+      const notes = st.notes.filter((n) => n !== hit)
+      drag.current = { mode: "erase", base: st.notes, at: c.at, deg: c.deg, notes }
+      set({ notes })
+    } else {
+      const notes = place(st.notes, c.at, Math.min(st.len, STEPS - c.at), c.deg)
+      drag.current = { mode: "draw", base: st.notes, at: c.at, deg: c.deg, notes }
+      set({ notes })
+      audition(c.deg)
+    }
+  }
+  const onMove = (e: React.PointerEvent<HTMLElement>) => {
+    const d = drag.current
+    if (!d || !e.currentTarget.hasPointerCapture(e.pointerId)) return
+    const c = cellAt(e.clientX, e.clientY)
+    if (!c) return
+    let notes = d.notes
+    if (d.mode === "erase") notes = d.notes.filter((n) => !(n.deg === c.deg && c.at >= n.step && c.at < n.step + n.len))
+    else if (c.at > d.at) notes = place(d.base, d.at, Math.min(c.at - d.at + 1, STEPS - d.at), d.deg)
+    if (notes === d.notes || JSON.stringify(notes) === JSON.stringify(d.notes)) return
+    d.notes = notes
+    set({ notes })
+  }
+  const onUp = () => { drag.current = null }
 
   const exportMidi = () => {
     const mel = st.notes.map((n) => ({ tick: n.step * TICKS_PER_16TH, note: midiOf(n.deg), velocity: 100, duration: n.len * TICKS_PER_16TH - 2 }))
@@ -277,7 +327,7 @@ export function MelodyLab() {
           <div className="flex items-center gap-2"><Switch id="ml-chords" checked={st.chords} onCheckedChange={(v) => set({ chords: v })} /><Label htmlFor="ml-chords" className="font-normal">Chords and bass</Label></div>
           <div className="flex items-center gap-2"><Switch id="ml-drums" checked={st.drums} onCheckedChange={(v) => set({ drums: v })} /><Label htmlFor="ml-drums" className="font-normal">Drums</Label></div>
         </div>
-        <Caption>{STYLES.find((x) => x[0] === st.style)![2]} Click a cell to add a note, click a note to remove it. Suggestions are a starting point: change a few notes until it’s yours.</Caption>
+        <Caption>{STYLES.find((x) => x[0] === st.style)![2]} Click to add a note and drag right to make it longer. Click a note to remove it, or drag across notes to erase several. Suggestions are a starting point: change a few notes until it’s yours.</Caption>
 
         <div className="overflow-x-auto pb-1">
           <div className="flex min-w-[760px] gap-2">
@@ -294,8 +344,10 @@ export function MelodyLab() {
                     <span key={d} aria-hidden="true" className={cn("absolute inset-x-0 h-5", isChordTone(d, chord) && "bg-[color-mix(in_oklab,var(--s5)_12%,transparent)]", (((d % 7) + 7) % 7) === 0 && "border-b border-border")} style={{ top: `${r * 1.25}rem` }} />
                   ))}
                   {[4, 8, 12].map((x) => <span key={x} aria-hidden="true" className="absolute inset-y-0 w-px bg-border" style={{ left: `${(x / 16) * 100}%` }} />)}
-                  <button type="button" aria-label={`Bar ${bar + 1}: click to add or remove a note`} className="absolute inset-0 cursor-crosshair"
+                  <button type="button" data-bar={bar} aria-label={`Bar ${bar + 1}: click to add or remove a note`} className="absolute inset-0 cursor-crosshair touch-none"
+                    onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
                     onClick={(e) => {
+                      if (e.detail !== 0) return
                       const rect = e.currentTarget.getBoundingClientRect()
                       const s = Math.min(15, Math.floor(((e.clientX - rect.left) / rect.width) * 16))
                       const r = Math.min(ROWS.length - 1, Math.floor(((e.clientY - rect.top) / rect.height) * ROWS.length))
@@ -319,6 +371,19 @@ export function MelodyLab() {
           <span className="inline-flex items-center gap-2"><i className="inline-block h-3 w-5 rounded-sm bg-[var(--s5)]" />Chord tone</span>
           <span className="inline-flex items-center gap-2"><i className="inline-block h-3 w-5 rounded-sm bg-[var(--s2)]" />Passing note</span>
           <span className="inline-flex items-center gap-2"><i className="inline-block h-3 w-5 rounded-sm bg-[color-mix(in_oklab,var(--s5)_25%,transparent)]" />Chord tone rows</span>
+        </div>
+        <div className="space-y-2 pt-2">
+          <h3 className="text-sm font-medium">Try notes before you place them</h3>
+          <QwertyPiano scale={T.pcs} names={T.names} root={T.pc} base={12 * (snd.oct + 2)}
+            chord={chordTones(st.prog[Math.max(0, Math.floor(step / 16))]).map((d) => (root + iv[((d % 7) + 7) % 7]) % 12)}
+            label={`Piano in ${T.names[0]} ${T.sc.name.toLowerCase()}, playing the ${snd.name.toLowerCase()} sound`}
+            play={(m) => {
+              const c = audio()
+              if (!c) return
+              const { patch, fx } = resolveSound(snd), ch = fxChain(c, masterBus())
+              ch.set({ ...fx, delay: undefined }, st.tempo)
+              voice(c, ch.input, c.currentTime + 0.01, m, 0.35, patch, st.tempo)
+            }} />
         </div>
         <p className="sr-only" aria-live="polite">{st.notes.length} notes: {sorted.map((n) => `bar ${Math.floor(n.step / 16) + 1} step ${(n.step % 16) + 1} ${T.names[((n.deg % 7) + 7) % 7]}`).join(", ")}</p>
       </Block>

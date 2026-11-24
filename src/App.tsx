@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect } from "react"
 import { HomeRoute, RequireAccount } from "@/components/account"
 import { createBrowserRouter, Outlet, RouterProvider, useLocation } from "react-router"
-import { stop } from "@/audio/playback"
+import { keepsPlaying, stop } from "@/audio/playback"
+import { NowPlayingBar } from "@/components/now-playing"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -44,7 +45,7 @@ function Layout() {
   useTheme()
   const { pathname, hash, search } = useLocation()
   useEffect(() => {
-    stop()
+    if (!keepsPlaying()) stop()
     if (!hash) window.scrollTo(0, 0)
   }, [pathname, hash])
   // Anchors like #pat-techno: wait for lazy pages to render, then scroll to and highlight the target.
@@ -78,6 +79,7 @@ function Layout() {
               <Outlet />
             </Suspense>
           </main>
+          <NowPlayingBar />
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>

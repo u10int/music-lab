@@ -80,3 +80,47 @@ export function LfoExplainer() {
     </svg>
   )
 }
+
+/** A compact filter response for sound cards: any biquad type, with an optional envelope sweep drawn faintly. */
+export function FilterCurve({ type = "lowpass", cutoff, q = 0.7, sweep }: { type?: BiquadFilterType; cutoff: number; q?: number; sweep?: number }) {
+  const W = 200, H = 64, fmin = 20, fmax = 20000, top = 14, bot = -30, plotH = H - 12
+  const x = (f: number) => (Math.log(f / fmin) / Math.log(fmax / fmin)) * W
+  const y = (db: number) => ((top - Math.max(bot, Math.min(top, db))) / (top - bot)) * plotH
+  const curve = (fc: number) => {
+    let p = ""
+    for (let i = 0; i <= 90; i++) {
+      const f = fmin * Math.pow(fmax / fmin, i / 90), k = f / fc, den = Math.sqrt(Math.pow(1 - k * k, 2) + Math.pow(k / q, 2))
+      const mag = type === "highpass" ? (k * k) / den : type === "bandpass" ? k / q / den : 1 / den
+      p += (i ? " L" : "M") + x(f).toFixed(1) + " " + y(20 * Math.log10(Math.max(mag, 1e-4))).toFixed(1)
+    }
+    return p
+  }
+  const main = curve(cutoff), name = type === "highpass" ? "High-pass" : type === "bandpass" ? "Band-pass" : "Low-pass"
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="vsvg" role="img" aria-label={`${name} filter at ${fmtHz(cutoff)}${sweep ? `, opening to ${fmtHz(Math.min(18000, cutoff + sweep))} at each note` : ""}`}>
+      {[100, 1000, 10000].map((f) => <line key={f} className="vgrid" x1={x(f)} y1={0} x2={x(f)} y2={plotH} />)}
+      {[100, 1000, 10000].map((f) => <text key={"t" + f} className="vtext" style={{ fontSize: 10 }} x={x(f)} y={H - 1} textAnchor="middle">{fmtHz(f)}</text>)}
+      {sweep ? <path className="vline" style={{ opacity: 0.3 }} strokeDasharray="3 3" d={curve(Math.min(18000, cutoff + sweep))} /> : null}
+      <path className="varea" d={`${main} L${W} ${plotH} L0 ${plotH} Z`} />
+      <path className="vline" d={main} />
+    </svg>
+  )
+}
+
+/** A compact amp envelope for sound cards. */
+export function AmpShape({ env }: { env: Envelope }) {
+  const { a, d, s, r } = env, hold = 0.35, total = Math.max(a + d + hold + r, 0.8)
+  const W = 200, H = 64, top = 4, bot = H - 12
+  const x = (t: number) => (t / total) * W, y = (v: number) => bot - v * (bot - top)
+  const pts = [[0, y(0)], [x(a), y(1)], [x(a + d), y(s)], [x(a + d + hold), y(s)], [x(a + d + hold + r), y(0)]]
+  const path = "M" + pts.map((p) => p.map((n) => n.toFixed(1)).join(" ")).join(" L")
+  const lbl = (t0: number, t1: number, txt: string) => <text className="vtext" style={{ fontSize: 10 }} x={((x(t0) + x(t1)) / 2).toFixed(1)} y={H - 1} textAnchor="middle">{txt}</text>
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="vsvg" role="img" aria-label={`Amp envelope: attack ${fmtS(a)}, decay ${fmtS(d)}, sustain ${Math.round(s * 100)}%, release ${fmtS(r)}`}>
+      <line className="vgrid" x1={0} y1={bot} x2={W} y2={bot} />
+      <path className="varea" d={`${path} L${x(a + d + hold + r).toFixed(1)} ${bot} Z`} />
+      <path className="vline" d={path} />
+      {x(a) > 14 && lbl(0, a, "A")}{lbl(a, a + d, "D")}{lbl(a + d, a + d + hold, "S")}{lbl(a + d + hold, a + d + hold + r, "R")}
+    </svg>
+  )
+}

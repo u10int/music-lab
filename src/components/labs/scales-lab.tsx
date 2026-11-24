@@ -4,11 +4,10 @@ import { toggle } from "@/audio/playback"
 import { KeyPicker, useKey } from "@/components/key-picker"
 import { Caption } from "@/components/page"
 import { PadGrid, type Pad } from "@/components/pad-grid"
-import { Piano } from "@/components/piano"
+import { QwertyPiano } from "@/components/qwerty-piano"
 import { PlayButton } from "@/components/play-button"
 import { Seg } from "@/components/seg"
 import { usePref } from "@/lib/store"
-import { useMidi } from "@/midi/midi"
 import { chordMidi, theory, type Theory } from "@/lib/theory"
 import { cn } from "@/lib/utils"
 
@@ -62,7 +61,6 @@ export function ScalesLab({ hideKey = false }: { hideKey?: boolean }) {
   const { root, scale } = useKey()
   const [layout, setLayout] = usePref<Layout>("layout", "key")
   const [chord, setChord] = useState(0)
-  const { held } = useMidi()
   const T = theory(root, scale), ch = T.chords[Math.min(chord, 6)]
   const keyName = T.names[0] + " " + T.sc.name.toLowerCase()
 
@@ -156,16 +154,9 @@ export function ScalesLab({ hideKey = false }: { hideKey?: boolean }) {
               ))}
             </div>
           </div>
-          <Piano
-            scale={T.pcs}
-            names={T.names}
-            root={T.pc}
-            chord={ch.pcs}
-            held={held}
-            label={`Piano keyboard, two octaves from C. Scale notes: ${T.names.join(", ")}. Selected chord ${ch.name}: ${ch.notes.join(", ")}.`}
-          />
         </div>
       </div>
+      <QwertyPiano scale={T.pcs} names={T.names} root={T.pc} chord={ch.pcs} label={`Piano in ${keyName}. Scale notes are marked; the ${ch.name} chord is shaded.`} />
     </div>
   )
 }

@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { SKILL_GUIDES } from "@/data/skill-guides"
 import type { Sprint } from "@/data/sprints"
-import { update, useProgress } from "@/lib/store"
+import { fmtDay, update, useProgress } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { SECTION_TITLE } from "@/components/page"
 
@@ -46,13 +46,14 @@ export function SkillList({ s }: { s: Sprint }) {
       <ol className="divide-y rounded-xl border bg-card">
         {s.skills.map((title, i) => {
           const key = keys[i], g = SKILL_GUIDES[key], learned = !!p.done[key], n = stepsDone(p, key).length
-          const status = learned ? "Learned" : !g ? "" : n === 0 ? "Not started" : n >= g.steps.length ? "All steps done" : `${n} of ${g.steps.length} steps`
+          const at = p.doneAt?.[key]
+          const status = learned ? (at ? `Learned ${fmtDay.format(new Date(at + "T00:00:00"))}` : "Learned") : !g ? "" : n === 0 ? "Not started" : n >= g.steps.length ? "All steps done" : `${n} of ${g.steps.length} steps`
           return (
             <li key={key} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
               <Checkbox id={key} checked={learned} onCheckedChange={(v) => setLearned(key, v === true)} aria-describedby={key + "-meta"} />
               <div className="min-w-0 flex-1">
-                <Label htmlFor={key} className={cn("leading-snug font-normal", learned && "text-muted-foreground")}>{title}</Label>
-                {g && <p id={key + "-meta"} className="text-muted-foreground mt-0.5 text-xs tabular-nums">{g.min} min · {status}</p>}
+                <Label htmlFor={key} className={cn("leading-snug font-normal", learned && "text-muted-foreground line-through decoration-foreground/30")}>{title}</Label>
+                {g && <p id={key + "-meta"} className={cn("mt-0.5 text-xs tabular-nums", learned ? "text-foreground" : "text-muted-foreground")}>{learned ? status : `${g.min} min · ${status}`}</p>}
               </div>
               {g && (
                 <Button variant={n > 0 && !learned ? "default" : "outline"} size="sm" className="ml-7 sm:ml-0" onClick={() => open(key)}>
