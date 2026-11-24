@@ -1,5 +1,7 @@
 # Music Lab
 
+Live at https://music-lab-xi.vercel.app
+
 A personal workspace for learning music theory, Ableton Live 12 and Push 3: a 12-week sprint plan with progress tracking, interactive labs you can hear, and reference guides for Live's instruments, effects and Push.
 
 Built with React 19, TypeScript, Vite, Tailwind CSS 4 and shadcn/ui. Sound is synthesized in the browser with the Web Audio API, so there are no audio files.
