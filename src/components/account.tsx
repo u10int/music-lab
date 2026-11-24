@@ -33,7 +33,7 @@ export function SignInPanel({ idPrefix = "si" }: { idPrefix?: string }) {
     return (
       <div className="space-y-2 text-sm" role="status">
         <p className="font-medium">Check your email</p>
-        <p className="text-muted-foreground text-pretty">We sent a sign-in link to {sent}. Open it on this device to finish signing in.</p>
+        <p className="text-muted-foreground text-pretty">We sent a sign-in link to {sent}. Open it on this device to finish signing in. It comes from Supabase Auth and can take a few minutes; check your spam folder if it doesn’t show up.</p>
         <Button variant="ghost" size="sm" onClick={() => setSent("")}>Use a different email</Button>
       </div>
     )
