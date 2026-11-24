@@ -92,12 +92,13 @@ export function TodayPage() {
       </Block>
 
       {nextSkills.length > 0 && (
-        <Block title="Skills to work toward" description="The next unchecked skills in this sprint. Check one off once you can do it without looking anything up.">
+        <Block title="Skills to work toward" description="The next skills in this sprint, each with a step-by-step walkthrough. Check one off once you can do it without the steps.">
           <ul className="max-w-3xl space-y-3">
             {nextSkills.map(({ k, key }) => (
               <li key={key} className="flex items-start gap-3">
                 <Checkbox id={"t-" + key} checked={!!p.done[key]} onCheckedChange={(v) => update((d) => { d.done[key] = v === true })} className="mt-0.5" />
-                <Label htmlFor={"t-" + key} className="leading-snug font-normal">{k}</Label>
+                <Label htmlFor={"t-" + key} className="flex-1 leading-snug font-normal">{k}</Label>
+                <Link to={`/sprints/${s.n}?skill=${key}`} className="text-sm whitespace-nowrap underline">{(p.skillSteps?.[key]?.length ?? 0) > 0 ? "Continue walkthrough" : "Walk through"}</Link>
               </li>
             ))}
           </ul>

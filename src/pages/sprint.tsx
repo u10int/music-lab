@@ -10,10 +10,10 @@ import { Block } from "@/components/page"
 import { DrumLayouts } from "@/components/push/drum-layouts"
 import { SprintShortcuts } from "@/components/push/recording"
 import { References, Resources, Stuck } from "@/components/sprint-sections"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { SkillList } from "@/components/skill-list"
+import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { SPRINTS } from "@/data/sprints"
@@ -34,7 +34,6 @@ export function SprintPage() {
   const p = useProgress()
   const s = SPRINTS.find((x) => String(x.n) === n)
   if (!s) return <Navigate to="/" replace />
-  const doneN = s.skills.filter((_, i) => p.done[s.id + "-" + i]).length
   const cur = currentWeek(p)
   const dayCol = ({ 1: 0, 2: 1, 3: 1, 4: 1, 5: 2, 6: 3, 0: 3 } as Record<number, number>)[cur.day]
   const w1 = s.n * 2 - 1
@@ -50,26 +49,9 @@ export function SprintPage() {
         <p className="max-w-2xl text-lg text-pretty">{s.goal}</p>
       </header>
 
+      <SkillList s={s} />
+
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="space-y-2">
-            <div className="flex items-baseline justify-between"><CardTitle className="font-sans text-base">Skills</CardTitle><span className="text-muted-foreground text-sm tabular-nums">{doneN} of {s.skills.length}</span></div>
-            <Progress value={(doneN / s.skills.length) * 100} aria-hidden="true" className="[&>div]:bg-[var(--c)]" />
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {s.skills.map((k, i) => {
-                const key = s.id + "-" + i, on = !!p.done[key]
-                return (
-                  <li key={key} className="flex items-start gap-3">
-                    <Checkbox id={key} checked={on} onCheckedChange={(v) => update((d) => { d.done[key] = v === true })} className="mt-0.5" />
-                    <Label htmlFor={key} className={cn("leading-snug font-normal", on && "text-muted-foreground line-through")}>{k}</Label>
-                  </li>
-                )
-              })}
-            </ul>
-          </CardContent>
-        </Card>
         <Card>
           <CardContent className="space-y-4">
             <div className="space-y-1"><h2 className="font-sans text-base font-semibold">Done when</h2><p className="text-pretty">{s.done}</p></div>
@@ -81,10 +63,12 @@ export function SprintPage() {
                 <Checkbox checked={!!p.shipped[s.id]} onCheckedChange={(v) => update((d) => { d.shipped[s.id] = v === true })} />Shipped
               </Label>
             </div>
-            <div className="grid gap-1.5">
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="grid h-full grid-rows-[auto_1fr] gap-1.5">
               <Label htmlFor={"log-" + s.id} className="text-base font-semibold">Practice log</Label>
               <Textarea id={"log-" + s.id} value={p.log[s.id] ?? ""} onChange={(e) => update((d) => { d.log[s.id] = e.target.value })} placeholder="Swing at 58% finally felt right. Note Repeat still awkward. Next: groove pool?" className="min-h-24 text-base sm:text-sm" />
-            </div>
           </CardContent>
         </Card>
       </div>

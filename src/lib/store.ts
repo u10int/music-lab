@@ -42,6 +42,8 @@ export interface Progress {
   loops: SavedLoop[]
   /** Reference track notebook. */
   notebook: RefNote[]
+  /** Walkthrough steps ticked off, per skill ("s1-0" → step indexes). */
+  skillSteps: Record<string, number[]>
 }
 
 const KEY = "music-lab-progress-v1"
@@ -53,7 +55,7 @@ function nextMonday() {
   d.setDate(d.getDate() + ((8 - d.getDay()) % 7))
   return isoDate(d)
 }
-const blank = (): Progress => ({ start: nextMonday(), done: {}, shipped: {}, log: {}, genre: "all", refs: {}, exports: [], ear: {}, push: "p3", sessions: [], cards: {}, plan: null, loops: [], notebook: [] })
+const blank = (): Progress => ({ start: nextMonday(), done: {}, shipped: {}, log: {}, genre: "all", refs: {}, exports: [], ear: {}, push: "p3", sessions: [], cards: {}, plan: null, loops: [], notebook: [], skillSteps: {} })
 
 function load(): Progress {
   try {

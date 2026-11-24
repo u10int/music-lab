@@ -40,6 +40,7 @@ export default function SearchDialog({ open, setOpen }: { open: boolean; setOpen
   const groups = useMemo(() => [
     { heading: "Pages", items: PAGES.map(([l, to]) => ({ label: l, hint: "", to })) },
     { heading: "Sprints", items: SPRINTS.map((s) => ({ label: `Sprint ${s.n}: ${s.title}`, hint: s.short, to: `/sprints/${s.n}` })) },
+    { heading: "Skill walkthroughs", items: SPRINTS.flatMap((s) => s.skills.map((k, i) => ({ label: k, hint: `Sprint ${s.n}`, to: `/sprints/${s.n}?skill=${s.id}-${i}` }))) },
     { heading: "Sound recipes", items: RECIPES.map((r) => ({ label: r.n, hint: r.g, to: `/instruments?tab=sounds&q=${encodeURIComponent(r.n)}` })) },
     { heading: "Instruments", items: INSTR.map((i) => ({ label: i.name, hint: i.type.split(" · ")[0], to: `/instruments?tab=instruments#inst-${i.id}` })) },
     { heading: "Effects", items: FX.map((f) => ({ label: f.n, hint: f.tags.join(", "), to: `/instruments?tab=effects#fx-${slug(f.n)}` })) },
