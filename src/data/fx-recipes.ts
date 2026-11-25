@@ -216,7 +216,7 @@ export const FX_RECIPES: FxRecipe[] = [
       "Redux to drop the bit depth and sample rate, then Vinyl Distortion for crackle.",
     ],
     chain: ["Auto Filter", "Redux", "Vinyl Distortion"],
-    tempo: 145, drums: "wave", bars: 2,
+    tempo: 140, drums: "wave", bars: 2,
     params: [P("tune", "Tuning speed", 1, 8, 1, 3, (v) => v + " jumps / bar"), P("whistle", "Whistle", 0, 0.12, 0.002, 0.05, (v) => pct(v / 0.12)), P("level", "Level", 0, 1, 0.01, 0.55, pct)],
     render: ({ c, out, t, tempo, p }) => {
       const B = BAR(tempo), dur = B * 2, end = t + dur + 0.1, bus = segment(c, out, t, dur, p.level)
@@ -270,7 +270,7 @@ export const FX_RECIPES: FxRecipe[] = [
       "Hybrid Reverb with a long, dark hall makes it sound far away.",
     ],
     chain: ["Auto Filter", "Hybrid Reverb", "Utility"],
-    tempo: 145, drums: "wave", bars: 4,
+    tempo: 140, drums: "wave", bars: 4,
     params: [P("dist", "Distance", 120, 900, 5, 350, (v) => (v < 300 ? "Far" : v < 600 ? "Near" : "Overhead")), P("length", "Length", 2, 8, 0.1, 5, sec), space(0.45)],
     render: ({ c, out, t, p }) => {
       const at = t + 0.2, len = p.length, lp = filter(c, "lowpass", p.dist), g = gain(c, 0)
@@ -1198,7 +1198,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "phonk-vocal", kind: "Vocal", name: "Pitched-down Memphis vocal", families: ["phonk", "hardwave", "trap", "wave", "boombap"],
+    id: "phonk-vocal", kind: "Vocal", name: "Pitched-down Memphis vocal", families: ["phonk", "hardwave", "trap", "wave", "boombap", "driftwave"],
     what: "A rap or chant sample slowed and pitched way down, gritty and repeated. The Memphis-tape sound phonk is built on, usually chopped into one phrase that repeats.",
     listen: "Pitching down lowers the formants too, so the voice sounds huge and menacing. The repeat on the last word is the hook.",
     use: ["simpler"],
@@ -1255,7 +1255,7 @@ export const FX_RECIPES: FxRecipe[] = [
       "Automate the filter open to full range on the drop.",
     ],
     chain: ["EQ Eight", "Saturator", "Redux"],
-    tempo: 145, drums: "wave", bars: 2,
+    tempo: 140, drums: "wave", bars: 2,
     params: [P("band", "Bandwidth", 0.3, 1, 0.01, 0.55, (v) => (v < 0.5 ? "Phone" : v < 0.8 ? "Radio" : "Wide")), P("grit", "Grit", 0, 1, 0.01, 0.4, pct)],
     render: ({ c, out, t, tempo, root, iv, p }) => {
       const s16 = BAR(tempo) / 16, lo = 900 - p.band * 700, hi = 1500 + p.band * 4000

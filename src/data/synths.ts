@@ -127,7 +127,7 @@ export const CONCEPTS: Concept[] = [
     },
   },
   {
-    id: "drive", name: "Drive and distortion", heard: "Phonk 808s, wave and driftwave kick tails, hardwave basses, hardstyle kicks.",
+    id: "drive", name: "Drive and distortion", heard: "Phonk and driftwave 808s, wave kick tails, hardwave basses, hardstyle kicks.",
     what: "Pushing the sound into clipping adds harmonics. A sine 808 is nearly invisible on phone speakers; driven, it grows upper harmonics you can hear everywhere.",
     where: {
       wavetable: "Filter Drive, or put Roar or Saturator after the synth.",
@@ -230,7 +230,10 @@ export const SYNTH_STEPS: Record<string, { massive: string[]; spire: string[] }>
     massive: ["Osc 1 Sin-Tri sine with Envelope 2 on Pitch for the punch; Voicing Monophon with Glide.", "Osc 2 on a saw detuned slightly, quieter, for the reese layer.", "Filter 1 Lowpass 4 on Osc 2’s route only (route Osc 1 straight to the amp with the mix fader).", "Insert 1 Hardclipper."],
     spire: ["Osc 1 Classic sine with Env 2 → Osc 1 Pitch for punch; Voice Mono with Portamento.", "Osc 2 and 3 Classic saws slightly detuned, quieter, through Filter 1 low-pass.", "Route Osc 1 so it skips Filter 1 (use the per-oscillator filter routing), keeping the sub clean.", "FX: Shaper."],
   },
-  "dw-chop": {
+  "dw-cowbell": {
+    massive: ["Two squares about +6.8 semitones apart (Osc 1 and Osc 2 on Squ-Sw I at the square end).", "Filter 1 Bandpass around 1 kHz; Envelope 4 short with no sustain.", "LFO 5 tiny amount on Pitch for wobble.", "FX1 Chorus, FX2 Reverb long."],
+    spire: ["Osc 1 and 2 Classic squares about +6.8 semitones apart.", "Filter 1 band-pass around 1 kHz; Amp Env short, no sustain.", "Matrix: LFO 1 → oscillator pitch, tiny amount.", "FX: Chorus and a long Reverb."],
+  },  "dw-chop": {
     massive: ["Massive isn’t ideal for real vocal chops; slice the vocal in Simpler. For a synth stand-in: Osc 1 on a saw with 2 Unisono voices into Filter 1 Bandpass around 1.3 kHz.", "Drag Envelope 2 onto Osc 1 Pitch with a small negative amount and short decay for the bend into each note.", "Voicing tab: Monophon with a short Glide.", "FX2 Reverb high; Delay in Live."],
     spire: ["For a synth stand-in, Osc 1 in Vowel mode if your version has it (otherwise Classic saw into a band-pass around 1.3 kHz).", "Matrix: Env 2 → oscillator pitch, small negative amount, short Decay, for the bend into each note.", "Voice: Mono with short Portamento.", "FX: Delay and a big Reverb."],
   },
@@ -238,11 +241,10 @@ export const SYNTH_STEPS: Record<string, { massive: string[]; spire: string[] }>
     massive: ["Osc 1 and 2 on Squ-Sw I saws with 6 Unisono voices and wide detune.", "Envelope 4: attack about 300 ms, long release.", "Filter 1 Lowpass 4 around 2 kHz.", "FX1 Chorus, FX2 Reverb; sidechain in Live."],
     spire: ["Osc 1 and 2 Classic saw, Density 6, Detune high, Wide up.", "Amp Env: slow attack and long release.", "Filter 1 low-pass around 2 kHz.", "FX: Chorus and Reverb; sidechain in Live."],
   },
-  "dw-reese": {
-    massive: ["Osc 1 and Osc 2 on Squ-Sw I set to the saw, Osc 2 detuned a few cents; Osc 3 on Sin-Tri sine at −12 for the sub. Voicing tab: Monophon.", "Filter 1 Lowpass 4 around 500 Hz; LFO 5 (Sync, 2 bars) onto Cutoff, small amount.", "LFO 6 (slower) onto Osc 1 Wt-position or Osc 2 Pitch, tiny amount, for the drift.", "FX1 Classic Tube lightly; sidechain to the kick in Live."],
-    spire: ["Osc 1 and 2 Classic saw, Osc 2 Fine-tuned a few cents up; Osc 4 sine an octave down. Voice: Mono.", "Filter 1 low-pass around 500 Hz; Matrix: LFO 1 (synced, 2 bars) → Filter 1 Cut, small.", "Matrix: LFO 2 (slower) → Osc 2 fine pitch or Detune, tiny, for the drift.", "FX: Shaper lightly; sidechain to the kick in Live."],
-  },
-  "dw-lead": {
+  "dw-808": {
+    massive: ["Osc 1 Sin-Tri sine, Voicing tab Monophon with Glide about 80 ms.", "Envelope 2 → Osc 1 Pitch, high amount, very short decay.", "Envelope 4 long decay with some sustain.", "Insert 1 Hardclipper and FX1 Classic Tube for heavy drive."],
+    spire: ["Osc 1 Classic sine; Voice: Mono, Legato, Portamento about 80 ms.", "Matrix: Env 2 → Osc 1 Pitch, short Decay.", "Amp Env long decay with some sustain.", "FX: Shaper with heavy Drive."],
+  },  "dw-lead": {
     massive: ["Osc 1 on a saw, Osc 2 the same saw at +12, lower Amp.", "Voicing: 6–8 Unisono voices, detune up, a short Glide.", "Filter 1 Lowpass 4 mostly open.", "FX2 Delay; reverb and light sidechain in Live."],
     spire: ["Osc 1 Classic saw, Osc 2 an octave up and quieter; Density 7, Detune moderate.", "Voice: Mono with short Portamento.", "Filter 1 low-pass mostly open.", "FX: Delay and Reverb."],
   },
