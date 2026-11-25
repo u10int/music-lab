@@ -4,7 +4,9 @@
  * run in a worker. Everything snaps to a beat grid refined from the kick drum.
  *
  * - Drums: onsets in three bands (kick, snare/clap, hats) sampled on 16th steps,
- *   then summarised per section as the hits that repeat in most bars.
+ *   then summarised per section as the hits that repeat in most bars. Hats that ring
+ *   on are split out as open hats, and fills and rolls (extra hats or snares on a
+ *   16th, 32nd or triplet grid) are found bar by bar.
  * - Bass: pitch of the low end (below ~250 Hz) on every 16th, snapped to the key.
  * - Chords: a chroma profile for each bar matched against major and minor triads,
  *   nudged toward the bass note and the key.
@@ -13,8 +15,8 @@
  */
 import { fft } from "./audio-analysis-core"
 
-export type PartLane = "Kick" | "Snare" | "Hat"
-export const PART_LANES: PartLane[] = ["Kick", "Snare", "Hat"]
+export type PartLane = "Kick" | "Snare" | "Hat" | "Open hat"
+export const PART_LANES: PartLane[] = ["Kick", "Snare", "Hat", "Open hat"]
 
 export interface DrumPart {
   length: 16 | 32
@@ -23,12 +25,27 @@ export interface DrumPart {
   /** 0–1: how consistent the bars were. */
   conf: number
 }
+export type FillGrid = "16ths" | "16th triplets" | "32nds" | "8th triplets"
+/** A roll or fill in one bar that the section’s pattern doesn’t play. */
+export interface DrumFill {
+  /** The bar (0-based, from the first downbeat). */
+  bar: number
+  lane: "Hat" | "Snare"
+  grid: FillGrid
+  /** Where the fill takes over from the pattern, in 16ths from the bar’s start. */
+  from: number
+  /** Hits from `from` to the bar’s end: position in 16ths (triplets fall between) and strength 0–1. */
+  hits: { pos: number; v: number }[]
+  /** The same figure comes back through the section, so it’s part of the groove rather than a one-off fill. */
+  groove?: boolean
+}
 export interface PartSection {
   label: string
   /** First bar (0-based, from the first downbeat) and how many bars. */
   startBar: number
   bars: number
   drums: DrumPart | null
+  fills?: DrumFill[]
 }
 export interface BassNote { step: number; len: number; midi: number }
 export interface BarChord { root: number; minor: boolean; conf: number }
@@ -75,7 +92,7 @@ function features(x: Float32Array, sr: number) {
   const [l0, l1, c1, m0, m1, h0, h1] = [bin(40), bin(120), bin(250), bin(200), bin(2500), bin(3000), bin(Math.min(10000, sr / 2 - 200))]
   const frames = Math.max(0, Math.floor((x.length - n) / hop) + 1)
   const mk = () => new Float32Array(frames)
-  const low = mk(), lowE = mk(), midE = mk(), fcent = mk(), midLin = mk(), midFrac = mk(), hiLin = mk(), hiFrac = mk(), all = mk(), loud = mk()
+  const low = mk(), lowE = mk(), midE = mk(), hiE = mk(), fcent = mk(), midLin = mk(), midFrac = mk(), hiLin = mk(), hiFrac = mk(), all = mk(), loud = mk()
   const re = new Float64Array(n), im = new Float64Array(n)
   const hist = Array.from({ length: lag + 1 }, () => new Float64Array(n / 2))
   const histM = Array.from({ length: lag + 1 }, () => new Float64Array(n / 2))
@@ -85,16 +102,18 @@ function features(x: Float32Array, sr: number) {
     fft(re, im)
     const cur = hist[f % (lag + 1)], prev = hist[(f + 1) % (lag + 1)]
     const curM = histM[f % (lag + 1)], prevM = histM[(f + 1) % (lag + 1)]
-    let e = 0, le = 0, me = 0
+    let e = 0, le = 0, me = 0, he = 0
     for (let k = 0; k < n / 2; k++) {
       const mag = Math.hypot(re[k], im[k])
       curM[k] = mag
       cur[k] = Math.log1p(60 * mag)
       if (k >= m0 && k <= m1) { e += cur[k]; me += mag * mag }
       if (k >= l0 && k <= l1) le += mag * mag
+      if (k >= h0 && k <= h1) he += mag * mag
     }
     lowE[f] = le
     midE[f] = me
+    hiE[f] = he
     loud[f] = e / (m1 - m0 + 1)
     if (f < lag) continue
     let sl = 0, sa = 0, nm = 0, nh = 0, ml = 0, hl = 0, cw = 0, cm = 0
@@ -116,7 +135,8 @@ function features(x: Float32Array, sr: number) {
     hiLin[f] = hl
     fcent[f] = cm > 1e-9 ? ((cw / cm) * sr) / n : 0
   }
-  return { low, lowE, midE, fcent, midLin, midFrac, hiLin, hiFrac, all, loud, fps: sr / hop }
+  // `center`: frames from a frame’s start to its middle, for timing individual hits.
+  return { low, lowE, midE, hiE, fcent, midLin, midFrac, hiLin, hiFrac, all, loud, fps: sr / hop, center: n / 2 / hop }
 }
 
 const percentile = (v: ArrayLike<number>, p: number) => {
@@ -221,9 +241,23 @@ function beatGrid(F: Feat, x: Float32Array, sr: number, tempo: number, startSec:
 /* ---------- Drums ---------- */
 
 /** Per 16th step: kick, snare/clap and hat strength, each 0–1+ against that lane’s strong hits. */
-function drumSteps(F: Feat, t0: number, step: number, steps: number) {
+/** Energy above ~5 kHz in 6 ms windows every 3 ms: fine enough to see one closed hat’s level. */
+function hatEnergy(x: Float32Array, sr: number) {
+  const lp = lowpass(x, sr, 5000), hop = Math.round(sr * 0.003), w = hop * 2
+  const env = new Float32Array(Math.max(0, Math.floor((x.length - w) / hop)))
+  for (let f = 0; f < env.length; f++) {
+    let e = 0
+    for (let i = f * hop; i < f * hop + w; i++) { const v = x[i] - lp[i]; e += v * v }
+    env[f] = e / w
+  }
+  return { env, fps: sr / hop, center: 1 }
+}
+
+function drumSteps(F: Feat, t0: number, step: number, steps: number, H: ReturnType<typeof hatEnergy>) {
   const lowRef = percentile(F.low, 0.97)
-  const kick = new Float32Array(steps), snare = new Float32Array(steps), hat = new Float32Array(steps), low = new Float32Array(steps)
+  const kick = new Float32Array(steps), snare = new Float32Array(steps), hat = new Float32Array(steps), low = new Float32Array(steps), open = new Float32Array(steps), hatLevel = new Float32Array(steps)
+  // High-band energy in the frame centred on a time.
+  const hiAt = (t: number) => F.hiE[Math.round(t * F.fps - F.center)] ?? 0
   for (let s = 0; s < steps; s++) {
     const t = t0 + s * step
     kick[s] = kickness(F, t, lowRef)
@@ -236,12 +270,30 @@ function drumSteps(F: Feat, t0: number, step: number, steps: number) {
     snare[s] = near(F.midLin, F.fps, t) * Math.sqrt(near(F.midFrac, F.fps, t)) * Math.max(0.25, Math.min(1, ring * 2.5))
     hat[s] = near(F.hiLin, F.fps, t) * Math.sqrt(near(F.hiFrac, F.fps, t))
     low[s] = near(F.low, F.fps, t) / (lowRef + 1e-9)
+    // How much of the hit is still ringing halfway to the next 16th: a closed hat is gone, an open one isn’t.
+    let pk = 0
+    for (let dt = -0.01; dt <= 0.045; dt += 0.003) pk = Math.max(pk, hiAt(t + dt))
+    let floor = Infinity
+    for (let dt = -0.06; dt <= -0.03; dt += 0.005) floor = Math.min(floor, hiAt(t + dt))
+    let tail = 0
+    for (let k = 0; k < 4; k++) tail += hiAt(t + step * (0.45 + k * 0.05)) / 4
+    // How loud the hat is: its peak high-band level over what was already sounding.
+    // Find the sharpest rise near the step, then compare the level just after it with just before.
+    const he = (f: number) => H.env[f] ?? 0
+    let rf = 0, rise = -Infinity
+    for (let f = Math.round((t - 0.015) * H.fps); f <= Math.round((t + 0.045) * H.fps); f++) if (he(f) - he(f - 2) > rise) { rise = he(f) - he(f - 2); rf = f }
+    const hp = (he(rf) + he(rf + 1) + he(rf + 2)) / 3, hf = (he(rf - 2) + he(rf - 3) + he(rf - 4) + he(rf - 5)) / 4
+    hatLevel[s] = Math.sqrt(Math.max(0, hp - hf))
+    open[s] = pk > floor ? Math.max(0, Math.min(1, (tail - floor) / (pk - floor))) : 0
   }
+  // Hats on a square-root scale: a short closed hat measures far below an open one that’s only a little louder.
+  for (let i = 0; i < steps; i++) hat[i] = Math.sqrt(hat[i])
+  const refs = { snare: percentile(snare, 0.97) + 1e-9, hat: percentile(hat, 0.97) + 1e-9 }
   const norm = (v: Float32Array) => { const r = percentile(v, 0.97) + 1e-9; for (let i = 0; i < v.length; i++) v[i] /= r; return v }
-  return { kick: norm(kick), snare: norm(snare), hat: norm(hat), low }
+  return { kick: norm(kick), snare: norm(snare), hat: norm(hat), low, open, hatLevel: norm(hatLevel), refs }
 }
 
-function sectionDrums(vals: Float32Array[], startBar: number, bars: number): DrumPart | null {
+function sectionDrums(vals: Float32Array[], open: Float32Array, level: Float32Array, startBar: number, bars: number): DrumPart | null {
   if (bars < 1) return null
   // Per bar and lane: which steps hit, and how hard compared with the track’s strong hits.
   const hits = (lane: number, bar: number, s: number) => {
@@ -250,7 +302,7 @@ function sectionDrums(vals: Float32Array[], startBar: number, bars: number): Dru
     if (lane === 1 && vals[0][(startBar + bar) * 16 + s] >= 0.42 && v < 0.8) return 0
     // A snare hit also lights up the hat band; only count the hat if it stands out on its own.
     if (lane === 2) {
-      const sn = vals[1][(startBar + bar) * 16 + s]
+      const sn = hits(1, bar, s)
       if (sn >= 0.38 && v < Math.max(1, sn * 1.15)) return 0
     }
     return v
@@ -259,22 +311,40 @@ function sectionDrums(vals: Float32Array[], startBar: number, bars: number): Dru
     const per = len / 16, groups = Math.floor(bars / per)
     if (groups < 1) return null
     let consistency = 0, cells = 0
-    const rows = PART_LANES.map((lane, li): [PartLane, number[], number[]] => {
+    const openSteps: number[] = []
+    const rows = (["Kick", "Snare", "Hat"] as const).map((lane, li): [PartLane, number[], number[]] => {
       const on: number[] = [], ghost: number[] = []
-      const thr = li === 0 ? 0.42 : 0.38
+      // Hats often sit well under the mix’s loudest hits, so they get a lower bar, then a level of their own.
+      const thr = li === 0 ? 0.42 : li === 1 ? 0.38 : 0.2
+      const found: { s: number; frac: number; mean: number; open: boolean }[] = []
       for (let s = 0; s < len; s++) {
-        let count = 0, sum = 0
+        let count = 0, sum = 0, op = 0
         for (let g = 0; g < groups; g++) {
-          const v = hits(li, g * per + Math.floor(s / 16), s % 16)
-          if (v >= thr) { count++; sum += v }
+          const bar = g * per + Math.floor(s / 16), at = (startBar + bar) * 16 + (s % 16)
+          const v = hits(li, bar, s % 16)
+          // Hats are levelled by how loud they are rather than how sharp the attack is.
+          if (v >= thr) { count++; sum += li === 2 ? level[at] : v; op += open[at] }
         }
         const frac = count / groups
         consistency += Math.abs(2 * frac - 1); cells++
-        if (frac >= 0.5) (sum / Math.max(1, count) < 0.55 && li > 0 ? ghost : on).push(s + 1)
-        else if (frac >= 0.3 && groups >= 3) ghost.push(s + 1)
+        const isOpen = li === 2 && op / Math.max(1, count) >= 0.25
+        if (frac >= 0.3) found.push({ s, frac, mean: sum / Math.max(1, count), open: isOpen })
+        if (isOpen && frac >= 0.3) openSteps.push(s + 1)
+      }
+      // Hats: quiet against this section’s loudest closed (or open) hat. Snares: against the track’s strong hits.
+      const top = (open: boolean) => Math.max(0, ...found.filter((f) => f.frac >= 0.5 && f.open === open).map((f) => f.mean))
+      for (const f of found) {
+        const quiet = f.frac < 0.5 || (li === 1 && f.mean < 0.55) || (li === 2 && f.mean < top(f.open) * 0.65)
+        if (f.frac < 0.5 && groups < 3) continue
+        if (quiet) ghost.push(f.s + 1)
+        else on.push(f.s + 1)
       }
       return [lane, on, ghost]
     })
+    // Hats that ring on move to their own lane.
+    const hat = rows[2], ohat: [PartLane, number[], number[]] = ["Open hat", [], []]
+    for (const s of openSteps) for (const k of [1, 2] as const) if (hat[k].includes(s)) { hat[k] = hat[k].filter((x) => x !== s); ohat[k].push(s) }
+    if (ohat[1].length + ohat[2].length) rows.push(ohat)
     return { length: len, rows, conf: consistency / cells }
   }
   const one = summarise(16), two = bars >= 4 ? summarise(32) : null
@@ -288,6 +358,113 @@ function sectionDrums(vals: Float32Array[], startBar: number, bars: number): Dru
   const total = best.rows.reduce((n, [, on]) => n + on.length, 0)
   if (total < 2) return null
   return { ...best, conf: Math.round(Math.max(0, Math.min(1, (best.conf - 0.5) * 2)) * 100) / 100 }
+}
+
+/* ---------- Fills ---------- */
+
+const GRIDS: [FillGrid, number][] = [["16ths", 1], ["16th triplets", 2 / 3], ["32nds", 0.5], ["8th triplets", 4 / 3]]
+
+/**
+ * Individual hits in one band: local peaks of its onset strength, as times and
+ * strength against the band’s strong hits. Times are shifted by `offset`, how far
+ * the band’s peaks sit from the grid they belong to.
+ */
+function peaks(env: (f: number) => number, energy: Float32Array, F: Feat, from: number, to: number, ref: number, thr: number, offset: number) {
+  const out: { t: number; v: number }[] = []
+  const a = Math.max(4, Math.floor(from * F.fps)), b = Math.min(F.hiLin.length - 5, Math.ceil(to * F.fps))
+  for (let f = a; f <= b; f++) {
+    const v = env(f) / ref
+    if (v < thr) continue
+    let max = true
+    for (let k = -4; k <= 4 && max; k++) if (k && env(f + k) / ref > v) max = false
+    if (!max) continue
+    // A new hit adds energy; flicker in a ringing cymbal or open hat doesn’t.
+    const t = f / F.fps - offset, e = (dt: number) => energy[Math.round((t + dt) * F.fps - F.center)] ?? 0
+    let after = 0, before = Infinity
+    for (let dt = -0.06; dt <= -0.01; dt += 0.005) before = Math.min(before, e(dt))
+    for (let dt = 0; dt <= 0.04; dt += 0.005) after = Math.max(after, e(dt))
+    if (after < 1.5 * before) continue
+    out.push({ t, v })
+  }
+  return out
+}
+
+/** How late a band’s peaks sit after the grid, from its strong hits on 16ths. */
+function peakOffset(env: (f: number) => number, F: Feat, t0: number, step: number, vals: Float32Array) {
+  const d: number[] = []
+  for (let s = 0; s < vals.length; s++) {
+    if (vals[s] < 0.5) continue
+    const t = t0 + s * step, a = Math.floor((t - 0.03) * F.fps), b = Math.ceil((t + 0.045) * F.fps)
+    let bf = a
+    for (let f = a; f <= b; f++) if (env(f) > env(bf)) bf = f
+    d.push(bf / F.fps - t)
+  }
+  d.sort((x, y) => x - y)
+  return d.length ? d[Math.floor(d.length / 2)] : 0
+}
+
+/**
+ * Bars where hats or snares play a run the pattern doesn’t: at least four hits at an even
+ * spacing (16ths, 32nds or triplets) including two or more off the pattern’s own steps.
+ * A figure that keeps coming back is marked as part of the groove (often triplets the
+ * 16-step grid can’t show); a one-off is kept only where a phrase ends, since busy
+ * percussion elsewhere is easily mistaken for one.
+ */
+function sectionFills(F: Feat, D: ReturnType<typeof drumSteps>, t0: number, step: number, sec: { startBar: number; bars: number; drums: DrumPart | null }): DrumFill[] {
+  const hatEnv = (f: number) => Math.sqrt((F.hiLin[f] ?? 0) * Math.sqrt(F.hiFrac[f] ?? 0))
+  const snEnv = (f: number) => (F.midLin[f] ?? 0) * Math.sqrt(F.midFrac[f] ?? 0)
+  const off = { Hat: peakOffset(hatEnv, F, t0, step, D.hat), Snare: peakOffset(snEnv, F, t0, step, D.snare) }
+  const out: DrumFill[] = []
+  for (let bar = sec.startBar; bar < sec.startBar + sec.bars; bar++) {
+    const b0 = t0 + bar * 16 * step, b1 = b0 + 16 * step
+    const sn = peaks(snEnv, F.midE, F, b0 - step / 2, b1 - step / 2, D.refs.snare, 0.3, off.Snare)
+    // A snare also lights up the hat band; drop hat peaks that are really a snare.
+    const ht = peaks(hatEnv, F.hiE, F, b0 - step / 2, b1 - step / 2, D.refs.hat, 0.2, off.Hat)
+      .filter((h) => !sn.some((x) => Math.abs(x.t - h.t) < step * 0.2 && x.v >= 0.6 && h.v < x.v * 1.15))
+    for (const [lane, list] of [["Hat", ht], ["Snare", sn]] as const) {
+      // This bar’s pattern steps for the lane (0-based), to tell the fill’s extra hits from the groove.
+      const d = sec.drums, inBar = d ? ((bar - sec.startBar) % (d.length / 16)) * 16 : 0
+      const pattern = new Set<number>()
+      for (const [l, on, ghost] of d?.rows ?? []) if (l === lane || (lane === "Hat" && l === "Open hat")) for (const x of [...on, ...ghost]) if (x - 1 >= inBar && x - 1 < inBar + 16) pattern.add(x - 1 - inBar)
+      const pts = list.map((h) => ({ pos: (h.t - b0) / step, v: h.v })).filter((h) => h.pos > -0.5 && h.pos < 15.75)
+      const extra = (pos: number) => ![...pattern].some((p) => Math.abs(p - pos) < 0.25)
+      // Runs of hits no more than a dotted 16th apart.
+      let i = 0
+      while (i < pts.length) {
+        let j = i
+        while (j + 1 < pts.length && pts[j + 1].pos - pts[j].pos <= 1.45) j++
+        const run = pts.slice(i, j + 1)
+        i = j + 1
+        const firstExtra = run.findIndex((h) => extra(h.pos))
+        if (firstExtra < 0) continue
+        // The fill starts on the beat where the extra hits begin.
+        const from = Math.max(0, Math.floor(run[firstExtra].pos / 4) * 4)
+        const fill = run.filter((h) => h.pos >= from - 0.25)
+        if (fill.length < 4 || fill.filter((h) => extra(h.pos)).length < 2) continue
+        const gaps = fill.slice(1).map((h, k) => h.pos - fill[k].pos).sort((x, y) => x - y)
+        const med = gaps[Math.floor(gaps.length / 2)]
+        const [grid, g] = GRIDS.reduce((best, cand) => (Math.abs(Math.log(cand[1] / med)) < Math.abs(Math.log(best[1] / med)) ? cand : best))
+        if (Math.abs(Math.log(g / med)) > 0.15) continue
+        // Snap to the grid and check the hits really sit on it.
+        const snapped = fill.map((h) => ({ pos: Math.round(h.pos / g) * g, v: h.v, err: Math.abs(h.pos - Math.round(h.pos / g) * g) }))
+        if (snapped.filter((h) => h.err < g * 0.3).length < snapped.length * 0.75) continue
+        const hits: DrumFill["hits"] = []
+        for (const h of snapped) if (h.err < g * 0.35 && h.pos >= from && h.pos < 16 && !hits.some((x) => Math.abs(x.pos - h.pos) < 0.01)) hits.push({ pos: Math.round(h.pos * 1000) / 1000, v: Math.round(Math.min(1, h.v) * 100) / 100 })
+        // A snare fill needs its extra hits to be clearly played, not percussion bleeding through.
+        const extras = hits.filter((h) => extra(h.pos))
+        if (lane === "Snare" && extras.reduce((t, h) => t + h.v, 0) / Math.max(1, extras.length) < 0.45) continue
+        if (hits.length >= 4) out.push({ bar, lane, grid, from, hits })
+      }
+    }
+  }
+  const sig = (f: DrumFill) => `${f.lane}|${f.grid}|${f.from}`
+  const count = new Map<string, number>()
+  for (const f of out) count.set(sig(f), (count.get(sig(f)) ?? 0) + 1)
+  return out.flatMap((f): DrumFill[] => {
+    const n = count.get(sig(f)) ?? 0, rel = f.bar - sec.startBar
+    if (n >= 3 && n >= sec.bars * 0.25) return [{ ...f, groove: true }]
+    return (rel + 1) % 4 === 0 || rel === sec.bars - 1 ? [f] : []
+  })
 }
 
 /* ---------- Bass ---------- */
@@ -531,7 +708,7 @@ export function transcribe({ x: xIn, sr: srIn, tempo, keyRoot, minor, sections, 
   const step = 60 / grid.bpm / 4, barSec = step * 16
   const bars = Math.max(0, Math.floor((endSec - grid.t0) / barSec))
   const steps = bars * 16
-  const D = drumSteps(F, grid.t0, step, steps)
+  const D = drumSteps(F, grid.t0, step, steps, hatEnergy(xIn, srIn))
   const vals = [D.kick, D.snare, D.hat]
 
   // Sections in bars, from the analysis.
@@ -543,7 +720,9 @@ export function transcribe({ x: xIn, sr: srIn, tempo, keyRoot, minor, sections, 
     const next = i + 1 < cuts.length ? cuts[i + 1].bar : bars
     const n = Math.min(next, bars) - c.bar
     if (n <= 0) return
-    partSections.push({ label: c.label, startBar: c.bar, bars: n, drums: sectionDrums(vals, c.bar, n) })
+    const drums = sectionDrums(vals, D.open, D.hatLevel, c.bar, n)
+    const sec = { label: c.label, startBar: c.bar, bars: n, drums }
+    partSections.push({ ...sec, fills: sectionFills(F, D, grid.t0, step, sec) })
   })
 
   const bass = transcribeBass(x, sr, grid.t0, step, steps, scale, keyRoot, D.low, 1, D.kick)

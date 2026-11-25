@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router"
-import { AudioLines, Download, Grid3x3, ListMusic, Loader2, RefreshCw } from "lucide-react"
+import { AudioLines, Download, Grid3x3, ListMusic, Loader2, RefreshCw, X } from "lucide-react"
 import { drum, tone, type DrumKind } from "@/audio/engine"
 import { setPos, toggle, usePlayingId, usePos } from "@/audio/playback"
 import { Caption, SECTION_TITLE } from "@/components/page"
@@ -11,7 +11,7 @@ import { analyzeParts } from "@/lib/audio-analysis"
 import { downloadFile, TICKS_PER_16TH, writeMidi, type MidiNote, type MidiTrack } from "@/lib/midi-file"
 import { proofUrl } from "@/lib/proofs"
 import { setPref, usePref, type RefNote } from "@/lib/store"
-import type { BarChord, DrumPart, PartLane, Parts } from "@/lib/transcribe-core"
+import type { BarChord, DrumFill, DrumPart, PartLane, Parts } from "@/lib/transcribe-core"
 import { cn } from "@/lib/utils"
 
 const NOTE = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]
@@ -21,6 +21,7 @@ const LANE: Record<PartLane, { kind: DrumKind; note: number; name: string; seq: 
   Kick: { kind: "kick", note: 36, name: "Kick", seq: "kick" },
   Snare: { kind: "clap", note: 38, name: "Snare / clap", seq: "snare" },
   Hat: { kind: "hat", note: 42, name: "Hats", seq: "hat" },
+  "Open hat": { kind: "ohat", note: 46, name: "Open hat", seq: "ohat" },
 }
 const chordName = (c: BarChord) => NOTE[c.root] + (c.minor ? "m" : "")
 const noteName = (m: number) => NOTE[m % 12] + (Math.floor(m / 12) - 2)
@@ -50,6 +51,21 @@ function cycle(chords: (BarChord | null)[]) {
 function drumHits(d: DrumPart) {
   return d.rows.flatMap(([lane, on, ghost]) => [...on.map((s) => ({ lane, s: s - 1, vel: 1 })), ...ghost.map((s) => ({ lane, s: s - 1, vel: 0.4 }))])
 }
+
+/**
+ * One bar of the pattern (0-based bar within the section), with a fill in that bar
+ * replacing its lane from where the fill starts. Positions are in 16ths, possibly fractional.
+ */
+function barHits(d: DrumPart, barInSection: number, fills: DrumFill[]) {
+  const from = (barInSection % (d.length / 16)) * 16
+  const pattern = drumHits(d).filter((h) => h.s >= from && h.s < from + 16).map((h) => ({ lane: h.lane, pos: h.s - from, vel: h.vel }))
+  const replaced = (lane: PartLane, pos: number) => fills.some((f) => pos >= f.from && (f.lane === lane || (f.lane === "Hat" && lane === "Open hat")))
+  return [
+    ...pattern.filter((h) => !replaced(h.lane, h.pos)),
+    ...fills.flatMap((f) => f.hits.map((h) => ({ lane: f.lane as PartLane, pos: h.pos, vel: 0.35 + 0.65 * h.v }))),
+  ]
+}
+const GRID_NAME: Record<DrumFill["grid"], string> = { "16ths": "16ths", "16th triplets": "16th-note triplets", "32nds": "32nd notes", "8th triplets": "8th-note triplets" }
 
 export function PartsPanel({ n, edit }: { n: RefNote; edit: (fn: (d: RefNote) => void) => void }) {
   const a = n.audio!.analysis, parts = n.audio!.parts
@@ -116,6 +132,19 @@ function PartsView({ n, parts, edit }: { n: RefNote; parts: Parts; edit: (fn: (d
   const diatonic = shown.length > 0 && romans.every(Boolean)
 
   const setDrums = (fn: (d: DrumPart) => void) => edit((d) => { const s = d.audio?.parts?.sections[si]; if (s?.drums) fn(s.drums) })
+  const fills = sec.fills ?? []
+  const fillSig = (f: DrumFill) => `${f.lane}|${f.grid}|${f.from}`
+  // Removing a repeating figure removes every bar of it.
+  const removeFill = (f: DrumFill) => edit((d) => { const s = d.audio?.parts?.sections[si]; if (s?.fills) s.fills = s.fills.filter((x) => (f.groove ? !(x.groove && fillSig(x) === fillSig(f)) : !(x.bar === f.bar && x.lane === f.lane))) })
+  // One row per repeating figure (with how many bars it’s in), then the one-off fills.
+  const fillRows = [
+    ...Object.values(fills.filter((f) => f.groove).reduce<Record<string, { f: DrumFill; bars: number }>>((m, f) => {
+      const k = fillSig(f)
+      m[k] = m[k] ? { ...m[k], bars: m[k].bars + 1 } : { f, bars: 1 }
+      return m
+    }, {})),
+    ...fills.filter((f) => !f.groove).map((f) => ({ f, bars: 1 })),
+  ]
   const cycleCell = (li: number, s: number) => setDrums((d) => {
     const row = d.rows[li], on = row[1].includes(s), ghost = row[2].includes(s)
     row[1] = row[1].filter((x) => x !== s); row[2] = row[2].filter((x) => x !== s)
@@ -146,12 +175,25 @@ function PartsView({ n, parts, edit }: { n: RefNote; parts: Parts; edit: (fn: (d
     }, (el) => setPos(el < 0 ? -1 : Math.floor(el / step) % (bars * 16)))
   }
 
+  /** The bar before a fill, then the fill bar. */
+  const playFill = (f: DrumFill) => {
+    if (!sec.drums) return
+    const rel = f.bar - sec.startBar, d = sec.drums
+    const inBar = fills.filter((x) => x.bar === f.bar)
+    toggle(`${pid}-fill-${f.bar}-${f.lane}`, 32 * step + 0.5, (c, bus, t0) => {
+      for (const h of barHits(d, Math.max(0, rel - 1), [])) drum(c, bus, t0 + h.pos * step, LANE[h.lane].kind, h.vel * 0.6)
+      for (const h of barHits(d, rel, inBar)) drum(c, bus, t0 + (16 + h.pos) * step, LANE[h.lane].kind, h.vel * 0.6)
+    })
+  }
+
   /* ---------- MIDI ---------- */
-  const drumTrack = (d: DrumPart, from: number, bars: number): MidiTrack => {
+  /** Drums for `bars` bars of a section, starting at its bar `first`, placed at bar `at` of the file; fills included. */
+  const drumTrack = (s: { startBar: number; drums: DrumPart | null; fills?: DrumFill[] }, first: number, bars: number, at: number): MidiTrack => {
     const notes: MidiNote[] = []
-    for (let b = 0; b < bars; b += d.length / 16) for (const h of drumHits(d)) {
-      const s = b * 16 + h.s
-      if (s < bars * 16) notes.push({ tick: (from * 16 + s) * TICKS_PER_16TH, note: LANE[h.lane].note, velocity: Math.round(h.vel * 110), duration: TICKS_PER_16TH / 2, channel: 9 })
+    if (s.drums) for (let b = 0; b < bars; b++) {
+      const bar = s.startBar + first + b
+      for (const h of barHits(s.drums, first + b, (s.fills ?? []).filter((f) => f.bar === bar)))
+        notes.push({ tick: Math.round(((at + b) * 16 + h.pos) * TICKS_PER_16TH), note: LANE[h.lane].note, velocity: Math.round(h.vel * 110), duration: TICKS_PER_16TH / 2, channel: 9 })
     }
     return { name: "Drums", notes }
   }
@@ -163,13 +205,13 @@ function PartsView({ n, parts, edit }: { n: RefNote; parts: Parts; edit: (fn: (d
   const title = (n.title || "reference").replace(/[^\w-]+/g, "-").toLowerCase()
   const sectionMidi = () => {
     const tracks: MidiTrack[] = []
-    if (sec.drums) tracks.push({ ...drumTrack(sec.drums, 0, loopBars), length: loopBars * 16 * TICKS_PER_16TH })
+    if (sec.drums) { const n = Math.max(loopBars, sec.drums.length / 16); tracks.push({ ...drumTrack(sec, 0, n, 0), length: n * 16 * TICKS_PER_16TH }) }
     if (bassNotes.length) tracks.push({ name: "Bass", notes: bassNotes.map((b) => ({ tick: b.step * TICKS_PER_16TH, note: b.midi, velocity: 100, duration: b.len * TICKS_PER_16TH - 2, channel: 1 })), length: loopBars * 16 * TICKS_PER_16TH })
     if (shown.some(Boolean)) tracks.push({ name: "Chords", notes: chordNotes(shown.slice(0, loopBars), 0), length: loopBars * 16 * TICKS_PER_16TH })
     downloadFile(writeMidi(tracks, parts.tempo), `${title}-${sec.label.toLowerCase()}-${Math.round(parts.tempo)}bpm.mid`)
   }
   const fullMidi = () => {
-    const drums: MidiNote[] = sections.flatMap((s) => (s.drums ? drumTrack(s.drums, s.startBar, s.bars).notes : []))
+    const drums: MidiNote[] = sections.flatMap((s) => drumTrack(s, 0, s.bars, s.startBar).notes)
     const tracks: MidiTrack[] = [
       { name: "Drums", notes: drums },
       { name: "Bass", notes: parts.bass.map((b) => ({ tick: b.step * TICKS_PER_16TH, note: b.midi, velocity: 100, duration: b.len * TICKS_PER_16TH - 2, channel: 1 })) },
@@ -185,7 +227,7 @@ function PartsView({ n, parts, edit }: { n: RefNote; parts: Parts; edit: (fn: (d
       const s = (i % len) + 1
       return on.includes(s) ? 2 : ghost.includes(s) ? 1 : 0
     })
-    setPref("sequencer", { melody: Array(32).fill(null), sound: "pluck", ...(seq ?? {}), tempo: Math.round(parts.tempo), swing: 0, bars: len === 32 ? 2 : 1, drums: { ...((seq?.drums as Record<string, number[]>) ?? {}), kick: [], snare: [], clap: [], hat: [], ...drums } })
+    setPref("sequencer", { melody: Array(32).fill(null), sound: "pluck", ...(seq ?? {}), tempo: Math.round(parts.tempo), swing: 0, bars: len === 32 ? 2 : 1, drums: { ...((seq?.drums as Record<string, number[]>) ?? {}), kick: [], snare: [], clap: [], hat: [], ohat: [], ...drums } })
     navigate("/labs/sequencer")
   }
   const toProgressions = () => {
@@ -246,6 +288,33 @@ function PartsView({ n, parts, edit }: { n: RefNote; parts: Parts; edit: (fn: (d
               <PlayButton id={`${pid}-drums`} label="Play drums" onPlay={() => play("drums")} />
               <Button variant="outline" size="sm" onClick={toSequencer}><Grid3x3 />Open in step sequencer</Button>
             </div>
+            {fillRows.length > 0 && (
+              <div className="space-y-2 pt-2">
+                <h4 className="text-sm font-semibold">Fills and rolls</h4>
+                <Caption>Where the hats or snare play more than the grid above: fills at the end of a phrase, and triplet or 32nd figures that repeat through the section. They’re in both MIDI files.</Caption>
+                <ul className="divide-y border-y">
+                  {fillRows.map(({ f, bars }) => {
+                    const rel = f.bar - sec.startBar
+                    const what = `${f.lane === "Hat" ? "Hats" : "Snare"} in ${GRID_NAME[f.grid]} from beat ${Math.floor(f.from / 4) + 1}`
+                    return (
+                      <li key={`${f.bar}-${f.lane}`} className="grid gap-x-4 gap-y-2 py-3 sm:grid-cols-[minmax(0,1fr)_14rem_auto] sm:items-center">
+                        <div className="min-w-0">
+                          {f.groove
+                            ? <p className="text-sm font-medium">Repeats in {bars} of {sec.bars} bars <span className="text-muted-foreground font-normal tabular-nums">· first at {mmss(at(f.bar))}</span></p>
+                            : <p className="text-sm font-medium">Bar {rel + 1} <span className="text-muted-foreground font-normal tabular-nums">· {mmss(at(f.bar))}</span></p>}
+                          <p className="text-muted-foreground text-sm">{what}{f.groove ? ", part of the groove" : ", leading into the next phrase"}</p>
+                        </div>
+                        <FillStrip fill={f} />
+                        <div className="flex gap-1">
+                          <PlayButton id={`${pid}-fill-${f.bar}-${f.lane}`} label="Play" onPlay={() => playFill(f)} />
+                          <Button variant="ghost" size="sm" onClick={() => removeFill(f)} aria-label={f.groove ? `Remove the repeating ${what.toLowerCase()}` : `Remove the fill in bar ${rel + 1}`}><X />Remove</Button>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
           </>
         ) : <Caption>No steady drums in this section.</Caption>}
       </div>
@@ -304,5 +373,16 @@ function BassRoll({ notes, bars }: { notes: { step: number; len: number; midi: n
         {notes.map((n, i) => <rect key={i} x={n.step + 0.05} y={hi - n.midi + 0.1} width={Math.max(0.4, n.len - 0.1)} height={0.8} fill="var(--foreground)" />)}
       </svg>
     </div>
+  )
+}
+
+/** One bar with the fill’s hits as ticks, taller for louder hits. */
+function FillStrip({ fill }: { fill: DrumFill }) {
+  return (
+    <svg viewBox="0 0 16 4" preserveAspectRatio="none" className="h-8 w-full bg-muted" role="img" aria-label={`${fill.hits.length} hits from step ${fill.from + 1}`}>
+      <rect x={0} y={0} width={fill.from} height={4} fill="var(--border)" opacity={0.5} />
+      {[4, 8, 12].map((x) => <line key={x} x1={x} x2={x} y1={0} y2={4} stroke="var(--border)" strokeWidth={0.08} />)}
+      {fill.hits.map((h, i) => <rect key={i} x={h.pos + 0.04} y={4 - (1.2 + 2.6 * h.v)} width={0.22} height={1.2 + 2.6 * h.v} fill="var(--foreground)" />)}
+    </svg>
   )
 }
