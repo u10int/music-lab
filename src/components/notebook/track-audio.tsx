@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 import { Flag, Loader2, Pause, Play, Trash2, Upload } from "lucide-react"
 import { stop as stopAppAudio } from "@/audio/playback"
 import { useKey } from "@/components/key-picker"
@@ -27,13 +27,13 @@ export function AudioUpload({ n, edit, compact }: { n: RefNote; edit: (fn: (d: R
     if (!file.type.startsWith("audio/") && !/\.(mp3|wav|m4a|aac|ogg|flac|aiff?|webm)$/i.test(file.name)) return setError("That isn’t an audio file. Try an MP3, WAV, M4A or FLAC.")
     if (file.size > MAX_AUDIO_BYTES) return setError("Files can be up to 50 MB. Export an MP3 or M4A instead of WAV.")
     try {
-      setStatus("Listening for tempo, key and sections…")
-      const analysis = await analyzeFile(file)
+      setStatus("Listening for tempo, key, sections, drums, bass and chords…")
+      const { analysis, parts } = await analyzeFile(file)
       setStatus("Saving the file…")
       const path = await saveProofFile(`nb-${n.id}-${Date.now()}`, file, MAX_AUDIO_BYTES)
       const old = n.audio?.path
       edit((d) => {
-        d.audio = { path, name: file.name, size: file.size, analysis }
+        d.audio = { path, name: file.name, size: file.size, analysis, parts }
         d.tempo = analysis.tempo
         d.key = { root: analysis.keyRoot, minor: analysis.minor }
         if (!d.title && !d.artist) {
@@ -71,7 +71,7 @@ export function AudioUpload({ n, edit, compact }: { n: RefNote; edit: (fn: (d: R
       {pick}
       <div className="space-y-1">
         <p className="font-semibold">Add the track’s audio</p>
-        <Caption className="max-w-xl">Drop an MP3, WAV, M4A or FLAC here (up to 50 MB). The notebook works out the tempo, key and loudness, draws the waveform and suggests where the sections start. Then you can pin notes to any moment.</Caption>
+        <Caption className="max-w-xl">Drop an MP3, WAV, M4A or FLAC here (up to 50 MB). The notebook works out the tempo, key and loudness, draws the waveform, suggests where the sections start, and transcribes the drums, bass and chords as a starting point. Then you can pin notes to any moment.</Caption>
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <Button disabled={!!status} onClick={() => input.current?.click()}>{status ? <Loader2 className="animate-spin" /> : <Upload />}{status ? "Working…" : "Choose a file"}</Button>
@@ -292,7 +292,7 @@ export function Suggestions({ n, edit }: { n: RefNote; edit: (fn: (d: RefNote) =
       {!same && (
         <div className="space-y-2">
           <p className="text-sm"><span className="font-semibold">Suggested sections: </span>
-            {a.sections.map((s, i) => <span key={i} className="whitespace-nowrap">{i > 0 && " · "}<span className="tabular-nums">{mmss(s.t)}</span> {s.label}</span>)}
+            {a.sections.map((s, i) => <Fragment key={i}>{i > 0 && " · "}<span className="whitespace-nowrap"><span className="tabular-nums">{mmss(s.t)}</span> {s.label}</span></Fragment>)}
           </p>
           <Caption>Found where the low end comes in or drops out and where the energy changes, snapped to bars. Check them by ear: builds and drops are guesses.</Caption>
           <div className="flex flex-wrap items-center gap-2">

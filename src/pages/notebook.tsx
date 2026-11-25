@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { AudioUpload, Suggestions, TrackPlayer } from "@/components/notebook/track-audio"
+import { PartsPanel } from "@/components/notebook/parts"
 import { ROOTS } from "@/data/labs"
 import { FAMILIES, type Family } from "@/data/patterns"
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -346,6 +347,7 @@ export function NotebookTrackPage() {
           <>
             <TrackPlayer key={n.id} n={n} edit={edit} onMark={mark} />
             <Suggestions n={n} edit={edit} />
+            <PartsPanel n={n} edit={edit} />
           </>
         ) : <AudioUpload n={n} edit={edit} />}
       </Block>

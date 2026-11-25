@@ -33,7 +33,7 @@ export interface Analysis {
 
 /* ---------- FFT ---------- */
 
-function fft(re: Float64Array, im: Float64Array) {
+export function fft(re: Float64Array, im: Float64Array) {
   const n = re.length
   for (let i = 1, j = 0; i < n; i++) {
     let bit = n >> 1
@@ -58,7 +58,7 @@ function fft(re: Float64Array, im: Float64Array) {
 }
 
 /** Magnitude spectra of hann-windowed frames. */
-function spectra(x: Float32Array, n: number, hop: number) {
+export function spectra(x: Float32Array, n: number, hop: number) {
   const win = new Float64Array(n)
   for (let i = 0; i < n; i++) win[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (n - 1))
   const frames: Float32Array[] = []

@@ -27,7 +27,7 @@ export interface RefMarker { id: string; t: number; label: string; energy: numbe
 /** A note pinned to a moment in a reference track, like a comment on a waveform. */
 export interface RefComment { id: string; t: number; text: string }
 /** The reference's audio file (stored separately) and what the analysis found. */
-export interface RefAudio { path: string; name: string; size: number; analysis: import("./audio-analysis-core").Analysis }
+export interface RefAudio { path: string; name: string; size: number; analysis: import("./audio-analysis-core").Analysis; /** Drums, bass and chords found in the track, if analysed. */ parts?: import("./transcribe-core").Parts }
 export interface RefNote { id: string; title: string; artist: string; url: string; tempo: number; date: string; notes: string; markers: RefMarker[]; audio?: RefAudio; comments?: RefComment[]; key?: { root: number; minor: boolean }; genres?: import("@/data/patterns").Family[] }
 export interface Progress {
   start: string
