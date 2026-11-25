@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { AudioUpload, Suggestions, TrackPlayer } from "@/components/notebook/track-audio"
+import { ROOTS } from "@/data/labs"
+import { deleteProofFile } from "@/lib/proofs"
 import { fmtDay, safeUrl, todayISO, uid, update, useProgress, type RefMarker, type RefNote, type TrackPlan } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
@@ -20,7 +23,7 @@ function parseTime(s: string) {
 const barAt = (t: number, tempo: number) => (t * tempo) / 240
 const blank = (): RefNote => ({ id: uid(), title: "", artist: "", url: "", tempo: 124, date: todayISO(), notes: "", markers: [] })
 
-/** Sections between markers, rounded-none to whole bars. Lengths snap to multiples of 4 when they're close. */
+/** Sections between markers, rounded to whole bars. Lengths snap to multiples of 4 when they're close. */
 function sectionsOf(n: RefNote, end?: number) {
   const ms = [...n.markers].sort((a, b) => a.t - b.t)
   return ms.map((m, i) => {
@@ -64,7 +67,7 @@ function TapTimer({ onMark }: { onMark: (t: number) => void }) {
     return () => window.removeEventListener("keydown", onKey)
   }, [])
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4">
+    <div className="flex flex-wrap items-center gap-3 border bg-card p-4">
       <output className="min-w-24 text-stat font-medium tabular-nums" aria-label="Time listened">{mmss(elapsed)}</output>
       <Button variant="outline" onClick={toggleRun}>{running ? <Pause /> : <Play className="fill-current" />}{running ? "Pause" : elapsed ? "Resume" : "Start"}</Button>
       <Button onClick={() => onMark(elapsed)} disabled={!running && !elapsed}><Flag />Mark a section</Button>
@@ -127,12 +130,12 @@ export function NotebookPage() {
   return (
     <div className="space-y-10">
       <PageHeader title="Reference notebook" actions={<Button onClick={add}><Plus />New reference</Button>}>
-        Study tracks you love. Tap where each section starts while you listen, label it and rate its energy, and the notebook turns the times into bars. Then turn the map into a track plan to build your own track on the same shape.
+        Study tracks you love. Add the audio and the notebook finds the tempo, key and sections, and you can pin notes to any moment. Or tap where each section starts while you listen. Label each section and rate its energy, and the notebook turns the times into bars. Then turn the map into a track plan to build your own track on the same shape.
       </PageHeader>
       <datalist id="nb-names">{NAMES.map((x) => <option key={x} value={x} />)}</datalist>
 
       {!list.length ? (
-        <div className="space-y-3 rounded-xl border bg-card p-6">
+        <div className="space-y-3 border bg-card p-6">
           <p className="font-medium">No references yet</p>
           <Caption>Pick a track in the genre you’re working on, ideally one you’d like yours to sound next to in a DJ set.</Caption>
           <Button onClick={add}><Plus />Add your first reference</Button>
@@ -144,9 +147,9 @@ export function NotebookPage() {
               {list.map((x) => (
                 <li key={x.id}>
                   <button type="button" onClick={() => setSelId(x.id)} aria-current={x.id === selId ? "true" : undefined}
-                    className={cn("grid w-full gap-0.5 rounded-lg px-3 py-2 text-left transition-[background-color] duration-150 hover:bg-accent", x.id === selId && "bg-accent")}>
+                    className={cn("grid w-full gap-0.5 px-3 py-2 text-left transition-[background-color] duration-150 hover:bg-accent", x.id === selId && "bg-accent")}>
                     <span className="truncate text-sm font-medium">{x.title || "Untitled reference"}</span>
-                    <span className="text-muted-foreground truncate text-xs">{x.artist || "Unknown artist"} · {x.markers.length} sections · {fmtDay.format(new Date(x.date + "T00:00:00"))}</span>
+                    <span className="text-muted-foreground truncate text-xs">{x.artist || "Unknown artist"} · {x.key ? `${ROOTS[x.key.root]}${x.key.minor ? "m" : ""} · ${x.tempo} BPM` : `${x.markers.length} sections`} · {fmtDay.format(new Date(x.date + "T00:00:00"))}</span>
                   </button>
                 </li>
               ))}
@@ -168,22 +171,37 @@ export function NotebookPage() {
                   </div>
                   <div className="grid gap-1.5"><Label htmlFor="nb-tempo">Tempo (BPM)</Label><Input id="nb-tempo" type="number" inputMode="numeric" min={50} max={220} value={n.tempo} onChange={(e) => edit((d) => { d.tempo = Math.max(1, +e.target.value || 0) })} className="tabular-nums" /></div>
                 </div>
-                <Caption>Not sure of the tempo? Tap along in Live with the Tap Tempo button, or search the track on a BPM database.</Caption>
+                {!n.audio && <Caption>Not sure of the tempo? Add the audio below and the notebook will find it, or tap along in Live with the Tap Tempo button.</Caption>}
+              </Block>
+
+              <Block title="Listen" description={n.audio ? `${n.audio.name} · ${(n.audio.size / 1024 / 1024).toFixed(1)} MB` : "Add the audio to analyse it and pin notes to moments in the track."}
+                actions={n.audio && (
+                  <div className="flex flex-wrap items-center gap-1">
+                    <AudioUpload n={n} edit={edit} compact />
+                    <Button variant="ghost" size="sm" onClick={() => { const path = n.audio!.path; edit((d) => { delete d.audio }); void deleteProofFile(path) }}><Trash2 />Remove audio</Button>
+                  </div>
+                )}>
+                {n.audio ? (
+                  <>
+                    <TrackPlayer key={n.id} n={n} edit={edit} onMark={mark} />
+                    <Suggestions n={n} edit={edit} />
+                  </>
+                ) : <AudioUpload n={n} edit={edit} />}
               </Block>
 
               <Block title="Map the sections">
-                <TapTimer onMark={mark} />
+                {!n.audio && <TapTimer onMark={mark} />}
                 {secs.length > 0 && (
                   <>
-                    <div className="flex h-20 items-end gap-0.5 rounded-lg border bg-card p-2" role="img" aria-label={`Energy across ${secs.length} sections`}>
+                    <div className="flex h-20 items-end gap-0.5 border bg-card p-2" role="img" aria-label={`Energy across ${secs.length} sections`}>
                       {secs.map((s) => (
                         <div key={s.m.id} className="flex h-full min-w-0 flex-col justify-end" style={{ flex: `${s.bars ?? 8} 1 0` }}>
-                          <div className="rounded-none bg-[var(--s5)]" style={{ height: `${s.m.energy * 10}%` }} />
+                          <div className="bg-[var(--s5)]" style={{ height: `${s.m.energy * 10}%` }} />
                           <span className="text-muted-foreground mt-1 truncate text-[11px]">{s.m.label}</span>
                         </div>
                       ))}
                     </div>
-                    <ul className="divide-y rounded-xl border bg-card">
+                    <ul className="divide-y border bg-card">
                       {secs.map((s) => (
                         <MarkerRow key={s.m.id + ":" + s.m.t} m={s.m} startBar={s.startBar} bars={s.bars}
                           onChange={(p) => edit((d) => { const x = d.markers.find((y) => y.id === s.m.id); if (x) Object.assign(x, p); d.markers.sort((a, b) => a.t - b.t) })}
@@ -210,7 +228,7 @@ export function NotebookPage() {
                     <Button variant="ghost" size="sm" onClick={() => setConfirming(false)}>Cancel</Button>
                   </>
                 )}
-                <Button variant="ghost" className="ml-auto" onClick={() => { update((d) => { d.notebook = d.notebook.filter((x) => x.id !== n.id) }); setSelId(list.find((x) => x.id !== n.id)?.id ?? null) }}><Trash2 />Delete reference</Button>
+                <Button variant="ghost" className="ml-auto" onClick={() => { const path = n.audio?.path; update((d) => { d.notebook = d.notebook.filter((x) => x.id !== n.id) }); if (path) void deleteProofFile(path); setSelId(list.find((x) => x.id !== n.id)?.id ?? null) }}><Trash2 />Delete reference</Button>
               </div>
             </div>
           )}

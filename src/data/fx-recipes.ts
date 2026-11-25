@@ -1006,7 +1006,7 @@ export const FX_RECIPES: FxRecipe[] = [
       "Chop the vocal’s last held note into three short repeats with Simpler or Beat Repeat, then leave half a beat of total silence before the drop’s first kick.",
     ],
     chain: ["Auto Filter", "Beat Repeat", "Hybrid Reverb"],
-    tempo: 123, drums: "wave-123", bars: 4, drumsOn: (s) => s < 32,
+    tempo: 124, drums: "wave-123", bars: 4, drumsOn: (s) => s < 32,
     params: [P("dive", "Dive", 5, 36, 1, 19, (v) => "−" + v + " st"), P("stutters", "Vocal stutters", 0, 5, 1, 3, String), P("gap", "Silence", 0, 1, 0.5, 0.5, (v) => (v ? v + " beat" : "None"))],
     ref: { track: REFTRACK, at: "0:29" },
     render: ({ c, out, t, tempo, root, iv, p }) => {
@@ -1048,7 +1048,7 @@ export const FX_RECIPES: FxRecipe[] = [
       "Open the filter and bring the drums back on the next section’s downbeat.",
     ],
     chain: ["Auto Filter", "Utility", "Hybrid Reverb"],
-    tempo: 123, drums: "wave-123", bars: 4, drumsOn: (s) => s < 16,
+    tempo: 124, drums: "wave-123", bars: 4, drumsOn: (s) => s < 16,
     params: [P("close", "Closes to", 800, 6000, 10, 2500, hz), P("width", "Width", 0, 1, 0.01, 0.7, pct)],
     ref: { track: REFTRACK, at: "1:03" },
     render: ({ c, out, t, tempo, root, iv, p }) => {
@@ -1083,7 +1083,7 @@ export const FX_RECIPES: FxRecipe[] = [
       "Land the drop with the kick, sub and an impact together.",
     ],
     chain: ["EQ Eight", "Auto Filter"],
-    tempo: 123, drums: "wave-123", bars: 4, drumsOn: (s, p) => s < 64 - p.gap * 4,
+    tempo: 124, drums: "wave-123", bars: 4, drumsOn: (s, p) => s < 64 - p.gap * 4,
     params: [P("gap", "Dropout", 1, 4, 1, 3, (v) => v + (v === 1 ? " beat" : " beats")), P("top", "Top cut", 2000, 12000, 100, 4500, hz)],
     ref: { track: REFTRACK, at: "1:49" },
     render: ({ c, out, t, tempo, root, iv, p }) => {
@@ -1117,7 +1117,7 @@ export const FX_RECIPES: FxRecipe[] = [
       "End on a downbeat with the reverb tail cut.",
     ],
     chain: ["Auto Filter", "Utility"],
-    tempo: 123, drums: "wave-123", bars: (p) => p.len, drumsOn: () => false,
+    tempo: 124, drums: "wave-123", bars: (p) => p.len, drumsOn: () => false,
     params: [P("len", "Length", 4, 8, 4, 4, (v) => v + " bars"), P("end", "Closes to", 150, 2000, 10, 300, hz)],
     ref: { track: REFTRACK, at: "2:37" },
     render: ({ c, out, t, tempo, root, iv, p }) => {
@@ -1148,7 +1148,7 @@ export const FX_RECIPES: FxRecipe[] = [
       "Bring the bass and drums in exactly when the filter is fully open.",
     ],
     chain: ["Auto Filter", "Hybrid Reverb"],
-    tempo: 123, drums: "wave-123", bars: 6, drumsOn: (s) => s >= 64,
+    tempo: 124, drums: "wave-123", bars: 6, drumsOn: (s) => s >= 64,
     params: [P("from", "Starts at", 200, 2000, 10, 500, hz), P("res", "Resonance", 0.5, 8, 0.1, 2, (v) => v.toFixed(1))],
     ref: { track: REFTRACK, at: "0:00" },
     render: ({ c, out, t, tempo, root, iv, p }) => {

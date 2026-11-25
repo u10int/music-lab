@@ -25,15 +25,18 @@ async function idbDo<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDB
 }
 
 export const MAX_PROOF_BYTES = 25 * 1024 * 1024
+export const MAX_AUDIO_BYTES = 50 * 1024 * 1024
+
+const TYPE_BY_EXT: Record<string, string> = { mp3: "audio/mpeg", wav: "audio/wav", m4a: "audio/mp4", aac: "audio/aac", ogg: "audio/ogg", flac: "audio/flac", aif: "audio/aiff", aiff: "audio/aiff", webm: "audio/webm" }
 
 /** Store a file and return its path. */
-export async function saveProofFile(id: string, file: File): Promise<string> {
-  if (file.size > MAX_PROOF_BYTES) throw new Error("Files can be up to 25 MB.")
+export async function saveProofFile(id: string, file: File, max = MAX_PROOF_BYTES): Promise<string> {
+  if (file.size > max) throw new Error(`Files can be up to ${Math.round(max / 1024 / 1024)} MB.`)
   const safe = file.name.replace(/[^\w.-]+/g, "_").slice(-80)
   const user = getAuthUser()
   if (supabase && user) {
     const path = `${user.id}/${id}-${safe}`
-    const { error } = await supabase.storage.from("proofs").upload(path, file, { contentType: file.type, upsert: false })
+    const { error } = await supabase.storage.from("proofs").upload(path, file, { contentType: file.type || TYPE_BY_EXT[file.name.split(".").pop()?.toLowerCase() ?? ""] || "application/octet-stream", upsert: false })
     if (error) throw new Error(error.message)
     return path
   }
