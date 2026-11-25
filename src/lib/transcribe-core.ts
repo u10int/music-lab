@@ -391,7 +391,54 @@ function transcribeBass(x: Float32Array, sr: number, t0: number, step: number, s
     notes.push(cur)
   }
   // Drop isolated blips one step long between silences; they’re usually kick tails.
-  return notes.filter((n, i) => n.len > 1 || (notes[i - 1]?.step + notes[i - 1]?.len === n.step) || (notes[i + 1]?.step === n.step + 1))
+  const kept = notes.filter((n, i) => n.len > 1 || (notes[i - 1]?.step + notes[i - 1]?.len === n.step) || (notes[i + 1]?.step === n.step + 1))
+  return holdBars(kept, steps)
+}
+
+/**
+ * Basslines mostly hold one note per bar; gaps between readings are usually kicks
+ * masking the pitch, not rests. A bar whose readings mostly agree becomes one
+ * note for the whole bar. A bar that moves (a transition or a walk-up) keeps its
+ * notes, joined end to start, with the first starting on the downbeat when a kick
+ * likely hid it and the last held to the bar line unless the bass clearly stops early.
+ */
+export function holdBars(notes: BassNote[], steps: number, bar = 16): BassNote[] {
+  const out: BassNote[] = []
+  for (let b0 = 0; b0 < steps; b0 += bar) {
+    const b1 = Math.min(steps, b0 + bar)
+    // This bar’s pieces of each note.
+    const inBar = notes
+      .map((n) => ({ step: Math.max(n.step, b0), end: Math.min(n.step + n.len, b1), midi: n.midi }))
+      .filter((n) => n.end > n.step)
+    if (!inBar.length) continue
+    const voiced = inBar.reduce((t, n) => t + n.end - n.step, 0)
+    const byPc = new Map<number, number>(), byMidi = new Map<number, number>()
+    for (const n of inBar) {
+      byPc.set(n.midi % 12, (byPc.get(n.midi % 12) ?? 0) + n.end - n.step)
+      byMidi.set(n.midi, (byMidi.get(n.midi) ?? 0) + n.end - n.step)
+    }
+    const [pc, pcLen] = [...byPc].sort((x, y) => y[1] - x[1])[0]
+    if (voiced >= 4 && pcLen / voiced >= 0.6) {
+      const midi = [...byMidi].filter(([m]) => m % 12 === pc).sort((x, y) => y[1] - x[1])[0][0]
+      out.push({ step: b0, len: b1 - b0, midi })
+      continue
+    }
+    // A moving bar: merge repeats, then play legato.
+    const merged: { step: number; end: number; midi: number }[] = []
+    for (const n of inBar) {
+      const last = merged[merged.length - 1]
+      if (last && last.midi === n.midi) last.end = n.end
+      else merged.push({ ...n })
+    }
+    // A kick on the downbeat often hides the bass’s first step.
+    if (merged[0].step - b0 <= 2) merged[0].step = b0
+    merged.forEach((n, i) => {
+      const next = merged[i + 1]
+      const end = next ? next.step : b1 - n.end <= 4 ? b1 : n.end
+      out.push({ step: n.step, len: end - n.step, midi: n.midi })
+    })
+  }
+  return out
 }
 
 /* ---------- Chords ---------- */
