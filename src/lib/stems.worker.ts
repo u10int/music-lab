@@ -92,8 +92,24 @@ self.onmessage = async (e: MessageEvent<{ left: Float32Array; right: Float32Arra
     const gpu = typeof navigator !== "undefined" && "gpu" in navigator && !!(await (navigator as unknown as { gpu: { requestAdapter(): Promise<unknown> } }).gpu.requestAdapter().catch(() => null))
     const buf = await model()
     post({ type: "progress", phase: "load", p: 0 })
-    const demucs = await ort.InferenceSession.create(buf, { executionProviders: gpu ? ["webgpu", "wasm"] : ["wasm"], graphOptimizationLevel: "basic" })
-    const { vocals, other } = await separate(demucs, left, right)
+    // Some browsers offer WebGPU but can’t run this model on it; fall back to the CPU, which is slower but works.
+    const open = (useGpu: boolean) => ort.InferenceSession.create(buf, { executionProviders: useGpu ? ["webgpu"] : ["wasm"], graphOptimizationLevel: "basic" })
+    let onGpu = gpu, demucs: ort.InferenceSession
+    try { demucs = await open(onGpu) } catch (err) {
+      if (!onGpu) throw err
+      console.warn("Stem model on the GPU failed, using the CPU:", err)
+      onGpu = false; demucs = await open(false)
+    }
+    let stems: Awaited<ReturnType<typeof separate>>
+    try { stems = await separate(demucs, left, right) } catch (err) {
+      if (!onGpu) throw err
+      console.warn("Stem split on the GPU failed, using the CPU:", err)
+      await demucs.release().catch(() => {})
+      post({ type: "progress", phase: "load", p: 0, detail: "Switching to the CPU" })
+      onGpu = false; demucs = await open(false)
+      stems = await separate(demucs, left, right)
+    }
+    const { vocals, other } = stems
     await demucs.release()
 
     // Basic Pitch is small: the CPU is quick and avoids GPU quirks.
@@ -110,8 +126,9 @@ self.onmessage = async (e: MessageEvent<{ left: Float32Array; right: Float32Arra
     const vocalNotes = decodeNotes(vA, { minMidi: 40, maxMidi: 88 })
     const oA = await activations(o, run, (p) => post({ type: "progress", phase: "notes", p: 0.5 + p / 2, detail: "Instruments" }))
     const otherNotes = decodeNotes(oA)
-    post({ type: "done", melody: melodyFrom(vocalNotes, otherNotes, barMs), gpu })
+    post({ type: "done", melody: melodyFrom(vocalNotes, otherNotes, barMs), gpu: onGpu })
   } catch (err) {
-    post({ type: "error", error: err instanceof Error ? err.message : String(err) })
+    const msg = err instanceof Error ? err.message : String(err)
+    post({ type: "error", error: `The stem split stopped: ${msg.slice(0, 300)}` })
   }
 }
