@@ -12,6 +12,8 @@ import { ScalesLab } from "@/components/labs/scales-lab"
 import { SliceLab } from "@/components/labs/slice-lab"
 import { SynthLab } from "@/components/labs/synth-lab"
 import { GenreSounds } from "@/components/labs/genre-sounds"
+import { ConceptDemos, SignalFlow, SynthGuides, SynthSounds } from "@/components/labs/synth-school"
+import { SYNTH_STEPS } from "@/data/synths"
 import { FxLibrary } from "@/components/labs/fx-recipes"
 import { FX_RECIPES } from "@/data/fx-recipes"
 import { GENRE_SOUNDS } from "@/data/genre-sounds"
@@ -81,6 +83,19 @@ export function SoundDesignLab() {
       <Block title="Match the sound" description="Hear a sound, then find the knob settings that made it. The fastest way to learn what each control does."><MatchSound /></Block>
       <Block title="Synth playground" description="Change a control, play it, and watch the shape change."><SynthLab /></Block>
       <More to="/instruments?tab=modulation">the modulation guide</More>
+    </div>
+  )
+}
+
+export function SynthsLab() {
+  return (
+    <div className="space-y-10">
+      <PageHeader title="Synths">How synths work, the controls that shape trance, wave, driftwave and phonk sounds, and step-by-step builds in Live’s Wavetable and Drift and in Massive and Spire.</PageHeader>
+      <Block title="How a synth works" description="Every synth here follows the same path. Learn it once and any synth’s panel makes sense."><SignalFlow /></Block>
+      <Block title="The controls that matter" description="Eight ideas behind most electronic synth sounds, each with a live demo."><ConceptDemos /></Block>
+      <Block title="Your synths" description="What each one is best at, how its panel is laid out, and for the plugins, how to use them well in Live and from Push."><SynthGuides /></Block>
+      <Block title="Synth sounds to build" description={`${Object.keys(SYNTH_STEPS).length} sounds from trance, wave, driftwave, phonk, hardwave and more, each with a build for Live, Massive and Spire.`}><SynthSounds /></Block>
+      <More to="/labs/sound-design">sound design, with the synth playground and every genre sound</More>
     </div>
   )
 }

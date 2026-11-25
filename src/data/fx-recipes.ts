@@ -121,7 +121,7 @@ const REFTRACK = "Claudia Valentina, “When I’m High” (ROUDS Remix)"
 export const FX_RECIPES: FxRecipe[] = [
   /* ================= Atmospheres ================= */
   {
-    id: "vinyl-crackle", kind: "Atmosphere", name: "Vinyl crackle and hiss", families: ["futuregarage", "lofi", "boombap", "phonk", "wave", "deephouse", "dubtechno", "house", "discohouse", "breakbeat", "jungle", "ukg"],
+    id: "vinyl-crackle", kind: "Atmosphere", name: "Vinyl crackle and hiss", families: ["futuregarage", "lofi", "boombap", "phonk", "wave", "deephouse", "dubtechno", "house", "discohouse", "breakbeat", "jungle", "ukg", "driftwave"],
     what: "Random pops and clicks over a bed of soft hiss. The dusty floor under future garage, lo-fi and Memphis phonk, so the track sounds like it was sampled from a record.",
     listen: "Keep it just audible in the breakdown, then pull it back when the drums arrive. Pops should be uneven, never on the grid.",
     use: ["simpler"], alt: ["drift"],
@@ -170,7 +170,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "tape-wow", kind: "Atmosphere", name: "Worn tape: hiss and wow", families: ["lofi", "synthwave", "futuregarage", "phonk", "dubtechno", "ambient", "boombap", "discohouse"],
+    id: "tape-wow", kind: "Atmosphere", name: "Worn tape: hiss and wow", families: ["lofi", "synthwave", "futuregarage", "phonk", "dubtechno", "ambient", "boombap", "discohouse", "driftwave"],
     what: "Chords that drift slightly out of tune like a stretched cassette, with tape hiss and the highs rolled off. Wow is the slow pitch wander; flutter is the fast one.",
     listen: "A little wow makes chords feel nostalgic; a lot makes them seasick. Hear the pitch lean on the long notes.",
     use: ["simpler"], alt: ["electric"],
@@ -205,7 +205,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "radio", kind: "Atmosphere", name: "Radio static and tuning", families: ["futuregarage", "wave", "phonk", "hardwave", "dnb", "dubtechno", "electro", "jungle", "breakbeat", "ukg"],
+    id: "radio", kind: "Atmosphere", name: "Radio static and tuning", families: ["futuregarage", "wave", "phonk", "hardwave", "dnb", "dubtechno", "electro", "jungle", "breakbeat", "ukg", "driftwave"],
     what: "A shortwave radio being tuned: hiss that jumps between stations, a whistle sweeping past and the odd crackle. Good under intros and between sections.",
     listen: "Hear the band-pass jump to a new frequency every few beats. Fade it in before the first chord and cut it on the downbeat.",
     use: ["drift"], alt: ["operator"],
@@ -259,7 +259,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "thunder", kind: "Atmosphere", name: "Distant thunder", families: ["wave", "futuregarage", "ambient", "dubstep", "phonk", "trap"],
+    id: "thunder", kind: "Atmosphere", name: "Distant thunder", families: ["wave", "futuregarage", "ambient", "dubstep", "phonk", "trap", "driftwave"],
     what: "A crack, then a long rumble that rolls and fades. Wave and phonk intros use storms for drama; future garage uses them for mood.",
     listen: "Put thunder right before a big chord or the first kick so the rumble hands over to the low end.",
     use: ["simpler"], alt: ["drift"],
@@ -406,7 +406,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "haze", kind: "Atmosphere", name: "Granular shimmer haze", families: ["ambient", "odesza", "trance", "prog", "futuregarage", "wave", "futurebass"],
+    id: "haze", kind: "Atmosphere", name: "Granular shimmer haze", families: ["ambient", "odesza", "trance", "prog", "futuregarage", "wave", "futurebass", "driftwave"],
     what: "Tiny grains of your chord scattered across octaves and the stereo field, like light on water. Built in Granulator, it turns any pad into a glittering cloud.",
     listen: "No single note stands out; the chord is there, but smeared. More density sounds smoother, less sounds like sparkles.",
     use: ["granulator"], alt: ["wavetable"],
@@ -463,7 +463,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "whisper", kind: "Atmosphere", name: "Whispers and breaths", families: ["futuregarage", "wave", "phonk", "ambient", "ukg", "trap", "futurebass"],
+    id: "whisper", kind: "Atmosphere", name: "Whispers and breaths", families: ["futuregarage", "wave", "phonk", "ambient", "ukg", "trap", "futurebass", "driftwave"],
     what: "Breathy, unvoiced vowels drifting in and out with heavy reverb: no words, just the shape of a voice. Future garage and wave use them to haunt the background.",
     listen: "It’s filtered noise shaped by mouth formants. Pan them around and push them deep in the reverb.",
     use: ["simpler"], alt: ["drift"],
@@ -561,7 +561,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "noise-riser", kind: "Transition", name: "White noise riser", families: ["prog", "trance", "techhouse", "basshouse", "futurebass", "house", "hardstyle", "odesza", "hardwave", "dubstep", "dnb", "techno", "electro"],
+    id: "noise-riser", kind: "Transition", name: "White noise riser", families: ["prog", "trance", "techhouse", "basshouse", "futurebass", "house", "hardstyle", "odesza", "hardwave", "dubstep", "dnb", "techno", "electro", "driftwave"],
     what: "Noise that gets louder and brighter over several bars, then cuts right on the drop. The most common build-up sound in dance music.",
     listen: "The high-pass sweep does most of the work: the riser thins out as it rises, then the drop lands full-range.",
     use: ["drift"], alt: ["simpler", "operator"],
@@ -587,7 +587,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "pitch-riser", kind: "Transition", name: "Supersaw pitch riser", families: ["trance", "futurebass", "hardstyle", "prog", "wave", "hardwave", "basshouse", "dubstep", "synthwave"],
+    id: "pitch-riser", kind: "Transition", name: "Supersaw pitch riser", families: ["trance", "futurebass", "hardstyle", "prog", "wave", "hardwave", "basshouse", "dubstep", "synthwave", "driftwave"],
     what: "A detuned saw chord that bends up an octave while the filter opens. Layer it with a noise riser and the tension doubles.",
     listen: "Pitch rising is the strongest “something is coming” signal there is. The last beat is where it should feel unbearable.",
     use: ["wavetable"], alt: ["drift", "analog"],
@@ -611,7 +611,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "downlifter", kind: "Transition", name: "Downlifter", families: ["prog", "trance", "house", "techhouse", "futurebass", "odesza", "dubstep", "dnb", "wave", "basshouse"],
+    id: "downlifter", kind: "Transition", name: "Downlifter", families: ["prog", "trance", "house", "techhouse", "futurebass", "odesza", "dubstep", "dnb", "wave", "basshouse", "driftwave"],
     what: "The opposite of a riser: noise that falls and darkens after a big moment, carrying the energy down into a breakdown.",
     listen: "Place it on the downbeat where the drums drop out, so it fills the hole they leave.",
     use: ["drift"], alt: ["simpler"],
@@ -636,7 +636,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "impact", kind: "Transition", name: "Impact and boom", families: ["dubstep", "trap", "hardstyle", "wave", "phonk", "hardwave", "futurebass", "dnb", "basshouse", "odesza", "hardtechno"],
+    id: "impact", kind: "Transition", name: "Impact and boom", families: ["dubstep", "trap", "hardstyle", "wave", "phonk", "hardwave", "futurebass", "dnb", "basshouse", "odesza", "hardtechno", "driftwave"],
     what: "A short, huge hit on the first beat of a drop: a falling sub, a noise crack and a long tail. Tells the listener the drop has landed.",
     listen: "It should feel like weight in the chest, then vanish quickly so the drop’s groove takes over.",
     use: ["operator"], alt: ["simpler"],
@@ -703,7 +703,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "tape-stop", kind: "Transition", name: "Tape stop", families: ["dubstep", "trap", "phonk", "wave", "dnb", "futurebass", "basshouse", "hardwave", "lofi", "boombap"],
+    id: "tape-stop", kind: "Transition", name: "Tape stop", families: ["dubstep", "trap", "phonk", "wave", "dnb", "futurebass", "basshouse", "hardwave", "lofi", "boombap", "driftwave"],
     what: "Everything slows to a halt like a turntable losing power, right before the drop or a switch-up. Pitch and speed fall together.",
     listen: "The pitch dive is what sells it. The quick version lasts about one beat; the dramatic one a whole bar.",
     use: ["simpler"],
@@ -757,7 +757,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "sub-drop", kind: "Transition", name: "Sub drop", families: ["dubstep", "trap", "phonk", "wave", "hardwave", "dnb", "futurebass", "basshouse", "reggaeton"],
+    id: "sub-drop", kind: "Transition", name: "Sub drop", families: ["dubstep", "trap", "phonk", "wave", "hardwave", "dnb", "futurebass", "basshouse", "reggaeton", "driftwave"],
     what: "A sub bass note that falls in pitch on the first beat of the drop, rumbling underneath everything.",
     listen: "Felt more than heard. On small speakers you’ll mostly hear the distortion; on a system it shakes the room.",
     use: ["operator"], alt: ["simpler"],
@@ -834,7 +834,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "reverse-swell", kind: "Transition", name: "Reverse reverb swell", families: ["wave", "futuregarage", "odesza", "ambient", "trance", "dubtechno", "prog", "synthwave", "phonk"],
+    id: "reverse-swell", kind: "Transition", name: "Reverse reverb swell", families: ["wave", "futuregarage", "odesza", "ambient", "trance", "dubtechno", "prog", "synthwave", "phonk", "driftwave"],
     what: "The reverb tail of a chord, flipped so it swells up into the chord itself. A ghostly, sucking lead-in used in wave, future garage and ODESZA breakdowns.",
     listen: "It grows from nothing and cuts exactly where the dry chord starts. That snap is the effect.",
     use: ["simpler"],
@@ -972,7 +972,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "drop-gap", kind: "Transition", name: "Silence before the drop", families: ["dubstep", "trap", "futurebass", "wave", "phonk", "hardwave", "basshouse", "hardstyle", "reggaeton", "dnb"],
+    id: "drop-gap", kind: "Transition", name: "Silence before the drop", families: ["dubstep", "trap", "futurebass", "wave", "phonk", "hardwave", "basshouse", "hardstyle", "reggaeton", "dnb", "driftwave"],
     what: "Everything cuts out for half a beat to a whole beat right before the drop. The shortest transition and often the most powerful.",
     listen: "Silence is louder than any riser. Hear how the drop feels bigger after the gap.",
     use: ["drumrack"],
@@ -995,7 +995,7 @@ export const FX_RECIPES: FxRecipe[] = [
   },
 
   {
-    id: "bass-dive-gap", kind: "Transition", name: "Bass dive and stutter gap", families: ["wave", "phonk", "hardwave", "trap", "futurebass"],
+    id: "bass-dive-gap", kind: "Transition", name: "Bass dive and stutter gap", families: ["wave", "phonk", "hardwave", "trap", "futurebass", "driftwave"],
     what: "Instead of a riser, the build’s bass dives down in pitch, a sub rumble hangs underneath, the top end closes, and a held vocal note stutters before half a beat of silence. Then the drop lands with a big kick.",
     listen: "Energy goes down before the drop instead of up. The pitch dive and the stutter pull you in, and the silence makes the first kick hit twice as hard.",
     use: ["wavetable"], alt: ["simpler"],
@@ -1037,7 +1037,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "breakdown-cut", kind: "Transition", name: "Hard cut into a filtered breakdown", families: ["wave", "phonk", "hardwave", "futurebass", "dubstep", "trap", "futuregarage"],
+    id: "breakdown-cut", kind: "Transition", name: "Hard cut into a filtered breakdown", families: ["wave", "phonk", "hardwave", "futurebass", "dubstep", "trap", "futuregarage", "driftwave"],
     what: "On the bar line, the kick and bass vanish. The chords and vocal keep going, but a low-pass slowly closes over them and they spread wider, so the breakdown feels distant and dreamy until the drums return.",
     listen: "No downlifter, just a cut: the low end disappears instantly while the top end fades away gradually over several bars.",
     use: ["drumrack"],
@@ -1072,7 +1072,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "low-gap", kind: "Transition", name: "Low-end dropout before the drop", families: ["wave", "phonk", "hardwave", "dubstep", "trap", "futurebass", "basshouse"],
+    id: "low-gap", kind: "Transition", name: "Low-end dropout before the drop", families: ["wave", "phonk", "hardwave", "dubstep", "trap", "futurebass", "basshouse", "driftwave"],
     what: "For the last few beats before the drop, only the kick and bass disappear. The vocal and chords carry on with the top end shaved off, so the drop’s low end hits like it was switched back on.",
     listen: "Not total silence: the music keeps moving, but without weight. The sudden return of the sub is the impact.",
     use: ["drumrack"],
@@ -1106,7 +1106,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "filter-outro", kind: "Transition", name: "Four-on-the-floor filter outro", families: ["wave", "phonk", "hardwave", "house", "techhouse", "futurebass"],
+    id: "filter-outro", kind: "Transition", name: "Four-on-the-floor filter outro", families: ["wave", "phonk", "hardwave", "house", "techhouse", "futurebass", "driftwave"],
     what: "For the ending, the half-time groove switches to a kick on every beat while a low-pass slowly closes over the whole track until only the kick’s thud is left, then it stops.",
     listen: "The switch to straight kicks makes the ending drive forward even as the filter darkens everything. It also makes the track easy to mix out of.",
     use: ["drumrack"],
@@ -1137,7 +1137,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "filter-intro", kind: "Transition", name: "Low-pass opening intro", families: ["wave", "phonk", "futuregarage", "prog", "odesza", "deephouse", "trance"],
+    id: "filter-intro", kind: "Transition", name: "Low-pass opening intro", families: ["wave", "phonk", "futuregarage", "prog", "odesza", "deephouse", "trance", "driftwave"],
     what: "The track starts muffled, as if heard through a wall, and a low-pass slowly opens over the chords and vocal until the bass and drums arrive at full brightness.",
     listen: "No drums at all: the only movement is the brightness rising. It sets up the drums and bass as the first big change.",
     use: ["drumrack"],
@@ -1177,7 +1177,7 @@ export const FX_RECIPES: FxRecipe[] = [
 
   /* ================= Vocal effects ================= */
   {
-    id: "vocal-chops", kind: "Vocal", name: "Ghostly vocal chops", families: ["futuregarage", "ukg", "odesza", "futurebass", "deephouse", "prog", "wave"],
+    id: "vocal-chops", kind: "Vocal", name: "Ghostly vocal chops", families: ["futuregarage", "ukg", "odesza", "futurebass", "deephouse", "prog", "wave", "driftwave"],
     what: "Short vowel slices pitched up, played as a rhythm, and drowned in reverb and delay. The Burial and ODESZA signature: a voice that sings without words.",
     listen: "Each chop is a different vowel on a scale note. Pitched up with the formants raised, the voice sounds young and far away.",
     use: ["simpler"], alt: ["sampler"],
@@ -1198,7 +1198,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "phonk-vocal", kind: "Vocal", name: "Pitched-down Memphis vocal", families: ["phonk", "hardwave", "trap", "wave", "boombap"],
+    id: "phonk-vocal", kind: "Vocal", name: "Pitched-down Memphis vocal", families: ["phonk", "hardwave", "trap", "wave", "boombap", "driftwave"],
     what: "A rap or chant sample slowed and pitched way down, gritty and repeated. The Memphis-tape sound phonk is built on, usually chopped into one phrase that repeats.",
     listen: "Pitching down lowers the formants too, so the voice sounds huge and menacing. The repeat on the last word is the hook.",
     use: ["simpler"],
@@ -1244,7 +1244,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "telephone", kind: "Vocal", name: "Telephone and radio voice", families: ["wave", "phonk", "dnb", "techno", "electro", "breakbeat", "synthwave", "futuregarage", "hardwave", "minimal", "hardtechno", "jungle", "dubstep", "boombap"],
+    id: "telephone", kind: "Vocal", name: "Telephone and radio voice", families: ["wave", "phonk", "dnb", "techno", "electro", "breakbeat", "synthwave", "futuregarage", "hardwave", "minimal", "hardtechno", "jungle", "dubstep", "boombap", "driftwave"],
     what: "A voice squeezed through a narrow band, slightly distorted, like a phone call or an old radio. Great for intros, verses and contrast before a full-range drop.",
     listen: "No lows, no highs: everything lives between about 400 Hz and 3 kHz. Switch to the full voice on the drop for impact.",
     use: ["simpler"],
@@ -1340,7 +1340,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "choir", kind: "Vocal", name: "Ooh choir pad", families: ["trance", "ambient", "odesza", "wave", "futuregarage", "synthwave", "prog", "hardstyle", "dubtechno"],
+    id: "choir", kind: "Vocal", name: "Ooh choir pad", families: ["trance", "ambient", "odesza", "wave", "futuregarage", "synthwave", "prog", "hardstyle", "dubtechno", "driftwave"],
     what: "A stack of soft “ooh” voices holding a chord, with vibrato and a slow fade in. Trance breakdowns, wave intros and ambient all use choir pads for an epic, human feel.",
     listen: "Several slightly different voices on each note make it a choir rather than one singer.",
     use: ["sampler"], alt: ["simpler"],
@@ -1387,7 +1387,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "slowed-reverb", kind: "Vocal", name: "Slowed and reverb vocal", families: ["wave", "phonk", "lofi", "trap", "synthwave", "futuregarage", "ambient"],
+    id: "slowed-reverb", kind: "Vocal", name: "Slowed and reverb vocal", families: ["wave", "phonk", "lofi", "trap", "synthwave", "futuregarage", "ambient", "driftwave"],
     what: "A vocal slowed down so the pitch drops with it, then washed in reverb. The dreamy, sad “slowed + reverb” style that shaped wave and drift phonk.",
     listen: "Slowing a recording lowers its pitch and formants together: the voice gets darker and heavier, and the reverb makes it distant.",
     use: ["simpler"],

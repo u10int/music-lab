@@ -11,7 +11,7 @@ import { mtof } from "@/audio/engine"
 import { useKey } from "@/components/key-picker"
 import { Caption } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
-import { Seg } from "@/components/seg"
+import { Seg, TabSwitch } from "@/components/seg"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { FX } from "@/data/guide"
+import { SYNTH_STEPS } from "@/data/synths"
 import { GENRE_SOUNDS, type GenreSound } from "@/data/genre-sounds"
 import { SCALES } from "@/data/labs"
 import { familyOptions, normalizeFamily, PATTERNS, type Family } from "@/data/patterns"
@@ -52,6 +53,8 @@ export function SoundCard({ s }: { s: GenreSound }) {
     live.current = { vals, withDrums, root, iv }
   })
   const pattern = PATTERNS.find((p) => p.id === s.drums)
+  const synth = SYNTH_STEPS[s.id]
+  const [build, setBuild] = usePref<"live" | "massive" | "spire">("synth-build", "live")
 
   const play = () => {
     let timer = 0
@@ -107,7 +110,7 @@ export function SoundCard({ s }: { s: GenreSound }) {
   const playing = step >= 0
   const notes = new Set(s.phrase.flatMap(([start, len]) => Array.from({ length: Math.max(1, Math.round(len)) }, (_, j) => Math.floor(start) + j)))
   return (
-    <article id={"sound-" + s.id} tabIndex={-1} className="flex min-w-0 scroll-mt-24 flex-col gap-4 rounded-xl border bg-card p-4 outline-none transition-[box-shadow] duration-300 data-[flash=true]:ring-2 data-[flash=true]:ring-ring">
+    <article id={"sound-" + s.id} tabIndex={-1} className="flex min-w-0 scroll-mt-24 flex-col gap-4 border bg-card p-4 outline-none transition-[box-shadow] duration-300 data-[flash=true]:ring-2 data-[flash=true]:ring-ring">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -165,14 +168,16 @@ export function SoundCard({ s }: { s: GenreSound }) {
         </div>
         <Collapsible>
           <CollapsibleTrigger className="group flex items-center gap-1 text-sm font-medium hover:underline">
-            How to make it in Live <ChevronDown className="size-4 transition-transform duration-150 group-data-[state=open]:rotate-180" />
+            {synth ? "How to make it" : "How to make it in Live"} <ChevronDown className="size-4 transition-transform duration-150 group-data-[state=open]:rotate-180" />
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-3 pt-3">
+            {synth && <TabSwitch label="Synth" value={build} onChange={setBuild} options={[["live", "Live"], ["massive", "Massive"], ["spire", "Spire"]]} />}
             <ol className="space-y-1.5 text-sm">
-              {s.steps.map((t, i) => (
+              {(build !== "live" && synth ? synth[build] : s.steps).map((t, i) => (
                 <li key={i} className="grid grid-cols-[1.25rem_minmax(0,1fr)] gap-1.5"><span className="text-muted-foreground font-semibold tabular-nums">{i + 1}</span><span className="text-pretty">{t}</span></li>
               ))}
             </ol>
+            {build !== "live" && synth && <p className="text-muted-foreground text-sm">Then in Live, after the synth:</p>}
             <p className="text-sm">
               <span className="font-semibold">Effects, in order: </span>
               {s.chain.map((fx, i) => (

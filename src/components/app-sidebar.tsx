@@ -1,5 +1,5 @@
 import {
-  AudioLines, AudioWaveform, BookOpen, CalendarCheck, ChevronRight, ClipboardCheck, Columns3, Disc3, Drum, Ear, Flag, Grid2x2, Grid3x3, Home,
+  AudioLines, AudioWaveform, KeyboardMusic, BookOpen, CalendarCheck, ChevronRight, ClipboardCheck, Columns3, Disc3, Drum, Ear, Flag, Grid2x2, Grid3x3, Home,
   Layers, LayoutDashboard, Library, ListMusic, LogIn, Metronome, Music2, NotebookPen, PencilRuler, Piano, Repeat, Scissors, Settings,
   SlidersHorizontal, Sun, Timer, Upload,
 } from "lucide-react"
@@ -46,6 +46,7 @@ const THEORY: Item[] = [
 ]
 const SOUND: Item[] = [
   { to: "/labs/sound-design", label: "Sound design", icon: AudioWaveform },
+  { to: "/labs/synths", label: "Synths", icon: KeyboardMusic },
   { to: "/labs/drums", label: "Drums and sampling", icon: Drum },
   { to: "/labs/mixing", label: "Mixing", icon: SlidersHorizontal },
 ]

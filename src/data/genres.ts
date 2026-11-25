@@ -39,6 +39,15 @@ export const GENRE_INFO: GenreInfo[] = [
     near: ["trap", "hardwave"],
   },
   {
+    id: "driftwave", tempo: [125, 145], scale: "minor", prog: [0, 5, 2, 6],
+    blurb: "What the scene calls tracks between wave and drift phonk (also “wavephonk”): wave’s lush pads, reese and supersaw leads and emotional minor chords, driven by drift phonk’s cowbell hooks, sliding 808s and busy hats. The name is loose; you’ll hear it used for anything in that overlap.",
+    traits: ["Cowbell or bell hook drenched in reverb", "Detuned wave pads and supersaw leads", "Distorted, sliding 808 under a punchier groove", "Slowed, reverbed vocal chops and tape texture"],
+    chords: "Minor keys and long, emotional loops from wave: i–VI–III–VII or i–VII–VI–VII, one chord per bar. The cowbell hook outlines the chord tones.",
+    arrangement: "Short and loop-based like phonk, with wave’s contrast: a filtered intro, a drop led by the cowbell and 808, a pad-heavy breakdown, then a bigger second drop.",
+    artists: ["VØJ", "Narvent", "INTERWORLD", "Kordhell"],
+    near: ["wave", "phonk", "hardwave"],
+  },
+  {
     id: "hardwave", tempo: [140, 160], scale: "minor", prog: [0, 6, 5, 4],
     blurb: "Wave with the gloves off: distorted reese basses, hard-hitting drums and aggressive leads, still with wave's melancholy.",
     traits: ["Saturated, growling basses", "Punchy kick and snare, often four on the floor in the drop", "Detuned leads and stabs", "Dark, minor melodies"],

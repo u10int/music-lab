@@ -43,7 +43,7 @@ function planFor(id: string): TrackPlan {
 
 /** Families of genres, each with a color used across this page. */
 const GROUPS: { id: string; name: string; color: string; members: string[] }[] = [
-  { id: "wave", name: "Wave, phonk and trap", color: "var(--s6)", members: ["wave", "hardwave", "phonk", "trap", "futurebass"] },
+  { id: "wave", name: "Wave, phonk and trap", color: "var(--s6)", members: ["wave", "driftwave", "hardwave", "phonk", "trap", "futurebass"] },
   { id: "house", name: "House", color: "var(--s2)", members: ["house", "deephouse", "techhouse", "discohouse", "basshouse", "afrohouse", "prog"] },
   { id: "techno", name: "Techno and trance", color: "var(--s5)", members: ["techno", "minimal", "hardtechno", "dubtechno", "trance", "hardstyle"] },
   { id: "bass", name: "Bass, breaks and garage", color: "var(--s1)", members: ["dnb", "jungle", "dubstep", "ukg", "futuregarage", "breakbeat", "electro"] },

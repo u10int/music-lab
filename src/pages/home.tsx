@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { ArrowRight, AudioWaveform, BookOpen, Drum, Ear, Grid2x2, Grid3x3, ListMusic, Metronome, Music2, Piano, Play, Scissors, SlidersHorizontal, Square, Check } from "lucide-react"
+import { ArrowRight, AudioWaveform, KeyboardMusic, BookOpen, Drum, Ear, Grid2x2, Grid3x3, ListMusic, Metronome, Music2, Piano, Play, Scissors, SlidersHorizontal, Square, Check } from "lucide-react"
 import { Link } from "react-router"
 import { playLoop } from "@/audio/loop-player"
 import { toggle, usePlayingId } from "@/audio/playback"
@@ -158,6 +158,7 @@ const MORE: [string, string, string, React.ComponentType<{ className?: string }>
   ["Step sequencer", "/labs/sequencer", "Drums and melody on a grid", Grid2x2],
   ["Sampler", "/labs/sampler", "Slice your own audio onto pads", Scissors],
   ["Sound design", "/labs/sound-design", "Playable genre sound recipes", AudioWaveform],
+  ["Synths", "/labs/synths", "Synth basics and builds in Live, Massive and Spire", KeyboardMusic],
   ["Drums and sampling", "/labs/drums", "Drum patterns from 31 genres", Drum],
   ["Mixing", "/labs/mixing", "EQ ranges and sidechain", SlidersHorizontal],
   ["Scales and chords", "/labs/theory", "Keys, modes, circle of fifths", Music2],

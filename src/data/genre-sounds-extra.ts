@@ -9,6 +9,68 @@ const pitchDrop = (value: number) => ({ id: "pitch", label: "Pitch drop", min: 0
 const wobble = (value: number) => ({ id: "wobble", label: "Wobble", min: 0, max: 40, step: 1, value, fmt: cents, apply: (p: GenreSound["patch"], _f: GenreSound["fx"], v: number) => { if (p.lfo) p.lfo.depth = v } })
 
 export const EXTRA_SOUNDS: GenreSound[] = [
+  /* ---------- Driftwave ---------- */
+  {
+    id: "dw-cowbell", family: "driftwave", genre: "Driftwave", name: "Dreamy reverb cowbell", role: "Lead",
+    what: "Phonk’s cowbell, softened and drowned in reverb and chorus so it floats like a wave lead. The hook in most driftwave tracks.",
+    use: ["simpler"], alt: ["operator"],
+    steps: ["Load a cowbell one-shot into Simpler (Classic mode) so it plays across the keys, or build it in Operator from two square waves about a fifth apart (ratio 1.48) through a band-pass.", "Play a catchy minor melody that outlines the chord tones, mostly 8ths and dotted 8ths.", "Chorus-Ensemble for width, then a long Hybrid Reverb around 30 to 40% wet.", "Saturator lightly before the reverb so it cuts through the pads."],
+    chain: ["Saturator", "Chorus-Ensemble", "Hybrid Reverb"],
+    tempo: 140, drums: "dw-drop", oct: 3,
+    phrase: [[0, 2, 4], [3, 2, 2], [6, 2, 4], [8, 2, 7], [11, 2, 4], [14, 2, 2], [16, 2, 0], [19, 2, 2], [22, 2, 4], [24, 2, 5], [27, 2, 4], [30, 2, 2]],
+    patch: { layers: [{ wave: "square", level: 0.7 }, { wave: "square", ratio: 1.48, level: 0.55 }], filter: { type: "bandpass", cutoff: 1100, track: 2.2, q: 1.2 }, amp: { a: 0.002, d: 0.35, s: 0, r: 0.2 }, lfo: { target: "pitch", rate: 0.7, depth: 8 }, level: 0.36 },
+    fx: { reverb: 0.4, delay: { beats: 0.75, fb: 0.3, wet: 0.15 } },
+    macros: [space(0.4), decay(0.35, 1), delayWet(0.15)],
+  },
+  {
+    id: "dw-pad", family: "driftwave", genre: "Driftwave", name: "Wide wave pad", role: "Pad",
+    what: "A slow, wide supersaw pad holding the minor chords under the cowbell, sidechained so it breathes with the kick.",
+    use: ["wavetable"], alt: ["drift"],
+    steps: ["Wavetable: saws on both oscillators, unison around 6 voices with plenty of detune.", "Attack around 300 ms, long release, low-pass around 2 kHz so it sits behind the hook.", "One chord per bar from the progression.", "Compressor sidechained to the kick, then a long reverb."],
+    chain: ["Compressor", "Chorus-Ensemble", "Hybrid Reverb"],
+    tempo: 140, drums: "dw-drop", oct: 3,
+    phrase: [[0, 8, [0, 2, 4]], [8, 8, [-2, 0, 2]], [16, 8, [-5, -3, -1]], [24, 8, [-1, 1, 3]]],
+    patch: { layers: [{ wave: "sawtooth", voices: 6, detune: 30 }], filter: { cutoff: 2000, q: 0.8 }, amp: { a: 0.3, d: 0.5, s: 0.9, r: 0.8 }, level: 0.05 },
+    fx: { reverb: 0.45, duck: 0.55 },
+    macros: [pump(0.55), detune(30, 70), cutoff(2000, 400, 7000)],
+  },
+  {
+    id: "dw-808", family: "driftwave", genre: "Driftwave", name: "Sliding distorted 808", role: "Bass",
+    what: "A long 808 that slides between notes and is pushed into distortion, so it growls on phones but still hits on a system.",
+    use: ["operator"], alt: ["simpler"],
+    steps: ["Operator: one sine with a short pitch envelope for the punch, long decay. Or an 808 sample in Simpler, Classic mode.", "Set it to mono with glide around 80 ms; overlap notes to slide.", "Roar or Saturator for distortion, then EQ Eight to cut below 30 Hz.", "Follow the chord roots, with slides into the next bar."],
+    chain: ["Roar", "EQ Eight", "Utility"],
+    tempo: 140, drums: "dw-drop", oct: 1, mono: true,
+    phrase: [[0, 6, 0], [6, 3, 0, 1], [10, 6, 0], [16, 6, -2], [22, 3, -2, 1], [26, 6, -1]],
+    patch: { layers: [{ wave: "sine" }], filter: { cutoff: 3500 }, amp: { a: 0.003, d: 1.2, s: 0.6, r: 0.15 }, pitch: { semis: 12, time: 0.04 }, glide: 0.08, drive: 0.75, level: 0.32 },
+    fx: {},
+    macros: [drive(0.75), glide(0.08), decay(1.2, 2)],
+  },
+  {
+    id: "dw-lead", family: "driftwave", genre: "Driftwave", name: "Octave supersaw lead", role: "Lead",
+    what: "A bright supersaw doubled an octave up, playing a slow, emotional line over the drop. Wave’s lead, in phonk’s groove.",
+    use: ["wavetable"], alt: ["drift"],
+    steps: ["Wavetable: a saw on oscillator 1 and the same saw an octave up on oscillator 2, unison 6 to 8 voices.", "Low-pass fairly open, short glide for slurred notes.", "Long notes with a few quick pickups.", "Delay at a dotted 8th and a big reverb; sidechain lightly."],
+    chain: ["Delay", "Hybrid Reverb", "Compressor"],
+    tempo: 140, drums: "dw-drop", oct: 4, mono: true,
+    phrase: [[0, 6, 4], [6, 2, 2], [8, 8, 0], [16, 6, 2], [22, 2, 4], [24, 8, 5]],
+    patch: { layers: [{ wave: "sawtooth", voices: 6, detune: 25 }, { wave: "sawtooth", voices: 4, detune: 20, oct: 1, level: 0.5 }], filter: { cutoff: 5000, q: 0.8 }, amp: { a: 0.02, d: 0.3, s: 0.85, r: 0.35 }, glide: 0.04, level: 0.1 },
+    fx: { reverb: 0.35, delay: { beats: 0.75, fb: 0.35, wet: 0.18 }, duck: 0.25 },
+    macros: [layer(1, "Octave layer", 0.5), detune(25, 60), space(0.35)],
+  },
+  {
+    id: "dw-bell", family: "driftwave", genre: "Driftwave", name: "Glassy bell arp", role: "Pluck",
+    what: "A short, glassy FM bell arpeggiating the chords in 16ths behind the hook. Adds sparkle to the breakdown.",
+    use: ["operator"], alt: ["wavetable"],
+    steps: ["Operator: a sine carrier modulated by a sine at a ratio of 3.5 for a glassy, slightly inharmonic bell.", "Short decay on both; more modulator decay gives a brighter attack.", "16th-note arpeggio of the chord tones; Live’s Arpeggiator works well.", "Ping-pong delay and a big reverb, low in the mix."],
+    chain: ["Arpeggiator", "Delay", "Hybrid Reverb"],
+    tempo: 140, drums: "dw-break", oct: 4,
+    phrase: [0, 2, 4, 7, 4, 2, 0, 2, -2, 0, 2, 5, 2, 0, -2, 0].map((d, i): PhraseNote => [i * 2, 1.2, d]),
+    patch: { layers: [{ wave: "sine" }, { wave: "sine", ratio: 3.5, level: 0.3 }], filter: { cutoff: 7000 }, amp: { a: 0.002, d: 0.4, s: 0, r: 0.25 }, level: 0.15 },
+    fx: { reverb: 0.4, delay: { beats: 0.75, fb: 0.4, wet: 0.22 } },
+    macros: [layer(1, "Glass", 0.3), decay(0.4, 1), delayWet(0.22)],
+  },
+
   /* ---------- Wave, from ROUDS’s “When I’m High” remix ---------- */
   {
     id: "wave-tail-kick", family: "wave", genre: "Wave", name: "Long-tail distorted kick", role: "Perc",

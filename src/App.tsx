@@ -22,6 +22,7 @@ const PushPage = lazy(() => guides().then((m) => ({ default: m.PushPage })))
 const TheoryLab = lazy(() => labs().then((m) => ({ default: m.TheoryLab })))
 const EarLab = lazy(() => labs().then((m) => ({ default: m.EarLab })))
 const SoundDesignLab = lazy(() => labs().then((m) => ({ default: m.SoundDesignLab })))
+const SynthsLab = lazy(() => labs().then((m) => ({ default: m.SynthsLab })))
 const DrumsLab = lazy(() => labs().then((m) => ({ default: m.DrumsLab })))
 const ArrangementLab = lazy(() => labs().then((m) => ({ default: m.ArrangementLab })))
 const MixingLab = lazy(() => labs().then((m) => ({ default: m.MixingLab })))
@@ -137,6 +138,7 @@ const router = createBrowserRouter([
       { path: "/labs/ear", element: <EarLab /> },
       { path: "/labs/play-along", element: <PlayAlongPage /> },
       { path: "/labs/sound-design", element: <SoundDesignLab /> },
+      { path: "/labs/synths", element: <SynthsLab /> },
       { path: "/labs/drums", element: <DrumsLab /> },
       { path: "/labs/arrangement", element: <ArrangementLab /> },
       { path: "/labs/mixing", element: <MixingLab /> },
