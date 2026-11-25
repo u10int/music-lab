@@ -41,17 +41,17 @@ const NAMES: [RegExp, ControlId, boolean?][] = [
   [/\bClip (?:button|mode)\b/, "clip"],
   [/\bAdd (?:button|Device|Track)\b|\bpress Add\b|\bin Add\b/i, "add"],
   [/\bSwap\b/, "swap"],
-  [/\barrow (?:pad|buttons?|keys?)\b/i, "dpad"],
+  [/\barrow (?:pad|buttons?|keys?)\b|\bSession D-pad\b/i, "dpad"],
   [/\bjog wheel\b/i, "jog"],
   [/\bVolume encoder\b/, "volume"],
   [/\btouch ?strip\b/i, "touchStrip"],
-  [/\bscene buttons?\b|\bbuttons that light up on the right\b/i, "scenes"],
+  [/\bscene buttons?\b|\bScene Launch buttons?\b|\bRepeat Intervals buttons?\b|\bbuttons that light up on the right\b/i, "scenes"],
   [/\b(?:the |a |its )?(?:upper|top) (?:row of )?buttons\b|\bupper display buttons?\b/i, "upperButtons"],
   [/\blower (?:row of )?(?:display )?buttons?\b/i, "lowerButtons"],
   [/(?<!lower |upper )\bdisplay buttons\b/i, "upperButtons"],
   [/\b(?:the )?encoders?\b(?! (?:to switch|is set))/i, "encoders"],
   // Only drum and grid pads, not synth pad sounds.
-  [/\b(?:the|drum|rack|kick|snare|clap|hat|lit|first|second|root|\d+(?: visible)?|4×4) pads?\b|\bpads? (?:are|is|up|down)\b|\btap (?:a|each|the) pad\b|\ba step\b/i, "pads"],
+  [/\b(?:the|drum|rack|kick|snare|clap|hat|lit|first|second|root|\d+(?: visible)?|4×4) pads?\b|\bpads? (?:are|is|up|down)\b|\btap (?:a|each|the) pad\b|\ba step\b|\bloop length pads?\b|\bslice’s pad\b/i, "pads"],
 ]
 
 export function controlsIn(text: string): ControlId[] {

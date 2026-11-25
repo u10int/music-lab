@@ -30,7 +30,7 @@ export const SPRINTS: Sprint[] = [
     goal: "A 4-sound preset pack in your User Library: bass, pluck or lead, pad, and a custom drum kit.",
     done: "You can start Drift from its init patch and reach something usable in 10 minutes.",
     mouse: "Saving presets. Ignore Operator FM, Max for Live synths and third-party plugins.",
-    skills: ["Device mode: page parameters, lock a device to the encoders", "Drift basics: oscillator, filter, envelope, LFO", "Wavetable for bass and pads; Meld for textures", "Instrument Rack with 8 macros, saved", "Effects chain: Saturator or Roar, Auto Filter, Reverb, Delay"],
+    skills: ["Device mode: parameter tabs and Rack banks; lock a device to Push", "Drift basics: oscillator, filter, envelope, LFO", "Wavetable for bass and pads; Meld for textures", "Instrument Rack with 8 macros, saved", "Effects chain: Saturator or Roar, Auto Filter, Reverb, Delay"],
     weeks: [
       { mon: "What envelopes and filters do (Learning Synths).", mid: "One sound a day in Drift, tweaked only with the encoders.", fri: "Match a bass sound from a reference track.", wknd: "Finish bass and pluck, map macros, save both." },
       { mon: "Instrument and Drum Racks.", mid: "Build the pad, then a kit from layered Splice one-shots.", fri: "Match a pad or texture from a reference.", wknd: "Swap all 4 presets into your Sprint 2 sketch." }
@@ -75,7 +75,7 @@ export const RES: Record<string, Resource[]> = {
     { k: "Watch", t: "Learn Push videos", u: VIDS, n: "Sequencing drums, Playing drums, Creating drum variations. The Push 3 playlist is linked at the top." },
     { k: "Read", t: "Push manual", links: PUSHMAN, n: "The drum and step sequencer sections, plus Note Repeat." },
     { k: "Read", t: "Instrument, Drum and Effect Racks", u: M + "instrument-drum-and-effect-racks/", n: "How Drum Rack pads and chains are built." },
-    { k: "Read", t: "Using Grooves", u: M + "using-grooves/", n: "Swing and groove templates, the feel you'll dial in from Push." },
+    { k: "Read", t: "Using Grooves", u: M + "using-grooves/", n: "Groove Pool swing and groove templates: Live’s other way to add swing, alongside Push’s quantize swing." },
     { k: "Read", t: "10 tips for getting started with Push 3", u: "https://www.musicradar.com/news/10-tips-ableton-push-3", n: "MusicRadar. Quick workflow habits worth adopting early." }
   ],
   s2: [
@@ -83,7 +83,7 @@ export const RES: Record<string, Resource[]> = {
     { k: "Watch", t: "Learn Push videos", u: VIDS, n: "Play melodies, Play chords, Chromatic Note Mode, Step sequencing melodies." },
     { k: "Read", t: "Push manual", links: PUSHMAN, n: "Melodic playing, layouts and scale settings." },
     { k: "Read", t: "Session View", u: M + "session-view/", n: "Clip slots, scenes and how launching works." },
-    { k: "Read", t: "Recording New Clips", u: M + "recording-new-clips/", n: "Overdubbing, fixed-length recording and Capture MIDI." }
+    { k: "Read", t: "Recording New Clips", u: M + "recording-new-clips/", n: "Overdubbing, Record Quantization and Capture MIDI." }
   ],
   s3: [
     { k: "Try", t: "Learning Synths", u: "https://learningsynths.ableton.com", n: "Free interactive lessons on oscillators, filters, envelopes and LFOs." },
@@ -104,7 +104,7 @@ export const RES: Record<string, Resource[]> = {
     { k: "Watch", t: "Learn Push videos", u: VIDS, n: "Session View: advanced, Automation, Recording in the Arrangement View." },
     { k: "Read", t: "Arrangement View", u: M + "arrangement-view/", n: "Editing, looping and moving sections around." },
     { k: "Read", t: "Automation", u: M + "automation/", n: "Recording, drawing and editing automation." },
-    { k: "Read", t: "Recording New Clips", u: M + "recording-new-clips/", n: "Recording a Session performance into the Arrangement." }
+    { k: "Read", t: "Session View", u: M + "session-view/", n: "Recording Sessions into the Arrangement, and Back to Arrangement." }
   ],
   s6: [
     { k: "Watch", t: "Learn Push videos", u: VIDS, n: "Mixing and Routing." },

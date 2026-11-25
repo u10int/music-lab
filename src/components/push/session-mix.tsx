@@ -22,7 +22,7 @@ export function SessionGrid() {
           "Press Session to switch the pads to clips. Press Note to go back to playing the selected track.",
           "Tap a pad to launch that clip. Tap an empty pad on an armed track to start recording into it.",
           "Press a Scene button on the right to launch the whole row at once. Build a song by stacking scenes: intro, build, drop.",
-          "Press Stop Clip to stop the selected track. Shift and Stop Clip stops everything.",
+          "Hold Stop Clip and press a track’s lower display button to stop its clip. Hold Shift and press Stop Clip to stop every clip.",
           "Hold Layout for Session Overview, where each pad is a block of 8 scenes by 8 tracks. Shift and Layout keeps it open.",
         ]} />
       </div>
