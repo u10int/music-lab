@@ -1,16 +1,16 @@
 import { Fragment, useMemo, useState } from "react"
 import { useNavigate } from "react-router"
-import { AudioLines, ChevronDown, Download, Grid3x3, ListMusic, Loader2, RefreshCw, X } from "lucide-react"
+import { AudioLines, ChevronDown, Download, Grid3x3, ListMusic, Loader2, RefreshCw, Volume2, VolumeX, X } from "lucide-react"
 import { drum } from "@/audio/engine"
 import { setPos, toggle } from "@/audio/playback"
 import { Caption, SECTION_TITLE } from "@/components/page"
 import { PlayButton } from "@/components/play-button"
 import { Seg, TabSwitch } from "@/components/seg"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Toggle } from "@/components/ui/toggle"
 import { analyzeParts } from "@/lib/audio-analysis"
 import { melodyTracks } from "@/lib/melody-grid"
 import { downloadFile, writeMidi } from "@/lib/midi-file"
@@ -204,10 +204,10 @@ function PartsView({ n, parts, edit, getAudio }: { n: RefNote; parts: Parts; edi
               const melodyLane = k === "vocals" || k === "lead"
               return (
                 <Fragment key={k}>
-                  <div className="flex items-center gap-2">
-                    <Checkbox id={`${pid}-lane-${k}`} checked={!off} onCheckedChange={(v) => setMuted(v ? muted.filter((x) => x !== k) : [...muted, k])} aria-label={`Play ${label.toLowerCase()}`} />
-                    <Label htmlFor={`${pid}-lane-${k}`} className="text-sm font-normal">{label}</Label>
-                  </div>
+                  <Toggle variant="outline" size="sm" pressed={!off} onPressedChange={(on) => setMuted(on ? muted.filter((x) => x !== k) : [...muted, k])}
+                    aria-label={`Include ${label.toLowerCase()} when playing`} className="w-full justify-start gap-1.5 px-2 font-normal data-[state=off]:text-muted-foreground">
+                    {off ? <VolumeX /> : <Volume2 />}{label}
+                  </Toggle>
                   <div className={cn("min-w-0", off && "opacity-40")}>
                     {k === "drums" && (w.drums.length ? <DrumStrip hits={w.drums} bars={bars} step={pos} /> : empty("No steady drums"))}
                     {k === "bass" && (w.bass.length ? <Roll notes={w.bass} bars={bars} step={pos} names={false} className="h-16" label="Bass notes" /> : empty("No clear bass"))}
@@ -218,7 +218,7 @@ function PartsView({ n, parts, edit, getAudio }: { n: RefNote; parts: Parts; edi
               )
             })}
           </div>
-          <Caption>Untick a part to leave it out when you press play.</Caption>
+          <Caption>Switch a part off to leave it out when you press play.</Caption>
         </div>
       )}
 
