@@ -210,9 +210,9 @@ function PartsView({ n, parts, edit, getAudio }: { n: RefNote; parts: Parts; edi
                   </Toggle>
                   <div className={cn("min-w-0", off && "opacity-40")}>
                     {k === "drums" && (w.drums.length ? <DrumStrip hits={w.drums} bars={bars} step={pos} /> : empty("No steady drums"))}
-                    {k === "bass" && (w.bass.length ? <Roll notes={w.bass} bars={bars} step={pos} names={false} className="h-16" label="Bass notes" color={PART_COLOR.bass} /> : empty("No clear bass"))}
+                    {k === "bass" && (w.bass.length ? <Roll firstBar={firstInSec} stepMs={step * 1000} notes={w.bass} bars={bars} step={pos} names={false} className="h-16" label="Bass notes" color={PART_COLOR.bass} /> : empty("No clear bass"))}
                     {k === "chords" && <div className="relative"><ChordStrip chords={w.chords} step={pos} keyRoot={a.keyRoot} minor={a.minor} /></div>}
-                    {melodyLane && (!hasMelody ? empty("Split the stems to see this") : w[k].length ? <Roll notes={w[k]} bars={bars} step={pos} names={false} className="h-20" label={`${label} notes`} color={PART_COLOR[k]} /> : empty(k === "vocals" ? "No singing in these bars" : "No lead line in these bars"))}
+                    {melodyLane && (!hasMelody ? empty("Split the stems to see this") : w[k].length ? <Roll firstBar={firstInSec} stepMs={step * 1000} notes={w[k]} bars={bars} step={pos} names={false} className="h-20" label={`${label} notes`} color={PART_COLOR[k]} /> : empty(k === "vocals" ? "No singing in these bars" : "No lead line in these bars"))}
                   </div>
                 </Fragment>
               )
@@ -292,7 +292,7 @@ function PartsView({ n, parts, edit, getAudio }: { n: RefNote; parts: Parts; edi
         <div className="space-y-3">
           {w.bass.length ? (
             <>
-              <Roll notes={w.bass} bars={bars} step={pos} className="h-48" label="Bass notes" color={PART_COLOR.bass} />
+              <Roll firstBar={firstInSec} stepMs={step * 1000} notes={w.bass} bars={bars} step={pos} className="h-48" label="Bass notes" color={PART_COLOR.bass} />
               <p className="text-sm text-pretty">{[...new Set(w.bass.map((b) => noteName(b.midi)))].join(" · ")}</p>
               <Caption>{parts.fromStems ? "From the bass stem." : "From the low end of the full mix; splitting the stems makes this cleaner."} Notes are held for the bar unless the bass clearly moves.</Caption>
               <PlayButton id={`${pid}-bass`} label="Play bass" onPlay={() => play("bass", ["bass"])} />
@@ -335,7 +335,7 @@ function PartsView({ n, parts, edit, getAudio }: { n: RefNote; parts: Parts; edi
                     <h3 className="font-semibold">{label}</h3>
                     {w[k].length ? (
                       <>
-                        <div className="relative"><Roll notes={w[k]} bars={bars} step={pos} className="h-48" label={`${label} notes`} color={PART_COLOR[k]} /></div>
+                        <div className="relative"><Roll firstBar={firstInSec} stepMs={step * 1000} notes={w[k]} bars={bars} step={pos} className="h-48" label={`${label} notes`} color={PART_COLOR[k]} /></div>
                         <PlayButton id={`${pid}-${k}`} label={`Play ${label.toLowerCase()}`} onPlay={() => play(k, [k])} />
                       </>
                     ) : <Caption>{none}</Caption>}
