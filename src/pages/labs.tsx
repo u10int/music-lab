@@ -12,6 +12,8 @@ import { ScalesLab } from "@/components/labs/scales-lab"
 import { SliceLab } from "@/components/labs/slice-lab"
 import { SynthLab } from "@/components/labs/synth-lab"
 import { GenreSounds } from "@/components/labs/genre-sounds"
+import { PatchLibrary } from "@/components/labs/synth-patches"
+import { SYNTH_PATCHES } from "@/data/synth-patches"
 import { ConceptDemos, SignalFlow, SynthGuides, SynthSounds } from "@/components/labs/synth-school"
 import { SYNTH_STEPS } from "@/data/synths"
 import { FxLibrary } from "@/components/labs/fx-recipes"
@@ -95,6 +97,7 @@ export function SynthsLab() {
       <Block title="The controls that matter" description="Eight ideas behind most electronic synth sounds, each with a live demo."><ConceptDemos /></Block>
       <Block title="Your synths" description="What each one is best at, how its panel is laid out, and for the plugins, how to use them well in Live and from Push."><SynthGuides /></Block>
       <Block title="Synth sounds to build" description={`${Object.keys(SYNTH_STEPS).length} sounds from trance, wave, driftwave, phonk, hardwave and more, each with a build for Live, Massive and Spire.`}><SynthSounds /></Block>
+      <Block title="Patch library" description={`${SYNTH_PATCHES.length} general-purpose patches, from reese and acid basses to gated pads, bells, risers and textures, with starting settings for Wavetable, Drift, Massive and Spire.`}><PatchLibrary /></Block>
       <More to="/labs/sound-design">sound design, with the synth playground and every genre sound</More>
     </div>
   )
