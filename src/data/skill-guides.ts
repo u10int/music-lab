@@ -335,7 +335,7 @@ export const SKILL_GUIDES: Record<string, SkillGuide> = {
     ],
     check: "You have a phonk cowbell riff in key and one reversed chop leading into a section.",
     drill: "Play the phonk cowbell sound in the sound design lab, then match its riff on Push.",
-    links: [["Phonk sounds", "/genres/phonk"], ["Sampler lab", "/labs/sampler"]],
+    links: [["Phonk sounds", "/genres/phonk?tab=sounds"], ["Sampler lab", "/labs/sampler"]],
   },
 
   // ---------- Sprint 5: Arrangement ----------

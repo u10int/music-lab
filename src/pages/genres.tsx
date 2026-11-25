@@ -21,6 +21,7 @@ import { genreInfo, GENRE_INFO } from "@/data/genres"
 import { GENRE_GUIDE } from "@/data/genre-guide"
 import { TELLS } from "@/data/genre-tells"
 import { JamRecipes } from "@/components/genres/jam-recipes"
+import { UrlTabs } from "@/components/url-tabs"
 import { ChordMoves, ListenTo, PartsList, Tells } from "@/components/genres/genre-guide"
 import { FAMILIES, PATTERNS } from "@/data/patterns"
 import { uid, update, useProgress, type LoopState, type TrackPlan } from "@/lib/store"
@@ -358,46 +359,60 @@ export function GenrePage() {
 
       <GenreHero key={g.id} id={g.id} />
 
-      <div className="grid gap-x-10 gap-y-8 lg:grid-cols-2">
-        <Block title="What it sounds like">
-          <p className="text-pretty">{g.blurb}</p>
-          <ul className="list-disc space-y-1.5 pl-5 text-sm">{g.traits.map((t) => <li key={t} className="text-pretty">{t}</li>)}</ul>
-        </Block>
-        <Block title="How tracks are laid out">
-          <p className="text-pretty">{g.arrangement}</p>
-        </Block>
-      </div>
-
-      <Block title="The chord moves" description={`Each move in your key, voiced with the ${guide.ext === 9 ? "9th chords" : guide.ext === 7 ? "7th chords" : "plain triads"} ${lower} tends to use. Press Hear it to play one; the recipes below put them into full parts.`}>
-        <ChordMoves id={g.id} />
-      </Block>
-
-      <Block title="The groove" description={guide.groove}>
-        {hasDrums ? <DrumPatterns only={g.id} /> : null}
-      </Block>
-
-      <Block title="The sounds" description="What each part does, then sounds you can play and tweak, with how to build them.">
-        <PartsList parts={guide.parts} />
-        {sounds.length ? <div className="grid gap-4 pt-2 lg:grid-cols-2">{sounds.map((s) => <SoundCard key={s.id} s={s} />)}</div> : null}
-      </Block>
-
-      <Block title="Production tells" description={`Two ways producers finish ${lower}, and the concrete moves that give each one away. Loudness targets are rough guides for the finished master.`}>
-        <Tells tells={TELLS[g.id]} />
-      </Block>
-
-      <Block title="Listen to" description="Listening pointers, not templates. Each opens a search so you can find it wherever you listen.">
-        <ListenTo refs={guide.refs} />
-      </Block>
-
-      <Block title={`Six ways to make ${lower}`} description="A starter, three variations that each take the style somewhere different, a sectioned sketch and a Live handoff. Each one cooks from a Markdown recipe: play it, edit it and cook again, then download the MIDI or a pack for Live.">
-        <JamRecipes id={g.id} />
-      </Block>
-
-      <Block title="Atmospheres, transitions and vocal effects" description={`The effects ${famName(g.id).toLowerCase()} producers use between and around the notes, over ${famName(g.id).toLowerCase()} drums.`}><FxLibrary only={g.id} /></Block>
-      <Block title="Related genres">
-        <ul className="grid border-t border-l sm:grid-cols-2 xl:grid-cols-3">{g.near.map((n) => <GenreCard key={n} id={n} />)}</ul>
-        <Caption>The loop builder borrows sounds from these when {famName(g.id).toLowerCase()} has none for a part.</Caption>
-      </Block>
+      <UrlTabs
+        label={`${name} sections`}
+        tabs={[
+          ["overview", "Overview", (
+            <div key="overview" className="space-y-12">
+              <div className="grid gap-x-10 gap-y-8 lg:grid-cols-2">
+                <Block title="What it sounds like">
+                  <p className="text-pretty">{g.blurb}</p>
+                  <ul className="list-disc space-y-1.5 pl-5 text-sm">{g.traits.map((t) => <li key={t} className="text-pretty">{t}</li>)}</ul>
+                </Block>
+                <Block title="How tracks are laid out">
+                  <p className="text-pretty">{g.arrangement}</p>
+                </Block>
+              </div>
+              <Block title="Listen to" description="Listening pointers, not templates. Each opens a search so you can find it wherever you listen.">
+                <ListenTo refs={guide.refs} />
+              </Block>
+              <Block title="Related genres">
+                <ul className="grid border-t border-l sm:grid-cols-2 xl:grid-cols-3">{g.near.map((n) => <GenreCard key={n} id={n} />)}</ul>
+                <Caption>The loop builder borrows sounds from these when {lower} has none for a part.</Caption>
+              </Block>
+            </div>
+          )],
+          ["chords", "Chords", (
+            <Block key="chords" title="The chord moves" description={`Each move in your key, voiced with the ${guide.ext === 9 ? "9th chords" : guide.ext === 7 ? "7th chords" : "plain triads"} ${lower} tends to use. Press Hear it to play one; the Recipes tab puts them into full parts.`}>
+              <ChordMoves id={g.id} />
+            </Block>
+          )],
+          ["drums", "Drums", (
+            <Block key="drums" title="The groove" description={guide.groove}>
+              {hasDrums ? <DrumPatterns only={g.id} /> : <Caption>No patterns of its own yet; the Recipes tab borrows drums from related genres.</Caption>}
+            </Block>
+          )],
+          ["sounds", `Sounds${sounds.length ? ` (${sounds.length})` : ""}`, (
+            <Block key="sounds" title="The sounds" description="What each part does, then sounds you can play and tweak, with how to build them.">
+              <PartsList parts={guide.parts} />
+              {sounds.length ? <div className="grid gap-4 pt-2 lg:grid-cols-2">{sounds.map((s) => <SoundCard key={s.id} s={s} />)}</div> : null}
+            </Block>
+          )],
+          ["effects", "Effects", (
+            <Block key="effects" title="Atmospheres, transitions and vocal effects" description={`The effects ${lower} producers use between and around the notes, over ${lower} drums.`}><FxLibrary only={g.id} /></Block>
+          )],
+          ["production", "Production", (
+            <Block key="production" title="Production tells" description={`Two ways producers finish ${lower}, and the concrete moves that give each one away. Loudness targets are rough guides for the finished master.`}>
+              <Tells tells={TELLS[g.id]} />
+            </Block>
+          )],
+          ["recipes", "Recipes", (
+            <Block key="recipes" title={`Six ways to make ${lower}`} description="A starter, three variations that each take the style somewhere different, a sectioned sketch and a Live handoff. Each one cooks from a Markdown recipe: play it, edit it and cook again, then download the MIDI or a pack for Live.">
+              <JamRecipes id={g.id} />
+            </Block>
+          )],
+        ]}
+      />
     </div>
   )
 }
