@@ -219,8 +219,16 @@ export const SYNTH_STEPS: Record<string, { massive: string[]; spire: string[] }>
     spire: ["Osc 1 and 2 Classic saw (try Ctrl A for a PWM-like shape), Density 6, wide Detune.", "Voice: Mono, Legato, Portamento about 150 ms.", "Matrix: Env 2 → oscillator pitch, small negative amount, for the dip.", "FX: Chorus and Shaper."],
   },
   "hw-bass": {
-    massive: ["Osc 1 and 2 on Squ-Sw I (saw), slightly detuned; Osc 3 sine −12.", "Filter 1 Lowpass 4 around 800 Hz; Voicing tab Monophon.", "Insert 1 Hardclipper, FX1 Classic Tube.", "Play offbeat 8ths and sidechain hard to the kick."],
-    spire: ["Osc 1 and 2 Classic saw, slight detune; Osc 4 sine an octave down.", "Filter 1 low-pass around 800 Hz; Voice: Mono.", "FX: Shaper hard, then EQ.", "Offbeat 8ths, heavy sidechain."],
+    massive: ["Osc 1 and Osc 2 on Squ-Sw I set to the saw, slightly detuned; 3–4 Unisono voices. Voicing tab: Monophon with a short Glide.", "Filter 1 Bandpass around 1 kHz; LFO 5 (Sync, 1/8) onto Cutoff for the screech movement.", "Insert 1 Hardclipper and FX1 Classic Tube, hard.", "Cut below 120 Hz in Live so the 808 owns the sub; long notes with slides."],
+    spire: ["Osc 1 and 2 Classic saw, Density 3–4, wide Detune. Voice: Mono, Legato, short Portamento.", "Filter 1 in band-pass around 1 kHz; Matrix: LFO 1 (synced 1/8) → Filter 1 Cut.", "FX: Shaper with heavy Drive, then the Decimator lightly.", "Cut below 120 Hz in Live; long notes with slides."],
+  },
+  "hw-screech": {
+    massive: ["Osc 1 on Squ-Sw I (saw). Modulation Osc in Phase mode on Osc 1 at Pitch +12 (a 2:1 ratio) for FM bite.", "Drag Envelope 2 onto Osc 1 Pitch with a small negative amount and short decay, for the bend into each note. Voicing: Monophon, short Glide.", "Filter 1 Bandpass around 2 kHz; Insert 1 Hardclipper.", "FX2 Delay; automate the Modulation Osc amount for movement."],
+    spire: ["Osc 1 in FM mode; turn Ctrl A and Ctrl B toward a harsh, buzzy tone (one is the amount, the other the ratio).", "Matrix: Env 2 → oscillator pitch, small negative amount, short Decay. Voice: Mono with short Portamento.", "Filter 1 band-pass around 2 kHz; FX: Shaper with heavy Drive.", "FX: Delay; automate the FM amount knob for movement."],
+  },
+  "hw-chords": {
+    massive: ["Osc 1 and 2 on Squ-Sw I saws with 5 Unisono voices; Osc 3 on Sin-Tri an octave up, quieter.", "Envelope 4: attack 300–600 ms, very long release.", "Filter 1 Lowpass 4 around 2.5 kHz.", "FX1 Chorus, FX2 Reverb; sidechain to the kick in Live."],
+    spire: ["Osc 1 and 2 Classic saw, Density 5, moderate Detune, Wide up; Osc 3 a softer shape an octave up.", "Amp Env: slow attack and a very long release.", "Filter 1 low-pass around 2.5 kHz.", "FX: Chorus and Reverb; sidechain to the kick in Live."],
   },
   "hw-lead": {
     massive: ["Osc 1–3 on Squ-Sw I saws, Osc 2 +12; 8 Unisono voices, wide detune.", "Insert 1 Hardclipper for the scream; Filter 1 Lowpass 4 open.", "LFO 5 small amount on Pitch for vibrato on long notes.", "FX1 Dimension Expander, FX2 Delay."],

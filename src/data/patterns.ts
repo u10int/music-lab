@@ -150,7 +150,7 @@ export const PATTERNS: Pattern[] = [
       ["Open hat", [16]],
     ],
     note: "The hardware roots: a TR-808 kit with its cowbell as a rhythm part, a lazy half-time snare and hat rolls. Run the whole loop through tape saturation and a low-pass to get the dusty Memphis sound." },
-  { id: "hard-phonk", family: "phonk", name: "Hard phonk (hardwave crossover)", bpm: "145–155 BPM", tempo: 150, length: 32,
+  { id: "hard-phonk", family: "phonk", name: "Hard drift phonk", bpm: "150–165 BPM", tempo: 155, length: 32,
     rows: [
       ["Kick", [1, 5, 9, 13, 17, 21, 25, 29]],
       ["Clap", [5, 13, 21, 29]],
@@ -158,7 +158,7 @@ export const PATTERNS: Pattern[] = [
       ["Cowbell", [], [4, 12, 20, 28]],
       ["Snare", [31, 32], [30]],
     ],
-    note: "Phonk sounds over a hardwave-style four-on-the-floor: a pumping kick, offbeat hats and a short roll. The cowbell melody and distorted 808 carry the phonk identity on top." },
+    note: "The heavier side of drift phonk: a pumping four-on-the-floor kick, offbeat hats and a short roll into the next bar. The cowbell melody and distorted 808 do the rest." },
 
   // House
   { id: "house", family: "house", name: "Classic house", bpm: "120–126 BPM", tempo: 124,
@@ -300,27 +300,21 @@ export const PATTERNS: Pattern[] = [
     note: "Denser and bouncier, for the melodic end of the genre. Heavy swing on the hats, and let the open hat breathe into the next bar." },
 
   // Hardwave: wave melodies with club and hard dance drums; drops usually four-on-the-floor, with half-time sections
-  { id: "hw-drop", family: "hardwave", name: "Hardwave drop", bpm: "130–150 BPM", tempo: 150, length: 32,
+  { id: "hw-drop", family: "hardwave", name: "Hardwave half-time drop", bpm: "135–150 BPM, half-time", tempo: 140, length: 32,
     rows: [
-      ["Kick", [1, 5, 9, 13, 17, 21, 25, 29]],
-      ["Clap", [5, 13, 21, 29]],
-      ["Open hat", [3, 7, 11, 15, 19, 23, 27]],
-      ["Hat", [1, 5, 9, 13, 17, 21, 25], [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26]],
-      ["Snare", [29, 30, 31, 32], [28]],
-    ],
-    note: "Driving kick under offbeat hats, with a snare roll into the next phrase. Sidechain everything to the kick hard; the pumping is part of the sound." },
-  { id: "hw-halftime", family: "hardwave", name: "Hardwave half-time", bpm: "130–150 BPM, half-time feel", tempo: 150, length: 32,
-    rows: [
-      ["Kick", [1, 8, 11, 17, 27], [24]],
+      ["Kick", [1, 11, 17, 23, 28], [7]],
       ["Snare", [9, 25]],
+      ["Clap", [9, 25]],
       ["Hat", [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25], [26, 27, 28, 29, 30, 31, 32]],
       ["Open hat", [15]],
-      ["Clap", [], [31]],
     ],
-    note: "Trap-style hats with a roll at the end of bar 2 (use Note Repeat at 1/16 or 1/32). Use this for intros and breakdowns, then switch to the four-on-the-floor drop." },
-  { id: "hw-drive", family: "hardwave", name: "Hard dance drive", bpm: "150 BPM", tempo: 150,
-    rows: [["Kick", FOUR], ["Clap", BACKBEAT], ["Ride", OFFBEATS], ["Shaker", EVEN16, EIGHTHS], ["Rim", [8, 15]]],
-    note: "Borrowed from hardstyle and hard trance: a long, distorted kick with a pitched tail carries the low end, so keep the bass off the kick." },
+    note: "Trap drums, half-time: kick on 1 with a couple of syncopated kicks, a layered snare and clap on beat 3 with a long reverb tail, and steady hats that roll into the next phrase (Note Repeat at 1/16, then 1/32). The screech bass fills the gaps." },
+  { id: "hw-halftime", family: "hardwave", name: "Hardwave rolling hats", bpm: "135–150 BPM, half-time", tempo: 140,
+    rows: [["Kick", [1, 8, 11]], ["Snare", [9]], ["Hat", ALL16, [2, 6, 10, 12, 14, 16]], ["Open hat", [], [15]]],
+    note: "Busier 16th hats with accents on the 8ths, the feel of the second drop. Pitch a few hat hits up an octave for accents, and keep the kick sparse so the 808 and bass have room." },
+  { id: "hw-drive", family: "hardwave", name: "Four-on-the-floor switch-up", bpm: "135–150 BPM", tempo: 140,
+    rows: [["Kick", FOUR], ["Clap", [9]], ["Hat", EIGHTHS, EVEN16], ["Open hat", [15]]],
+    note: "Some hardwave tracks switch to a kick on every beat for a section, but the clap stays on beat 3 so it still feels half-time. Use it for a short lift or the outro, not the whole drop." },
 
   // Ambient: sparse or no drums
   { id: "ambient-pulse", family: "ambient", name: "Ambient pulse", bpm: "70–90 BPM", tempo: 80, length: 32,
