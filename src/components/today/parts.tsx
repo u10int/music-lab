@@ -287,28 +287,35 @@ export function ListeningSheet({ p, sprintId }: { p: Progress; sprintId: string 
 
 /* ---------------- Your work ---------------- */
 
-/** The things you've made that today's plan refers to: your key, your latest saved loop, your sequencer pattern and progression. */
+const LANE_NAME: Record<string, string> = { kick: "kick", snare: "snare", clap: "clap", hat: "hats", ohat: "open hat", shaker: "shaker", rim: "rim", tom: "tom", ride: "ride", cowbell: "cowbell" }
+const list = (xs: string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`)
+
+/** The things you've made that today's tasks refer to as “your key”, “your beat”, “your progression” and “your loop”. */
 export function YourWork({ p, sel, isToday }: { p: Progress; sel: string; isToday: boolean }) {
   const { root, scale } = useKey()
-  const [seq] = usePref<{ drums?: Record<string, number[]>; tempo?: number } | null>("sequencer", null)
+  const [seq] = usePref<{ drums?: Record<string, number[]>; tempo?: number; bars?: number } | null>("sequencer", null)
   const [prog] = usePref<{ chords?: number[] } | null>("progression", null)
   const sc = SCALES.find((x) => x.id === scale) ?? SCALES[0], T = theory(root, sc.id)
   const loop = p.loops?.[0]
-  const hits = seq?.drums ? Object.values(seq.drums).reduce((a, r) => a + r.filter(Boolean).length, 0) : 0
-  const items: { label: string; value: string; link: DayLink }[] = [
-    { label: "Your key", value: `${T.names[0]} ${sc.name.toLowerCase()}`, link: { to: `/labs/theory?tab=chords&key=${root}&scale=${sc.id}`, label: "Chords" } },
+  const lanes = seq?.drums ? Object.entries(seq.drums).filter(([, r]) => r.some(Boolean)).map(([k]) => LANE_NAME[k] ?? k) : []
+  const items: { label: string; value: string; where: string; link: DayLink }[] = [
+    { label: "Your key", value: `${T.names[0]} ${sc.name.toLowerCase()}`, where: "The key picker in the labs. Chords, sounds and melodies all play in it.", link: { to: `/labs/theory?tab=chords&key=${root}&scale=${sc.id}`, label: "See its chords" } },
   ]
-  if (loop) items.push({ label: "Latest saved loop", value: `${loop.name}, ${fmtDay.format(new Date(loop.date + "T00:00:00"))}`, link: { to: `/labs/loop-builder?loop=${loop.id}`, label: "Open it" } })
-  if (hits) items.push({ label: "Step sequencer", value: `${hits} hits at ${seq?.tempo ?? 120} BPM`, link: { to: "/labs/sequencer", label: "Open it" } })
-  if (prog?.chords?.length) items.push({ label: "Your progression", value: prog.chords.map((d) => T.chords[d]?.roman ?? "").join(" – "), link: { to: "/labs/progressions", label: "Open it" } })
+  if (lanes.length) items.push({ label: "Your beat", value: `${list(lanes)[0].toUpperCase() + list(lanes).slice(1)}, ${seq?.bars ?? 1} bar${(seq?.bars ?? 1) > 1 ? "s" : ""} at ${seq?.tempo ?? 120} BPM`, where: "Saved in the step sequencer.", link: { to: "/labs/sequencer", label: "Open the beat" } })
+  if (prog?.chords?.length) items.push({ label: "Your progression", value: `${prog.chords.map((d) => T.chords[d]?.roman ?? "").join(" – ")} (${prog.chords.map((d) => T.chords[d]?.name ?? "").join(", ")})`, where: "Saved in the progression builder.", link: { to: "/labs/progressions", label: "Open it" } })
+  if (loop) items.push({ label: "Your latest loop", value: `${loop.name}, ${fmtDay.format(new Date(loop.date + "T00:00:00"))}`, where: "Saved in the loop builder.", link: { to: `/labs/loop-builder?loop=${loop.id}`, label: "Open the loop" } })
   return (
     <section aria-labelledby="yw-h" className="space-y-2">
-      <h2 id="yw-h" className={SECTION_TITLE}>From your work</h2>
-      <p className="text-muted-foreground text-sm">When the plan says “your beat” or “your key”, this is what it means.</p>
+      <h2 id="yw-h" className={SECTION_TITLE}>What you’ve made so far</h2>
+      <p className="text-muted-foreground text-sm text-pretty">Tasks build on these. When one says “your key”, “your beat” or “your progression”, it means the one saved here, so open it and carry on rather than starting over.</p>
       <ul className="divide-y border-y">
         {items.map((it) => (
           <li key={it.label} className="flex items-center gap-3 py-2.5">
-            <div className="min-w-0 flex-1"><p className="text-muted-foreground text-xs">{it.label}</p><p className="truncate text-sm">{it.value}</p></div>
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <p className="text-muted-foreground text-xs">{it.label}</p>
+              <p className="text-sm text-pretty">{it.value}</p>
+              <p className="text-muted-foreground text-xs text-pretty">{it.where}</p>
+            </div>
             <PlanLink link={it.link} sel={sel} isToday={isToday} variant="ghost" />
           </li>
         ))}
