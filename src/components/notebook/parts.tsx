@@ -19,7 +19,7 @@ import { setPref, usePref, type RefNote } from "@/lib/store"
 import type { DrumFill, DrumPart, Parts } from "@/lib/transcribe-core"
 import { cn } from "@/lib/utils"
 import { ChordStrip, DrumStrip, FillStrip, Progress, Roll, Ruler } from "./parts-lanes"
-import { LIVE, nowNote, usePlayhead } from "./parts-play"
+import { nowNote, PART_COLOR, tint, usePlayhead } from "./parts-play"
 import { barHits, chordName, cycle, GRID_NAME, LANE, LANES, mmss, NOTE, noteName, partsTracks, roman, scheduleWindow, windowOf, type Lane } from "./parts-model"
 import { StemsRunner } from "./stems-runner"
 
@@ -210,9 +210,9 @@ function PartsView({ n, parts, edit, getAudio }: { n: RefNote; parts: Parts; edi
                   </Toggle>
                   <div className={cn("min-w-0", off && "opacity-40")}>
                     {k === "drums" && (w.drums.length ? <DrumStrip hits={w.drums} bars={bars} step={pos} /> : empty("No steady drums"))}
-                    {k === "bass" && (w.bass.length ? <Roll notes={w.bass} bars={bars} step={pos} names={false} className="h-16" label="Bass notes" /> : empty("No clear bass"))}
+                    {k === "bass" && (w.bass.length ? <Roll notes={w.bass} bars={bars} step={pos} names={false} className="h-16" label="Bass notes" color={PART_COLOR.bass} /> : empty("No clear bass"))}
                     {k === "chords" && <div className="relative"><ChordStrip chords={w.chords} step={pos} keyRoot={a.keyRoot} minor={a.minor} /></div>}
-                    {melodyLane && (!hasMelody ? empty("Split the stems to see this") : w[k].length ? <Roll notes={w[k]} bars={bars} step={pos} names={false} className="h-20" label={`${label} notes`} /> : empty(k === "vocals" ? "No singing in these bars" : "No lead line in these bars"))}
+                    {melodyLane && (!hasMelody ? empty("Split the stems to see this") : w[k].length ? <Roll notes={w[k]} bars={bars} step={pos} names={false} className="h-20" label={`${label} notes`} color={PART_COLOR[k]} /> : empty(k === "vocals" ? "No singing in these bars" : "No lead line in these bars"))}
                   </div>
                 </Fragment>
               )
@@ -242,8 +242,8 @@ function PartsView({ n, parts, edit, getAudio }: { n: RefNote; parts: Parts; edi
                           return (
                             <button key={i} type="button" role="gridcell" aria-label={`${LANE[lane].name}, step ${s}: ${isOn ? "hit" : isGhost ? "quiet hit" : "off"}`}
                               onClick={() => cycleCell(li, s)}
-                              className={cn("h-8 transition-[background-color] duration-75", isOn ? "bg-foreground" : isGhost ? "bg-foreground/35" : i % 4 === 0 ? "bg-border" : "bg-muted")}
-                              style={live ? { background: isOn || isGhost ? LIVE : undefined, outline: `2px solid ${LIVE}`, outlineOffset: -2 } : undefined} />
+                              className={cn("h-8 transition-[background-color] duration-75", !isOn && !isGhost && (i % 4 === 0 ? "bg-border" : "bg-muted"))}
+                              style={{ background: isOn ? PART_COLOR.drums : isGhost ? tint(PART_COLOR.drums, 40) : undefined, ...(live ? { outline: "2px solid var(--foreground)", outlineOffset: -2 } : {}) }} />
                           )
                         })}
                       </div>
@@ -251,7 +251,7 @@ function PartsView({ n, parts, edit, getAudio }: { n: RefNote; parts: Parts; edi
                   ))}
                 </div>
               </div>
-              <Caption>Dark: a hit in most bars. Light: quieter or only some bars. Click a step to cycle hit, quiet hit and off. Playing these bars includes any fills below.</Caption>
+              <Caption>Solid: a hit in most bars. Pale: quieter or only some bars. Click a step to cycle hit, quiet hit and off. Playing these bars includes any fills below.</Caption>
               <div className="flex flex-wrap gap-2">
                 <PlayButton id={`${pid}-drums`} label="Play drums" onPlay={() => play("drums", ["drums"])} />
                 <Button variant="outline" size="sm" onClick={toSequencer}><Grid3x3 />Open in step sequencer</Button>
@@ -292,7 +292,7 @@ function PartsView({ n, parts, edit, getAudio }: { n: RefNote; parts: Parts; edi
         <div className="space-y-3">
           {w.bass.length ? (
             <>
-              <Roll notes={w.bass} bars={bars} step={pos} className="h-48" label="Bass notes" />
+              <Roll notes={w.bass} bars={bars} step={pos} className="h-48" label="Bass notes" color={PART_COLOR.bass} />
               <p className="text-sm text-pretty">{[...new Set(w.bass.map((b) => noteName(b.midi)))].join(" · ")}</p>
               <Caption>{parts.fromStems ? "From the bass stem." : "From the low end of the full mix; splitting the stems makes this cleaner."} Notes are held for the bar unless the bass clearly moves.</Caption>
               <PlayButton id={`${pid}-bass`} label="Play bass" onPlay={() => play("bass", ["bass"])} />
@@ -335,7 +335,7 @@ function PartsView({ n, parts, edit, getAudio }: { n: RefNote; parts: Parts; edi
                     <h3 className="font-semibold">{label}</h3>
                     {w[k].length ? (
                       <>
-                        <div className="relative"><Roll notes={w[k]} bars={bars} step={pos} className="h-48" label={`${label} notes`} /></div>
+                        <div className="relative"><Roll notes={w[k]} bars={bars} step={pos} className="h-48" label={`${label} notes`} color={PART_COLOR[k]} /></div>
                         <PlayButton id={`${pid}-${k}`} label={`Play ${label.toLowerCase()}`} onPlay={() => play(k, [k])} />
                       </>
                     ) : <Caption>{none}</Caption>}

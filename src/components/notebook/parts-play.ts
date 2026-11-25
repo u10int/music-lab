@@ -24,3 +24,12 @@ export function nowNote(notes: NoteEv[], step: number) {
   return n ? noteName(n.midi) : undefined
 }
 
+
+/**
+ * One colour per part, from the app’s palette (the sprint colours, which have light and
+ * dark versions): drums keep the red they have in the step sequencer. Green stays free
+ * for what’s playing now.
+ */
+export const PART_COLOR = { drums: "var(--s1)", bass: "var(--s5)", chords: "var(--s2)", vocals: "var(--s6)", lead: "var(--s4)" } as const
+/** A part’s colour mixed toward transparent, for quieter or background marks. */
+export const tint = (c: string, pct: number) => `color-mix(in oklab, ${c} ${pct}%, transparent)`

@@ -2,7 +2,7 @@ import { useMemo } from "react"
 import type { DrumFill } from "@/lib/transcribe-core"
 import { cn } from "@/lib/utils"
 import { chordName, noteName, roman, type ChordEv, type DrumEv, type NoteEv } from "./parts-model"
-import { LIVE } from "./parts-play"
+import { LIVE, PART_COLOR } from "./parts-play"
 
 /** “Bar 3 of 8 · beat 2”, with a thin bar for the whole window. */
 export function Progress({ step, bars, note }: { step: number; bars: number; note?: string }) {
@@ -38,7 +38,7 @@ export function Playhead({ step, total }: { step: number; total: number }) {
 const sounding = (n: { step: number; len: number }, step: number) => step >= n.step && step < n.step + n.len
 
 /** A piano roll: one row per semitone, the sounding note filled in the live colour. */
-export function Roll({ notes, bars, step, label, className, names = true }: { notes: NoteEv[]; bars: number; step: number; label: string; className?: string; names?: boolean }) {
+export function Roll({ notes, bars, step, label, className, names = true, color = "var(--foreground)" }: { notes: NoteEv[]; bars: number; step: number; label: string; className?: string; names?: boolean; color?: string }) {
   const W = bars * 16
   const lo = notes.length ? Math.min(...notes.map((x) => x.midi)) - 1 : 48, hi = notes.length ? Math.max(...notes.map((x) => x.midi)) + 1 : 60
   const rows = Math.max(names ? 8 : 6, hi - lo + 1), top = lo + rows - 1
@@ -50,7 +50,7 @@ export function Roll({ notes, bars, step, label, className, names = true }: { no
         {Array.from({ length: bars * 4 }, (_, i) => <line key={i} x1={i * 4} x2={i * 4} y1={0} y2={rows} stroke="var(--border)" strokeWidth={i % 4 === 0 ? 0.25 : 0.1} />)}
         {notes.map((x, i) => {
           const live = sounding(x, step)
-          return <rect key={i} x={Math.max(0, x.step) + 0.05} y={top - x.midi + 0.1} width={Math.max(0.3, Math.min(x.len, W - x.step) - 0.1)} height={0.8} fill={live ? LIVE : "var(--foreground)"} opacity={live ? 1 : 0.45 + Math.min(0.5, x.vel / 160)} />
+          return <rect key={i} x={Math.max(0, x.step) + 0.05} y={top - x.midi + 0.1} width={Math.max(0.3, Math.min(x.len, W - x.step) - 0.1)} height={0.8} fill={color} opacity={live ? 1 : 0.55 + Math.min(0.3, x.vel / 250)} stroke={live ? "var(--foreground)" : "none"} strokeWidth={0.12} vectorEffect="non-scaling-stroke" />
         })}
       </svg>
       <Playhead step={step} total={W} />
@@ -77,7 +77,7 @@ export function DrumStrip({ hits, bars, step }: { hits: DrumEv[]; bars: number; 
         {Array.from({ length: bars * 4 }, (_, i) => <line key={i} x1={i * 4} x2={i * 4} y1={0} y2={3} stroke="var(--border)" strokeWidth={i % 4 === 0 ? 0.25 : 0.1} />)}
         {hits.map((h, i) => {
           const live = step >= h.step && step < h.step + 1
-          return <rect key={i} x={h.step + 0.1} y={rowOf(h.lane) + 0.15} width={0.6} height={0.7} fill={live ? LIVE : "var(--foreground)"} opacity={live ? 1 : 0.3 + h.vel * 0.6} />
+          return <rect key={i} x={h.step + 0.1} y={rowOf(h.lane) + 0.15} width={0.6} height={0.7} fill={PART_COLOR.drums} opacity={live ? 1 : 0.35 + h.vel * 0.5} stroke={live ? "var(--foreground)" : "none"} vectorEffect="non-scaling-stroke" />
         })}
       </svg>
       <Playhead step={step} total={W} />
@@ -93,9 +93,9 @@ export function ChordStrip({ chords, step, keyRoot, minor, size = "sm" }: { chor
       {chords.map((c, i) => {
         const live = i === liveBar, r = c.chord ? roman(c.chord, keyRoot, minor) : null
         return (
-          <li key={i} className={cn("min-w-0 border", size === "lg" ? "px-2 py-2" : "px-1 py-1 sm:px-2", live ? "border-transparent text-white" : c.chord && c.chord.conf < 0.3 ? "border-dashed border-foreground/30" : "border-foreground/20")} style={live ? { background: LIVE } : undefined}>
+          <li key={i} className={cn("min-w-0 border", size === "lg" ? "px-2 py-2" : "px-1 py-1 sm:px-2", live ? "border-foreground" : c.chord && c.chord.conf < 0.3 ? "border-dashed border-foreground/30" : "border-foreground/20")} style={{ background: c.chord ? `color-mix(in oklab, ${PART_COLOR.chords} ${live ? 55 : 14}%, transparent)` : undefined }}>
             <span className={cn("block overflow-hidden font-medium whitespace-nowrap", size === "sm" && "text-xs sm:text-sm")}>{c.chord ? chordName(c.chord) : "–"}</span>
-            {size === "lg" && <span className={cn("block truncate text-xs", live ? "text-white/85" : "text-muted-foreground")}>{c.chord ? (r?.label ?? "outside the key") + (c.chord.conf < 0.3 ? " · unsure" : "") : "no clear chord"}</span>}
+            {size === "lg" && <span className={cn("block truncate text-xs", live ? "text-foreground/80" : "text-muted-foreground")}>{c.chord ? (r?.label ?? "outside the key") + (c.chord.conf < 0.3 ? " · unsure" : "") : "no clear chord"}</span>}
           </li>
         )
       })}
@@ -109,7 +109,7 @@ export function FillStrip({ fill }: { fill: DrumFill }) {
     <svg viewBox="0 0 16 4" preserveAspectRatio="none" className="h-8 w-full bg-muted" role="img" aria-label={`${fill.hits.length} hits from step ${fill.from + 1}`}>
       <rect x={0} y={0} width={fill.from} height={4} fill="var(--border)" opacity={0.5} />
       {[4, 8, 12].map((x) => <line key={x} x1={x} x2={x} y1={0} y2={4} stroke="var(--border)" strokeWidth={0.08} />)}
-      {fill.hits.map((h, i) => <rect key={i} x={h.pos + 0.04} y={4 - (1.2 + 2.6 * h.v)} width={0.22} height={1.2 + 2.6 * h.v} fill="var(--foreground)" />)}
+      {fill.hits.map((h, i) => <rect key={i} x={h.pos + 0.04} y={4 - (1.2 + 2.6 * h.v)} width={0.22} height={1.2 + 2.6 * h.v} fill={PART_COLOR.drums} />)}
     </svg>
   )
 }
