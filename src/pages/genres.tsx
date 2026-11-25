@@ -18,6 +18,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { GENRE_SOUNDS } from "@/data/genre-sounds"
 import { genreInfo, GENRE_INFO } from "@/data/genres"
+import { GENRE_GUIDE } from "@/data/genre-guide"
+import { recipesFor } from "@/lib/recipes"
+import { ChordMoves, ListenTo, PartsList, Recipes, Tells } from "@/components/genres/genre-guide"
 import { FAMILIES, PATTERNS } from "@/data/patterns"
 import { uid, update, useProgress, type LoopState, type TrackPlan } from "@/lib/store"
 
@@ -123,7 +126,7 @@ export function GenresPage() {
   const byTempo = [...list].sort((a, b) => a.tempo[0] + a.tempo[1] - (b.tempo[0] + b.tempo[1]))
   return (
     <div className="space-y-12">
-      <PageHeader title="Genres">31 styles of electronic music and what makes each one sound like itself: tempo, drums, chords, structure and who to listen to. Each page gathers that genre’s drum patterns and sounds.</PageHeader>
+      <PageHeader title="Genres">{GENRE_INFO.length} styles of electronic music and what makes each one sound like itself: chord moves, groove, sounds, production tells and records to study. Each page ends with recipes you can play, open in the loop builder or download as MIDI.</PageHeader>
 
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by family">
         {[{ id: "all", name: "All genres", color: "var(--foreground)" }, ...GROUPS].map((g) => (
@@ -330,12 +333,15 @@ export function GenrePage() {
     if (!progress.plan) update((d) => { d.plan = planFor(g.id) })
     navigate("/planner")
   }
+  const guide = GENRE_GUIDE[g.id]
+  const name = famName(g.id)
+  const lower = /^[A-Z]{2}/.test(name) ? name : name.toLowerCase()
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       <div className="space-y-3">
         <Link to="/genres" className="text-muted-foreground inline-flex items-center gap-1 text-sm hover:underline"><ArrowLeft className="size-4" />All genres</Link>
         <PageHeader
-          title={famName(g.id)}
+          title={name}
           actions={
             <div className="flex flex-wrap gap-2">
               <Button asChild><Link to={`/labs/loop-builder?genre=${g.id}`}><Repeat />Build a loop</Link></Button>
@@ -343,34 +349,49 @@ export function GenrePage() {
             </div>
           }
         >
-          {g.blurb}
+          <span className="block">{guide.tagline}</span>
         </PageHeader>
+        <p className="text-muted-foreground text-sm tabular-nums">{groupOf(g.id).name} · {g.tempo[0]}–{g.tempo[1]} BPM · {SCALE_NAME[g.scale]} · {guide.era}</p>
+        <ul className="flex flex-wrap gap-1.5" aria-label="Mood">{guide.moods.map((m) => <li key={m}><Badge variant="outline">{m}</Badge></li>)}</ul>
       </div>
 
       <GenreHero key={g.id} id={g.id} />
 
       <div className="grid gap-x-10 gap-y-8 lg:grid-cols-2">
-        <Block title="What to listen for">
+        <Block title="What it sounds like">
+          <p className="text-pretty">{g.blurb}</p>
           <ul className="list-disc space-y-1.5 pl-5 text-sm">{g.traits.map((t) => <li key={t} className="text-pretty">{t}</li>)}</ul>
         </Block>
-        <dl className="grid content-start gap-4 text-sm sm:grid-cols-2">
-          <div className="grid gap-1"><dt className="text-muted-foreground">Tempo</dt><dd className="font-medium tabular-nums">{g.tempo[0]}–{g.tempo[1]} BPM</dd></div>
-          <div className="grid gap-1"><dt className="text-muted-foreground">A good scale to start in</dt><dd className="font-medium">{SCALE_NAME[g.scale]}</dd></div>
-          <div className="grid gap-1 sm:col-span-2"><dt className="text-muted-foreground">Chords</dt><dd className="text-pretty">{g.chords}</dd></div>
-          <div className="grid gap-1 sm:col-span-2"><dt className="text-muted-foreground">How tracks are laid out</dt><dd className="text-pretty">{g.arrangement}</dd></div>
-          <div className="grid gap-1.5 sm:col-span-2">
-            <dt className="text-muted-foreground">Artists to study</dt>
-            <dd className="flex flex-wrap gap-1.5">{g.artists.map((a) => <Badge key={a} variant="secondary">{a}</Badge>)}</dd>
-          </div>
-        </dl>
+        <Block title="How tracks are laid out">
+          <p className="text-pretty">{g.arrangement}</p>
+        </Block>
       </div>
 
-      {hasDrums && <Block title="Drum patterns"><DrumPatterns only={g.id} /></Block>}
-      {sounds.length ? (
-        <Block title="Sounds">
-          <div className="grid gap-4 lg:grid-cols-2">{sounds.map((s) => <SoundCard key={s.id} s={s} />)}</div>
-        </Block>
-      ) : null}
+      <Block title="The chord moves" description={`Each move in your key, voiced with the ${guide.ext === 9 ? "9th chords" : guide.ext === 7 ? "7th chords" : "plain triads"} ${lower} tends to use. Press Hear it to play one; the Recipes below put them in a full loop.`}>
+        <ChordMoves id={g.id} />
+      </Block>
+
+      <Block title="The groove" description={guide.groove}>
+        {hasDrums ? <DrumPatterns only={g.id} /> : null}
+      </Block>
+
+      <Block title="The sounds" description="What each part does, then sounds you can play and tweak, with how to build them.">
+        <PartsList parts={guide.parts} />
+        {sounds.length ? <div className="grid gap-4 pt-2 lg:grid-cols-2">{sounds.map((s) => <SoundCard key={s.id} s={s} />)}</div> : null}
+      </Block>
+
+      <Block title="Production tells" description={`Two ways producers finish ${lower}, and what gives each away.`}>
+        <Tells tells={guide.tells} />
+      </Block>
+
+      <Block title="Listen to" description="Listening pointers, not templates. Each opens a search so you can find it wherever you listen.">
+        <ListenTo refs={guide.refs} />
+      </Block>
+
+      <Block title={`${recipesFor(g.id).length} ways to make ${lower}`} description="A starter loop, variations that each change one thing, and an arrangement sketch, all in your key. Play them here, open one in the loop builder, or download the MIDI for Live.">
+        <Recipes id={g.id} />
+      </Block>
+
       <Block title="Atmospheres, transitions and vocal effects" description={`The effects ${famName(g.id).toLowerCase()} producers use between and around the notes, over ${famName(g.id).toLowerCase()} drums.`}><FxLibrary only={g.id} /></Block>
       <Block title="Related genres">
         <ul className="grid border-t border-l sm:grid-cols-2 xl:grid-cols-3">{g.near.map((n) => <GenreCard key={n} id={n} />)}</ul>
