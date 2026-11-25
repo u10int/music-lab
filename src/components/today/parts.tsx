@@ -236,15 +236,18 @@ export function ListeningSheet({ p, sprintId }: { p: Progress; sprintId: string 
   const [title, setTitle] = useState(""), [artist, setArtist] = useState("")
   const [answers, setAnswers] = usePref<Record<string, string>>(`listen-${sprintId}-${todayISO()}`, {})
   const [msg, setMsg] = useState("")
+  const [savedId, setSavedId] = useState<string | null>(null)
   const save = () => {
     const lines = prompts.map((q, i) => `- ${q}: ${answers[i]?.trim() || "—"}`).join("\n")
     const block = `Listening sheet, Sprint ${s.n} (${fmtDay.format(new Date())}):\n${lines}`
     let name = title
+    let id = pick !== "new" ? pick : uid()
     update((d) => {
       const n = pick !== "new" ? d.notebook.find((x) => x.id === pick) : null
-      if (n) { n.notes = (n.notes ? n.notes + "\n\n" : "") + block; name = n.title }
-      else d.notebook.unshift({ id: uid(), title: title.trim() || "Untitled reference", artist: artist.trim(), url: "", tempo: 0, date: todayISO(), notes: block, markers: [] })
+      if (n) { n.notes = (n.notes ? n.notes + "\n\n" : "") + block; name = n.title; id = n.id }
+      else d.notebook.unshift({ id, title: title.trim() || "Untitled reference", artist: artist.trim(), url: "", tempo: 0, date: todayISO(), notes: block, markers: [] })
     })
+    setSavedId(id)
     setMsg(`Saved to your notebook${name ? ` under “${name}”` : ""}.`)
   }
   return (
@@ -275,7 +278,7 @@ export function ListeningSheet({ p, sprintId }: { p: Progress; sprintId: string 
         </ol>
         <div className="flex flex-wrap items-center gap-3">
           <Button size="sm" onClick={save}><NotebookPen />Save to notebook</Button>
-          {msg && <span className="text-sm" role="status">{msg} <Link to="/notebook" className="underline">Open it</Link></span>}
+          {msg && <span className="text-sm" role="status">{msg} <Link to={savedId ? `/notebook/${savedId}` : "/notebook"} className="underline">Open it</Link></span>}
         </div>
       </div>
     </section>

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from "react"
 import { HomeRoute, RequireAccount } from "@/components/account"
+import { cn } from "@/lib/utils"
 import { createBrowserRouter, Outlet, RouterProvider, useLocation } from "react-router"
 import { keepsPlaying, stop } from "@/audio/playback"
 import { NowPlayingBar } from "@/components/now-playing"
@@ -43,6 +44,7 @@ const FlashcardsPage = lazy(() => import("@/pages/flashcards").then((m) => ({ de
 const GenresPage = lazy(() => import("@/pages/genres").then((m) => ({ default: m.GenresPage })))
 const GenrePage = lazy(() => import("@/pages/genres").then((m) => ({ default: m.GenrePage })))
 const NotebookPage = lazy(() => import("@/pages/notebook").then((m) => ({ default: m.NotebookPage })))
+const NotebookTrackPage = lazy(() => import("@/pages/notebook").then((m) => ({ default: m.NotebookTrackPage })))
 const ReviewPage = lazy(() => import("@/pages/review").then((m) => ({ default: m.ReviewPage })))
 const HomePage = lazy(() => import("@/pages/home").then((m) => ({ default: m.HomePage })))
 const PlannerPage = lazy(() => import("@/pages/planner").then((m) => ({ default: m.PlannerPage })))
@@ -96,7 +98,7 @@ function Layout() {
             <SidebarTrigger aria-label="Open navigation" />
             <span className="font-display font-medium">Music Lab</span>
           </header>
-          <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+          <main className={cn("mx-auto w-full px-4 py-8 sm:px-6 lg:px-10 lg:py-10", /^\/notebook\/[^/]+$/.test(pathname) ? "max-w-[1600px]" : "max-w-6xl")}>
             {fromToday && pathname !== "/today" && (
               <Link to={fromDay ? `/today?day=${fromDay}` : "/today"} className="text-muted-foreground mb-6 inline-flex items-center gap-1 text-sm hover:underline"><ArrowLeft className="size-4" />Back to {fromDay ? "that day’s" : "today’s"} plan</Link>
             )}
@@ -130,6 +132,7 @@ const router = createBrowserRouter([
       { path: "/planner", element: <RequireAccount what="your track plan"><PlannerPage /></RequireAccount> },
       { path: "/review", element: <RequireAccount what="your weekly review"><ReviewPage /></RequireAccount> },
       { path: "/notebook", element: <RequireAccount what="your reference notebook"><NotebookPage /></RequireAccount> },
+      { path: "/notebook/:id", element: <RequireAccount what="your reference notebook"><NotebookTrackPage /></RequireAccount> },
       { path: "/labs/theory", element: <TheoryLab /> },
       { path: "/labs/ear", element: <EarLab /> },
       { path: "/labs/play-along", element: <PlayAlongPage /> },

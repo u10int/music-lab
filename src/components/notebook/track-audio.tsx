@@ -243,7 +243,7 @@ export function TrackPlayer({ n, edit, onMark }: { n: RefNote; edit: (fn: (d: Re
             {!src ? <Loader2 className="animate-spin" /> : playing ? <Pause className="fill-current" /> : <Play className="fill-current" />}{playing ? "Pause" : "Play"}
           </Button>
           <span className="text-sm tabular-nums">{mmss(time)} / {mmss(dur)}</span>
-          <span className="text-muted-foreground text-sm tabular-nums">Bar {Math.floor((time * n.tempo) / 240) + 1}</span>
+          <span className="text-muted-foreground text-sm tabular-nums">Bar {Math.floor((time * (n.tempo || a.tempo)) / 240) + 1}</span>
           <Button variant="outline" onClick={() => onMark(time)}><Flag />Mark a section here</Button>
           <span className="text-muted-foreground ml-auto hidden text-xs lg:inline">Space play · M mark a section · N add a note · ← → skip 5 s</span>
         </div>
