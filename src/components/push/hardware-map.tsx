@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import { useSearchParams } from "react-router"
 import { Push3 } from "@/components/push/push3"
 import { PUSH3_INFO, type ControlId } from "@/data/push3"
 import { cn } from "@/lib/utils"
@@ -12,12 +13,14 @@ const SECTIONS: [string, ControlId[]][] = [
 
 /** Push 3 at full width: hover any control for its name and what it does, with every control listed below. */
 export function HardwareMap() {
-  const [sel, setSel] = useState<ControlId | null>(null)
+  // ?controls=swing,quantize (from a walkthrough step) highlights those controls to start with.
+  const [params] = useSearchParams()
+  const [sel, setSel] = useState<ControlId[]>(() => (params.get("controls") ?? "").split(",").filter((c): c is ControlId => c in PUSH3_INFO))
   const fig = useRef<HTMLElement>(null)
   // Picking a name highlights it on the Push and brings the Push into view if it's scrolled away.
   const pick = (id: ControlId) => {
-    const next = sel === id ? null : id
-    setSel(next)
+    const next = sel.length === 1 && sel[0] === id ? null : id
+    setSel(next ? [next] : [])
     const r = fig.current?.getBoundingClientRect()
     if (next && r && (r.top < 0 || r.bottom > innerHeight)) fig.current!.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" })
   }
@@ -35,10 +38,10 @@ export function HardwareMap() {
               {ids.map((id) => (
                 <div key={id}>
                   <dt>
-                    <button type="button" aria-pressed={sel === id} onClick={() => pick(id)}
-                      className={cn("w-full py-1.5 text-left text-sm hover:underline", sel === id && "font-medium")}>{PUSH3_INFO[id][0]}</button>
+                    <button type="button" aria-pressed={sel.includes(id)} onClick={() => pick(id)}
+                      className={cn("w-full py-1.5 text-left text-sm hover:underline", sel.includes(id) && "font-medium")}>{PUSH3_INFO[id][0]}</button>
                   </dt>
-                  {sel === id && <dd className="text-muted-foreground pb-2 text-sm text-pretty">{PUSH3_INFO[id][1]}</dd>}
+                  {sel.includes(id) && <dd className="text-muted-foreground pb-2 text-sm text-pretty">{PUSH3_INFO[id][1]}</dd>}
                 </div>
               ))}
             </dl>

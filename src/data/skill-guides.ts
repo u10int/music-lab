@@ -14,6 +14,8 @@ export interface SkillGuide {
   /** A repeatable exercise for the practice days. */
   drill: string
   tip?: string
+  /** Push 3 controls to highlight for a step, by step index, when the text alone doesn’t name them. */
+  controls?: Record<number, import("./push3").ControlId[]>
   /** In-app pages to open alongside: [label, path]. */
   links: [string, string][]
 }
@@ -69,18 +71,21 @@ export const SKILL_GUIDES: Record<string, SkillGuide> = {
     links: [["Timing trainer", "/labs/timing"], ["Push: recording", "/push?tab=recording"], ["Note Repeat in the glossary", "/instruments?tab=glossary#gl-noterepeat"]],
   },
   "s1-3": {
-    why: "Swing is the difference between a stiff loop and one that moves. Quantize lets you keep the feel while fixing sloppy hits.",
+    why: "Swing is the difference between a stiff loop and one that moves. Quantize lets you keep the feel while fixing sloppy hits. On Push, swing is applied when notes are quantized or played with Note Repeat, so you set the amount first, then quantize to hear it.",
     min: 15,
     steps: [
-      "Play a straight 16th hat pattern so you can hear the change.",
-      "Press the Swing and Tempo encoder to switch it to Swing, then turn it up slowly from 50% to around 58–62%. The off-16ths start to lag.",
-      "Record a loose take on the pads, then press Quantize to snap it to the grid.",
-      "Hold Quantize to open its settings: set the grid to 1/16 and the amount to 50–75% so some human timing survives.",
-      "Hold Quantize and tap only the kick pad to tighten the kick while leaving the hats loose.",
+      "Make a straight 16th hat loop to hear the change on: in a drum clip, select the closed-hat pad and tap all 16 steps of the step sequencer (the top half of the pads), then press Play.",
+      "Find the Swing and Tempo encoder: the small knob at the top left, below the Volume encoder and just above Tap Tempo. Tap it once and the display shows whether it’s set to Tempo or Swing; press it to switch to Swing.",
+      "Turn it to set the swing amount, from 0% (straight) up to 100%, in 1% steps. Nothing changes yet: the amount is only applied when notes are quantized or repeated.",
+      "Apply it to the same hats: hold Quantize and tap the closed-hat pad. Only the hats are quantized with your swing, so the off-16ths now land late. Change the amount and do it again to compare.",
+      "Record a loose take of kick and snare on the pads, then press Quantize to snap the whole clip to the grid with the same swing.",
+      "Hold Quantize to open its settings: set Quantize To 1/16 and Quantize Amount to 50–75% so some human timing survives. Swing Amount is here too, on the first encoder.",
     ],
-    check: "You can hear and set the swing that suits a genre: none for techno, light for house, heavy for garage and lo-fi.",
-    drill: "Load the UK garage and lo-fi patterns in the drum library, listen to their swing, then match it on Push.",
-    links: [["Drum patterns with swing", "/labs/drums"], ["Swing in the sequencer lab", "/labs/sequencer"]],
+    check: "You can set a swing amount, quantize just the hats with it, and hear the difference: none for techno, light for house, heavy for garage and lo-fi.",
+    drill: "Load the UK garage and lo-fi patterns in the drum library, listen to their swing, then match it on Push by quantizing your hats at different amounts.",
+    tip: "To hear swing live, turn on Repeat and hold the hat pad: repeated notes use the swing amount straight away.",
+    controls: { 0: ["pads", "play"], 2: ["swing", "display"] },
+    links: [["Drum patterns with swing", "/labs/drums"], ["Swing in the sequencer lab", "/labs/sequencer"], ["Push 3 hardware map", "/push?tab=hardware&controls=swing,quantize"]],
   },
   "s1-4": {
     why: "Variations come from copying and changing, not starting over. These buttons keep ideas safe while you experiment.",
@@ -387,6 +392,7 @@ export const SKILL_GUIDES: Record<string, SkillGuide> = {
     ],
     check: "No 16-bar stretch of your track goes by without something entering or leaving.",
     drill: "Map one reference in the notebook, then mirror its layering in your track.",
+    controls: { 2: [] },
     links: [["Reference notebook", "/notebook"], ["Track planner", "/planner"]],
   },
   "s5-4": {

@@ -57,13 +57,16 @@ export function Push3({
   onControl?: (id: ControlId) => void
   /** Buttons to light: true for white, or a color. */
   lit?: Partial<Record<ControlId, boolean | string>>
-  selected?: ControlId | null
+  /** One control, or several to highlight together (for walkthrough steps). */
+  selected?: ControlId | ControlId[] | null
   /** What the display shows. */
   display?: React.ReactNode
   className?: string
 }) {
   const [hover, setHover] = useState<ControlId | null>(null)
-  const mark = hover ?? selected
+  const many = Array.isArray(selected) ? selected : selected ? [selected] : []
+  // The tooltip follows hover, or a single selected control.
+  const mark = hover ?? (many.length === 1 ? many[0] : null)
   const VB = { x: 180, y: 153, w: 1038, h: 869 }
 
   const hit = (id: ControlId, box: Box) => (
@@ -204,7 +207,12 @@ export function Push3({
 
         {highlightPad && <rect x={PAD_X(highlightPad[1]) - 4} y={PAD_Y(highlightPad[0]) - 4} width={PAD_W + 8} height={PAD_H + 8} fill="none" stroke="#fff" strokeWidth={4} pointerEvents="none" className="motion-safe:animate-pulse" />}
         {/* Highlight for the hovered or selected control */}
-        {box && <rect x={box.x - 3} y={box.y - 3} width={box.w + 6} height={box.h + 6} fill="none" stroke="var(--primary)" strokeWidth={4} pointerEvents="none" />}
+        {[...new Set([...many, ...(hover ? [hover] : [])])].map((id) => {
+          const b = HIT[id] ?? groupBox(id)
+          // Thicker when several are outlined at once, so they read when the drawing is small.
+          const w = many.length > 1 || (many.length && !hover) ? 7 : 4
+          return <rect key={"sel" + id} x={b.x - w} y={b.y - w} width={b.w + 2 * w} height={b.h + 2 * w} fill="none" stroke="var(--primary)" strokeWidth={w} pointerEvents="none" />
+        })}
 
         {/* Hit areas */}
         {(Object.keys(HIT) as ControlId[]).map((id) => hit(id, HIT[id]!))}

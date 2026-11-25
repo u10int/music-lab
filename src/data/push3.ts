@@ -19,7 +19,7 @@ export const PUSH3_INFO: Record<ControlId, [string, string]> = {
   stopClip: ["Stop Clip", "Hold and press a track’s lower display button to stop its clip. Shift + Stop Clip stops every clip."],
   mute: ["Mute", "Mutes the selected track. Hold it and press a lower display button to mute that track."],
   solo: ["Solo", "Solos the selected track. Hold it and press a lower display button to solo that track."],
-  swing: ["Swing & Tempo", "Turn to change the tempo. Press it to switch to the swing amount."],
+  swing: ["Swing & Tempo", "Turn to change the tempo (hold Shift for 0.1 BPM steps). Press it to switch to Swing, then turn to set the swing amount used when notes are quantized or repeated."],
   tapTempo: ["Tap Tempo", "Tap in time to set the tempo."],
   metronome: ["Metronome", "Turns the click on and off."],
   quantize: ["Quantize", "Snaps the selected notes or clip to the grid. Hold it to set the grid and strength."],

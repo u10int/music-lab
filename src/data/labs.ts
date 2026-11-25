@@ -70,7 +70,7 @@ export const SHORTCUTS: Record<string, [string, string, string][]> = {
   s1: [
     ["Note Repeat", "Press Repeat, pick a rate from the interval buttons that light up, then hold a pad. Tap Repeat quickly to keep it on.", "Press Repeat, pick a rate with the Scene/Grid buttons, then hold a pad. Hold Repeat for momentary use."],
     ["Fixed length recording", "Press Fixed Length to toggle it. Hold Fixed Length to set the length.", SAME],
-    ["Swing", "Press the Swing and Tempo encoder to switch it to Swing, then turn it.", "Turn the Swing knob."],
+    ["Swing", "Press the Swing and Tempo encoder to switch it to Swing, then turn it. The amount is applied when you quantize or use Note Repeat.", "Turn the Swing knob."],
     ["Quantize", "Press Quantize. Hold Quantize and tap a drum pad to quantize only that drum. Hold Quantize alone for settings.", "Press Quantize. Hold Quantize for settings, including Swing Amount."],
     ["Clear one drum", "Hold Delete and tap the drum pad.", SAME],
     ["Remove one step", "Tap a lit step.", SAME],

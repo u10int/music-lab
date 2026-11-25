@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ArrowLeft, ArrowRight, Check, Clock, Timer } from "lucide-react"
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Clock, Timer } from "lucide-react"
 import { SKILL_CHECKS } from "@/data/learning"
 import { Link, useSearchParams } from "react-router"
 import { Button } from "@/components/ui/button"
@@ -8,8 +8,11 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { SKILL_GUIDES } from "@/data/skill-guides"
+import { PUSH3_INFO, type ControlId } from "@/data/push3"
+import { controlsIn } from "@/data/step-controls"
+import { Push3 } from "@/components/push/push3"
 import type { Sprint } from "@/data/sprints"
-import { fmtDay, todayISO, update, useProgress } from "@/lib/store"
+import { fmtDay, todayISO, update, usePref, useProgress } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import { SECTION_TITLE } from "@/components/page"
 
@@ -76,6 +79,32 @@ export function SkillList({ s }: { s: Sprint }) {
   )
 }
 
+/** The Push 3 with this step’s controls highlighted. Opens on the current step once you’ve opened it anywhere. */
+function StepOnPush({ ids, current }: { ids: ControlId[]; current: boolean }) {
+  const [always, setAlways] = usePref<boolean>("wt-show-push", false)
+  const [open, setOpen] = useState<boolean | null>(null)
+  if (!ids.length) return null
+  const shown = open ?? (current && always)
+  const names = ids.map((id) => PUSH3_INFO[id][0])
+  return (
+    <div className="mt-2 space-y-2 pl-[3.25rem]">
+      <button type="button" aria-expanded={shown} onClick={() => { setOpen(!shown); setAlways(!shown) }}
+        className="group text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm underline-offset-4 hover:underline">
+        {shown ? "Hide" : "Show"} on Push: {names.join(", ")}
+        <ChevronDown className={cn("size-4 transition-transform duration-150", shown && "rotate-180")} />
+      </button>
+      {shown && (
+        <figure className="space-y-1.5">
+          <Push3 selected={ids} className="w-full" />
+          <figcaption className="text-muted-foreground text-xs">
+            Outlined: {names.join(", ")}. Hover a control for what it does, or <Link className="underline" to={`/push?tab=hardware&controls=${ids.join(",")}`}>open it in the hardware map</Link>.
+          </figcaption>
+        </figure>
+      )}
+    </div>
+  )
+}
+
 function Walkthrough({ s, skey, onGo }: { s: Sprint; skey: string; onGo: (k: string) => void }) {
   const p = useProgress()
   const i = +skey.split("-")[1], g = SKILL_GUIDES[skey]
@@ -109,6 +138,7 @@ function Walkthrough({ s, skey, onGo }: { s: Sprint; skey: string; onGo: (k: str
                     <span aria-hidden="true" className="text-sm font-semibold tabular-nums">{k + 1}</span>
                     <Label htmlFor={id} className="text-sm leading-relaxed font-normal text-pretty">{t}</Label>
                   </div>
+                  <StepOnPush ids={g.controls?.[k] ?? controlsIn(t)} current={isCur} />
                   {isCur && (
                     <div className="mt-3 flex justify-end">
                       <Button size="sm" data-wt-next="" onClick={() => {
