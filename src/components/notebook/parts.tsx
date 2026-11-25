@@ -13,6 +13,8 @@ import { proofUrl } from "@/lib/proofs"
 import { setPref, usePref, type RefNote } from "@/lib/store"
 import type { BarChord, DrumFill, DrumPart, PartLane, Parts } from "@/lib/transcribe-core"
 import { cn } from "@/lib/utils"
+import { melodyTracks } from "@/lib/melody-grid"
+import { MelodyBlock } from "./melody"
 
 const NOTE = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"]
@@ -71,16 +73,19 @@ export function PartsPanel({ n, edit }: { n: RefNote; edit: (fn: (d: RefNote) =>
   const a = n.audio!.analysis, parts = n.audio!.parts
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const getAudio = async () => {
+    const url = await proofUrl(n.audio!.path)
+    if (!url) throw new Error("The audio file isn’t available in this browser.")
+    return (await fetch(url)).blob()
+  }
   const run = async () => {
     setError(null)
     setStatus("Finding the drums, bass and chords…")
     try {
-      const url = await proofUrl(n.audio!.path)
-      if (!url) throw new Error("The audio file isn’t available in this browser.")
-      const blob = await (await fetch(url)).blob()
-      const p = await analyzeParts(blob, a)
+      const p = await analyzeParts(await getAudio(), a)
       if (!p) throw new Error("Couldn’t find a steady beat to line the parts up with.")
-      edit((d) => { if (d.audio) d.audio.parts = p })
+      // Keep the vocals and melody: splitting the stems again takes a while.
+      edit((d) => { if (d.audio) d.audio.parts = { ...p, melody: d.audio.parts?.melody } })
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.")
     } finally {
@@ -98,7 +103,7 @@ export function PartsPanel({ n, edit }: { n: RefNote; edit: (fn: (d: RefNote) =>
         {parts && <Button variant="ghost" size="sm" disabled={!!status} onClick={run}>{status ? <Loader2 className="animate-spin" /> : <RefreshCw />}Analyse again</Button>}
       </div>
       {error && <p className="text-destructive text-sm" role="alert">{error}</p>}
-      {parts ? <PartsView key={n.audio!.path} n={n} parts={parts} edit={edit} /> : (
+      {parts ? <PartsView key={n.audio!.path} n={n} parts={parts} edit={edit} getAudio={getAudio} /> : (
         <div className="flex flex-wrap items-center gap-3 border border-dashed border-foreground/30 p-5">
           <p className="text-sm">This track was analysed before parts were added.</p>
           <Button disabled={!!status} onClick={run}>{status ? <Loader2 className="animate-spin" /> : <AudioLines />}{status ?? "Find drums, bass and chords"}</Button>
@@ -108,7 +113,7 @@ export function PartsPanel({ n, edit }: { n: RefNote; edit: (fn: (d: RefNote) =>
   )
 }
 
-function PartsView({ n, parts, edit }: { n: RefNote; parts: Parts; edit: (fn: (d: RefNote) => void) => void }) {
+function PartsView({ n, parts, edit, getAudio }: { n: RefNote; parts: Parts; edit: (fn: (d: RefNote) => void) => void; getAudio: () => Promise<Blob> }) {
   const a = n.audio!.analysis
   const sections = parts.sections
   const dropIdx = sections.findIndex((s) => s.drums && /drop/i.test(s.label)), drumIdx = sections.findIndex((s) => s.drums)
@@ -118,6 +123,7 @@ function PartsView({ n, parts, edit }: { n: RefNote; parts: Parts; edit: (fn: (d
   const navigate = useNavigate()
   const [seq] = usePref<Record<string, unknown> | null>("sequencer", null)
   const [prog] = usePref<Record<string, unknown> | null>("progression", null)
+  const [snap] = usePref<boolean>("parts-snap", true)
   const step = 60 / parts.tempo / 4
   const mmss = (t: number) => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0")
   const at = (bar: number) => parts.t0 + bar * 16 * step
@@ -208,6 +214,7 @@ function PartsView({ n, parts, edit }: { n: RefNote; parts: Parts; edit: (fn: (d
     if (sec.drums) { const n = Math.max(loopBars, sec.drums.length / 16); tracks.push({ ...drumTrack(sec, 0, n, 0), length: n * 16 * TICKS_PER_16TH }) }
     if (bassNotes.length) tracks.push({ name: "Bass", notes: bassNotes.map((b) => ({ tick: b.step * TICKS_PER_16TH, note: b.midi, velocity: 100, duration: b.len * TICKS_PER_16TH - 2, channel: 1 })), length: loopBars * 16 * TICKS_PER_16TH })
     if (shown.some(Boolean)) tracks.push({ name: "Chords", notes: chordNotes(shown.slice(0, loopBars), 0), length: loopBars * 16 * TICKS_PER_16TH })
+    tracks.push(...melodyTracks(parts, sec.startBar, loopBars, snap, false))
     downloadFile(writeMidi(tracks, parts.tempo), `${title}-${sec.label.toLowerCase()}-${Math.round(parts.tempo)}bpm.mid`)
   }
   const fullMidi = () => {
@@ -217,6 +224,7 @@ function PartsView({ n, parts, edit }: { n: RefNote; parts: Parts; edit: (fn: (d
       { name: "Bass", notes: parts.bass.map((b) => ({ tick: b.step * TICKS_PER_16TH, note: b.midi, velocity: 100, duration: b.len * TICKS_PER_16TH - 2, channel: 1 })) },
       { name: "Chords", notes: chordNotes(parts.chords, 0) },
     ].map((t) => ({ ...t, length: parts.bars * 16 * TICKS_PER_16TH }))
+    tracks.push(...melodyTracks(parts, 0, parts.bars, snap, true))
     downloadFile(writeMidi(tracks, parts.tempo), `${title}-full-${Math.round(parts.tempo)}bpm.mid`)
   }
   const toSequencer = () => {
@@ -354,6 +362,8 @@ function PartsView({ n, parts, edit }: { n: RefNote; parts: Parts; edit: (fn: (d
           ) : <Caption>No clear chords in this section.</Caption>}
         </div>
       </div>
+
+      <MelodyBlock parts={parts} sec={sec} edit={edit} pid={pid} getAudio={getAudio} />
     </div>
   )
 }

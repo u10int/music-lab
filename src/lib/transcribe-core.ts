@@ -60,6 +60,8 @@ export interface Parts {
   bass: BassNote[]
   /** One chord per bar; null where there's no clear harmony. */
   chords: (BarChord | null)[]
+  /** Vocal and instrument notes from the stems, once the track has been split. */
+  melody?: import("./melody-core").Melody
 }
 
 interface Input {
