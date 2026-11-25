@@ -28,7 +28,7 @@ export interface RefMarker { id: string; t: number; label: string; energy: numbe
 export interface RefComment { id: string; t: number; text: string }
 /** The reference's audio file (stored separately) and what the analysis found. */
 export interface RefAudio { path: string; name: string; size: number; analysis: import("./audio-analysis-core").Analysis }
-export interface RefNote { id: string; title: string; artist: string; url: string; tempo: number; date: string; notes: string; markers: RefMarker[]; audio?: RefAudio; comments?: RefComment[]; key?: { root: number; minor: boolean } }
+export interface RefNote { id: string; title: string; artist: string; url: string; tempo: number; date: string; notes: string; markers: RefMarker[]; audio?: RefAudio; comments?: RefComment[]; key?: { root: number; minor: boolean }; genres?: import("@/data/patterns").Family[] }
 export interface Progress {
   start: string
   done: Record<string, boolean>

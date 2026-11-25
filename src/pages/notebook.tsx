@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, ExternalLink, Flag, Pause, PencilRuler, Play, Plus, RotateCcw, Search, Trash2 } from "lucide-react"
+import { ArrowLeft, ExternalLink, Flag, Pause, PencilRuler, Play, Plus, RotateCcw, Search, Trash2, X } from "lucide-react"
 import { Link, useNavigate, useParams } from "react-router"
 import { Block, Caption, PageHeader } from "@/components/page"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { AudioUpload, Suggestions, TrackPlayer } from "@/components/notebook/track-audio"
 import { ROOTS } from "@/data/labs"
+import { FAMILIES, type Family } from "@/data/patterns"
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { deleteProofFile } from "@/lib/proofs"
 import { fmtDay, getProgress, safeUrl, todayISO, uid, update, usePref, useProgress, type RefMarker, type RefNote, type TrackPlan } from "@/lib/store"
 import { cn } from "@/lib/utils"
@@ -96,7 +99,33 @@ function MarkerRow({ m, startBar, bars, onChange, onDelete }: { m: RefMarker; st
   )
 }
 
-const isEmpty = (x: RefNote) => !(x.title.trim() || x.artist.trim() || x.url.trim() || x.notes.trim() || x.audio || x.markers.length || x.comments?.length)
+const genreName = (f: Family) => FAMILIES.find((x) => x[0] === f)?.[1] ?? f
+const GENRE_LIST = FAMILIES.filter(([f]) => f !== "all") as unknown as [Family, string][]
+
+/** Pick one or more genres for a reference. */
+function GenrePicker({ value, onChange }: { value: Family[]; onChange: (v: Family[]) => void }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {value.map((g) => (
+        <span key={g} className="inline-flex h-7 items-center gap-1 border bg-muted pr-1 pl-2 text-sm">
+          {genreName(g)}
+          <button type="button" aria-label={`Remove ${genreName(g)}`} onClick={() => onChange(value.filter((x) => x !== g))} className="text-muted-foreground grid size-5 place-items-center hover:text-foreground"><X className="size-3.5" /></button>
+        </span>
+      ))}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild><Button variant="outline" size="sm"><Plus />{value.length ? "Add genre" : "Choose genres"}</Button></DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="max-h-80 overflow-y-auto overscroll-contain">
+          {GENRE_LIST.map(([f, name]) => (
+            <DropdownMenuCheckboxItem key={f} checked={value.includes(f)} onSelect={(e) => e.preventDefault()}
+              onCheckedChange={(on) => onChange(on ? [...value, f] : value.filter((x) => x !== f))}>{name}</DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
+const isEmpty = (x: RefNote) => !(x.genres?.length || x.title.trim() || x.artist.trim() || x.url.trim() || x.notes.trim() || x.audio || x.markers.length || x.comments?.length)
 const keyLabel = (n: RefNote) => (n.key ? `${ROOTS[n.key.root]} ${n.key.minor ? "minor" : "major"}` : null)
 const lengthOf = (n: RefNote) => (n.audio ? Math.floor(n.audio.analysis.duration / 60) + ":" + String(Math.floor(n.audio.analysis.duration % 60)).padStart(2, "0") : null)
 
@@ -135,6 +164,11 @@ function RefCard({ n }: { n: RefNote }) {
           <h2 className="truncate font-semibold group-hover:underline">{n.title || "Untitled reference"}</h2>
           <p className="text-muted-foreground truncate text-sm">{n.artist || "Unknown artist"}</p>
         </div>
+        {n.genres?.length ? (
+          <ul className="flex flex-wrap gap-1" aria-label="Genres">
+            {n.genres.map((g) => <li key={g} className="border px-1.5 py-0.5 text-xs">{genreName(g)}</li>)}
+          </ul>
+        ) : null}
         <dl className="grid grid-cols-3 gap-2 border-t pt-3">
           {stats.map(([label, v]) => (
             <div key={label} className="min-w-0">
@@ -158,6 +192,10 @@ export function NotebookPage() {
   const list = progress.notebook ?? []
   const [q, setQ] = useState("")
   const [sort, setSort] = usePref<"new" | "title" | "tempo">("nb-sort", "new")
+  const [picked, setPicked] = usePref<Family[]>("nb-genres", [])
+  // Only genres that some reference has, in the app's usual genre order.
+  const used = GENRE_LIST.filter(([f]) => list.some((x) => x.genres?.includes(f)))
+  const active = picked.filter((g) => used.some(([f]) => f === g))
   // References opened with "New reference" but never filled in are dropped, so they don't leave empty cards behind.
   useEffect(() => {
     if (getProgress().notebook?.some(isEmpty)) update((d) => { d.notebook = d.notebook.filter((x) => !isEmpty(x)) })
@@ -168,7 +206,8 @@ export function NotebookPage() {
     navigate(`/notebook/${nn.id}`)
   }
   const shown = list
-    .filter((x) => !q.trim() || `${x.title} ${x.artist} ${keyLabel(x) ?? ""}`.toLowerCase().includes(q.trim().toLowerCase()))
+    .filter((x) => !active.length || active.some((g) => x.genres?.includes(g)))
+    .filter((x) => !q.trim() || `${x.title} ${x.artist} ${keyLabel(x) ?? ""} ${(x.genres ?? []).map(genreName).join(" ")}`.toLowerCase().includes(q.trim().toLowerCase()))
     .sort((a, b) => (sort === "title" ? (a.title || "~").localeCompare(b.title || "~") : sort === "tempo" ? a.tempo - b.tempo : b.date.localeCompare(a.date)))
 
   return (
@@ -185,11 +224,20 @@ export function NotebookPage() {
         </div>
       ) : (
         <>
+          {used.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-muted-foreground text-sm" id="nb-filter">Genre</span>
+              <ToggleGroup type="multiple" variant="outline" size="sm" spacing={1} aria-labelledby="nb-filter" value={active} onValueChange={(v) => setPicked(v as Family[])} className="flex-wrap">
+                {used.map(([f, name]) => <ToggleGroupItem key={f} value={f} className="px-3 data-[state=on]:bg-foreground data-[state=on]:text-background">{name}</ToggleGroupItem>)}
+              </ToggleGroup>
+              {active.length > 0 && <Button variant="ghost" size="sm" onClick={() => setPicked([])}>Clear</Button>}
+            </div>
+          )}
           {list.length > 3 && (
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative w-full max-w-xs">
                 <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-                <Input aria-label="Search references" placeholder="Search by title, artist or key" value={q} onChange={(e) => setQ(e.target.value)} className="pl-8" />
+                <Input aria-label="Search references" placeholder="Search by title, artist, key or genre" value={q} onChange={(e) => setQ(e.target.value)} className="pl-8" />
               </div>
               <Select value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
                 <SelectTrigger aria-label="Sort references" className="w-44"><SelectValue /></SelectTrigger>
@@ -205,7 +253,7 @@ export function NotebookPage() {
           {shown.length ? (
             <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{shown.map((x) => <RefCard key={x.id} n={x} />)}</ul>
           ) : (
-            <p className="text-sm">No references match “{q}”. <button type="button" className="underline" onClick={() => setQ("")}>Clear the search</button></p>
+            <p className="text-sm">No references match{q.trim() ? ` “${q}”` : ""}{active.length ? ` in ${active.map(genreName).join(" or ")}` : ""}. <button type="button" className="underline" onClick={() => { setQ(""); setPicked([]) }}>Show all</button></p>
           )}
         </>
       )}
@@ -279,6 +327,10 @@ export function NotebookTrackPage() {
             </div>
           </div>
           <div className="grid gap-1.5"><Label htmlFor="nb-tempo">Tempo (BPM)</Label><Input id="nb-tempo" type="number" inputMode="numeric" min={50} max={220} placeholder="120" value={n.tempo || ""} onChange={(e) => edit((d) => { d.tempo = Math.max(0, Math.round(+e.target.value) || 0) })} className="tabular-nums" /></div>
+        </div>
+        <div className="grid gap-1.5">
+          <span className="text-sm font-medium" id="nb-genres">Genres</span>
+          <div role="group" aria-labelledby="nb-genres"><GenrePicker value={n.genres ?? []} onChange={(v) => edit((d) => { d.genres = v })} /></div>
         </div>
         {!n.audio && <Caption>Not sure of the tempo? Add the audio below and the notebook will find it, or tap along in Live with the Tap Tempo button.</Caption>}
       </Block>
