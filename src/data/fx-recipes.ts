@@ -1198,7 +1198,7 @@ export const FX_RECIPES: FxRecipe[] = [
     },
   },
   {
-    id: "phonk-vocal", kind: "Vocal", name: "Pitched-down Memphis vocal", families: ["phonk", "hardwave", "trap", "wave", "boombap", "driftwave"],
+    id: "phonk-vocal", kind: "Vocal", name: "Pitched-down Memphis vocal", families: ["phonk", "hardwave", "trap", "wave", "boombap"],
     what: "A rap or chant sample slowed and pitched way down, gritty and repeated. The Memphis-tape sound phonk is built on, usually chopped into one phrase that repeats.",
     listen: "Pitching down lowers the formants too, so the voice sounds huge and menacing. The repeat on the last word is the hook.",
     use: ["simpler"],
