@@ -1,21 +1,12 @@
-import { useRef, useState } from "react"
-import { Download, ExternalLink, Repeat } from "lucide-react"
-import { useNavigate } from "react-router"
+import { ExternalLink } from "lucide-react"
 import { tone } from "@/audio/engine"
-import { playLoop } from "@/audio/loop-player"
 import { setPos, toggle, usePlayingId, usePos } from "@/audio/playback"
 import { useKey } from "@/components/key-picker"
 import { PlayButton } from "@/components/play-button"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { GENRE_GUIDE, refUrl, type Ref } from "@/data/genre-guide"
+import type { Tell } from "@/data/genre-tells"
 import { genreInfo } from "@/data/genres"
-import { SCALES } from "@/data/labs"
 import type { Family } from "@/data/patterns"
-import { buildLoop, PART_NAME } from "@/lib/loop"
-import { downloadFile } from "@/lib/midi-file"
-import { recipeMidi, recipesFor, type Recipe } from "@/lib/recipes"
-import { setPref, type LoopPart, type LoopState } from "@/lib/store"
 import { theory } from "@/lib/theory"
 import { cn } from "@/lib/utils"
 
@@ -108,13 +99,14 @@ export function PartsList({ parts }: { parts: [string, string][] }) {
   )
 }
 
-export function Tells({ tells }: { tells: [string, string][] }) {
+export function Tells({ tells }: { tells: Tell[] }) {
   return (
-    <div className="grid gap-x-10 gap-y-4 md:grid-cols-2">
-      {tells.map(([k, v]) => (
-        <div key={k} className="space-y-1 border-t pt-3">
-          <h3 className="font-semibold">{k}</h3>
-          <p className="text-sm text-pretty">{v}</p>
+    <div className="grid gap-x-10 gap-y-6 md:grid-cols-2">
+      {tells.map((t) => (
+        <div key={t.name} className="space-y-2 border-t pt-3">
+          <h3 className="font-semibold">{t.name}</h3>
+          <p className="text-sm text-pretty">{t.intro}</p>
+          <ul className="list-disc space-y-1.5 pl-5 text-sm">{t.moves.map((m) => <li key={m} className="text-pretty">{m}</li>)}</ul>
         </div>
       ))}
     </div>
@@ -140,86 +132,3 @@ export function ListenTo({ refs }: { refs: Ref[] }) {
     </ol>
   )
 }
-
-/* ---------- Recipes ---------- */
-
-const live: Record<string, { loop: LoopState; events: ReturnType<typeof buildLoop> }> = {}
-const PART_SHORT: Record<LoopPart, string> = { drums: "D", bass: "B", chords: "C", lead: "L" }
-
-function RecipeCard({ r, family }: { r: Recipe; family: Family }) {
-  const g = genreInfo(family)!
-  const { root, setScale } = useKey()
-  const iv = (SCALES.find((x) => x.id === g.scale) ?? SCALES[0]).iv
-  const navigate = useNavigate()
-  const playing = usePlayingId()
-  const [sec, setSec] = useState(-1)
-  const lastSec = useRef(-1)
-
-  const start = (pid: string, loop: LoopState) => {
-    live[pid] = { loop, events: buildLoop(loop, root, iv) }
-    let end = () => {}
-    toggle(pid, 3600, (c, bus, t0) => { end = playLoop(c, bus, t0, () => live[pid]) }, undefined, () => end())
-  }
-  const withParts = (parts: LoopPart[]): LoopState => ({ ...r.loop, mix: Object.fromEntries((["drums", "bass", "chords", "lead"] as LoopPart[]).map((p) => [p, { ...r.loop.mix[p], mute: !parts.includes(p) }])) as LoopState["mix"] })
-  const audition = (i: number) => {
-    const pid = `recipe-${r.id}-sec`
-    if (playing === pid && lastSec.current === i) { toggle(pid, 0, () => {}); setSec(-1); lastSec.current = -1; return }
-    lastSec.current = i
-    setSec(i)
-    if (playing === pid) live[pid] = { loop: withParts(r.sections![i].parts), events: live[pid].events }
-    else start(pid, withParts(r.sections![i].parts))
-  }
-  const open = () => {
-    setPref("loop-builder", r.loop)
-    setScale(g.scale)
-    navigate("/labs/loop-builder")
-  }
-  const download = () => downloadFile(recipeMidi(r, root, iv), `music-lab-${family}-${r.id.replace(family + "-", "")}-${r.loop.tempo}bpm.mid`)
-  const total = r.sections?.reduce((n, s) => n + s.bars, 0) ?? 0
-  const secPlaying = playing === `recipe-${r.id}-sec`
-
-  return (
-    <li className="flex min-w-0 flex-col gap-3 border-r border-b p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1">
-          <Badge variant={r.kind === "Starter" ? "default" : "secondary"}>{r.kind}</Badge>
-          <h3 className="text-lg font-semibold">{r.name}</h3>
-          <p className="text-muted-foreground text-sm tabular-nums">{r.loop.tempo} BPM · {r.changes.join(" · ")}</p>
-        </div>
-        {!r.sections && <PlayButton id={`recipe-${r.id}`} label="Play" onPlay={() => start(`recipe-${r.id}`, r.loop)} />}
-      </div>
-      <p className="text-sm text-pretty">{r.blurb}</p>
-      {r.sections && (
-        <div className="space-y-1.5">
-          <div className="flex flex-wrap gap-px" role="group" aria-label="Sections: press one to hear which parts play">
-            {r.sections.map((s, i) => (
-              <button key={i} type="button" onClick={() => audition(i)} aria-pressed={secPlaying && sec === i}
-                style={{ flexGrow: s.bars }}
-                className={cn("min-w-20 basis-0 border px-2 py-1.5 text-left transition-[background-color,color,border-color] duration-100", secPlaying && sec === i ? "border-transparent bg-[#23782b] text-white" : "border-foreground/25 hover:border-foreground")}>
-                <span className="block text-sm font-medium">{s.name}</span>
-                <span className={cn("block text-xs tabular-nums", secPlaying && sec === i ? "opacity-85" : "text-muted-foreground")} title={s.parts.map((p) => PART_NAME[p]).join(", ")}>{s.bars} bars · {s.parts.map((p) => PART_SHORT[p]).join("")}</span>
-              </button>
-            ))}
-          </div>
-          <p className="text-muted-foreground text-xs">{total} bars. Press a section to hear its parts: D drums, B bass, C chords, L lead.</p>
-        </div>
-      )}
-      {r.study && (
-        <p className="text-sm text-pretty"><span className="text-muted-foreground">Listen to </span>
-          <a className="underline" href={refUrl(r.study)} target="_blank" rel="noreferrer">{r.study.track ? `“${r.study.track}” by ${r.study.artist}` : r.study.artist}</a>
-          <span className="text-muted-foreground"> for the feel, not to copy it.</span>
-        </p>
-      )}
-      <div className="mt-auto flex flex-wrap gap-2 pt-1">
-        <Button size="sm" variant="outline" onClick={open}><Repeat />Open in loop builder</Button>
-        <Button size="sm" variant="outline" onClick={download}><Download />Download MIDI</Button>
-      </div>
-    </li>
-  )
-}
-
-export function Recipes({ id }: { id: Family }) {
-  const list = recipesFor(id)
-  return <ul className="grid border-t border-l md:grid-cols-2 xl:grid-cols-3">{list.map((r) => <RecipeCard key={r.id} r={r} family={id} />)}</ul>
-}
-

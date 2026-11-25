@@ -19,8 +19,9 @@ import { Button } from "@/components/ui/button"
 import { GENRE_SOUNDS } from "@/data/genre-sounds"
 import { genreInfo, GENRE_INFO } from "@/data/genres"
 import { GENRE_GUIDE } from "@/data/genre-guide"
-import { recipesFor } from "@/lib/recipes"
-import { ChordMoves, ListenTo, PartsList, Recipes, Tells } from "@/components/genres/genre-guide"
+import { TELLS } from "@/data/genre-tells"
+import { JamRecipes } from "@/components/genres/jam-recipes"
+import { ChordMoves, ListenTo, PartsList, Tells } from "@/components/genres/genre-guide"
 import { FAMILIES, PATTERNS } from "@/data/patterns"
 import { uid, update, useProgress, type LoopState, type TrackPlan } from "@/lib/store"
 
@@ -47,10 +48,10 @@ function planFor(id: string): TrackPlan {
 /** Families of genres, each with a color used across this page. */
 const GROUPS: { id: string; name: string; color: string; members: string[] }[] = [
   { id: "wave", name: "Wave, phonk and trap", color: "var(--s6)", members: ["wave", "driftwave", "hardwave", "phonk", "trap", "futurebass"] },
-  { id: "house", name: "House", color: "var(--s2)", members: ["house", "deephouse", "techhouse", "discohouse", "basshouse", "afrohouse", "prog"] },
-  { id: "techno", name: "Techno and trance", color: "var(--s5)", members: ["techno", "minimal", "hardtechno", "dubtechno", "trance", "hardstyle"] },
-  { id: "bass", name: "Bass, breaks and garage", color: "var(--s1)", members: ["dnb", "jungle", "dubstep", "ukg", "futuregarage", "breakbeat", "electro"] },
-  { id: "chill", name: "Downtempo and beats", color: "var(--s4)", members: ["ambient", "odesza", "lofi", "boombap", "synthwave", "reggaeton"] },
+  { id: "house", name: "House", color: "var(--s2)", members: ["house", "deephouse", "minimaldeep", "techhouse", "discohouse", "basshouse", "afrohouse", "prog"] },
+  { id: "techno", name: "Techno and trance", color: "var(--s5)", members: ["techno", "minimal", "hardtechno", "dubtechno", "ambienttechno", "trance", "hardstyle"] },
+  { id: "bass", name: "Bass, breaks and garage", color: "var(--s1)", members: ["dnb", "liquid", "jungle", "dubstep", "chillstep", "ukg", "futuregarage", "breakbeat", "electro"] },
+  { id: "chill", name: "Downtempo and beats", color: "var(--s4)", members: ["ambient", "chill", "odesza", "lofi", "boombap", "synthwave", "reggaeton"] },
 ]
 const groupOf = (id: string) => GROUPS.find((g) => g.members.includes(id)) ?? GROUPS[0]
 const BPM_MIN = 60, BPM_MAX = 180
@@ -126,7 +127,7 @@ export function GenresPage() {
   const byTempo = [...list].sort((a, b) => a.tempo[0] + a.tempo[1] - (b.tempo[0] + b.tempo[1]))
   return (
     <div className="space-y-12">
-      <PageHeader title="Genres">{GENRE_INFO.length} styles of electronic music and what makes each one sound like itself: chord moves, groove, sounds, production tells and records to study. Each page ends with recipes you can play, open in the loop builder or download as MIDI.</PageHeader>
+      <PageHeader title="Genres">{GENRE_INFO.length} styles of electronic music and what makes each one sound like itself: chord moves, groove, sounds, production tells and records to study. Each page ends with six recipes you can play, edit and download as MIDI.</PageHeader>
 
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by family">
         {[{ id: "all", name: "All genres", color: "var(--foreground)" }, ...GROUPS].map((g) => (
@@ -367,7 +368,7 @@ export function GenrePage() {
         </Block>
       </div>
 
-      <Block title="The chord moves" description={`Each move in your key, voiced with the ${guide.ext === 9 ? "9th chords" : guide.ext === 7 ? "7th chords" : "plain triads"} ${lower} tends to use. Press Hear it to play one; the Recipes below put them in a full loop.`}>
+      <Block title="The chord moves" description={`Each move in your key, voiced with the ${guide.ext === 9 ? "9th chords" : guide.ext === 7 ? "7th chords" : "plain triads"} ${lower} tends to use. Press Hear it to play one; the recipes below put them into full parts.`}>
         <ChordMoves id={g.id} />
       </Block>
 
@@ -380,16 +381,16 @@ export function GenrePage() {
         {sounds.length ? <div className="grid gap-4 pt-2 lg:grid-cols-2">{sounds.map((s) => <SoundCard key={s.id} s={s} />)}</div> : null}
       </Block>
 
-      <Block title="Production tells" description={`Two ways producers finish ${lower}, and what gives each away.`}>
-        <Tells tells={guide.tells} />
+      <Block title="Production tells" description={`Two ways producers finish ${lower}, and the concrete moves that give each one away. Loudness targets are rough guides for the finished master.`}>
+        <Tells tells={TELLS[g.id]} />
       </Block>
 
       <Block title="Listen to" description="Listening pointers, not templates. Each opens a search so you can find it wherever you listen.">
         <ListenTo refs={guide.refs} />
       </Block>
 
-      <Block title={`${recipesFor(g.id).length} ways to make ${lower}`} description="A starter loop, variations that each change one thing, and an arrangement sketch, all in your key. Play them here, open one in the loop builder, or download the MIDI for Live.">
-        <Recipes id={g.id} />
+      <Block title={`Six ways to make ${lower}`} description="A starter, three variations that each take the style somewhere different, a sectioned sketch and a Live handoff. Each one cooks from a Markdown recipe: play it, edit it and cook again, then download the MIDI or a pack for Live.">
+        <JamRecipes id={g.id} />
       </Block>
 
       <Block title="Atmospheres, transitions and vocal effects" description={`The effects ${famName(g.id).toLowerCase()} producers use between and around the notes, over ${famName(g.id).toLowerCase()} drums.`}><FxLibrary only={g.id} /></Block>

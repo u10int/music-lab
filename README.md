@@ -32,6 +32,26 @@ npm run lint
 | `src/components/labs/` | Interactive labs: scales and chords, synth, slicing, drum patterns, arrangement map, mixing, ear training. |
 | `src/components/guide/`, `src/components/push/` | The Live instruments guide and the Push 3 guide. |
 | `src/pages/` | One file per route. |
+| `src/jam/` | The recipe generator: vocabulary, theory, layer generation, the six-recipe cookbook per style, MIDI and pack export, and browser playback. |
+| `recipes/` | Every style’s six recipes as Markdown, written by `npm run jam -- --write-recipes recipes`. |
+
+## Cooking recipes into MIDI
+
+`npm run jam` turns Markdown recipes into MIDI, inspired by jamburgr’s documented workflow (its source isn’t public, so this is our own implementation). The genre pages use the same code.
+
+```sh
+npm run jam                                            # interactive menu
+npm run jam -- --list                                  # every chord colour, voicing, pattern, bass, pad, lead and arrangement
+npm run jam -- --style-info liquid                     # a style’s notes, tells and recipes
+npm run jam -- --style ukg --recipes                   # the style’s six recipes
+npm run jam -- --style ukg --recipe starter --key "F minor" --out ./jams/ukg
+npm run jam -- --style deephouse --recipe live --output-mode pack --out ./jams/deep
+npm run jam -- --config recipes/chill/chill_golden_hour_chords.md --progression "i,bVII,bVI,V7" --out ./jams/chill
+npm run jam -- --style all --recipe sectioned --output-mode multi --out ./jams/all
+npm run jam -- --write-example-config my_song.md       # a recipe to edit
+```
+
+A recipe is readable `key: value` lines (anything else is notes): header fields (`recipe_role`, `display_title`, `summary`, `mood_tags`, `tempo_band`, `study`), then the config: `key`, `style`, `progression` (a name, `default`, or Roman numerals like `i,VI,III,VII`), `chord`, `voicing`, `pattern`, `bpm`, `bars_per_chord`, layer switches and styles (`bass_style`, `pad_style`, `lead_style`, `drum_style`, densities), `arrangement` with `arrangement_archetype` and `song_length`, and export settings (`output_mode`, `export_layout`, `sound_design_cards`). Any field can also be passed as a flag. Packs hold `full.mid`, one file per layer and per section, the recipe and `notes.md` with Live import steps and sound cards.
 
 ## Adding shadcn components
 
