@@ -1,5 +1,6 @@
 import type { Melody } from "./melody-core"
-import type { StemsMsg } from "./stems.worker"
+import type { StemsJob, StemsMsg } from "./stems.worker"
+import type { Parts } from "./transcribe-core"
 
 export type StemsProgress = Extract<StemsMsg, { type: "progress" }>
 const SR = 44100
@@ -35,7 +36,7 @@ export async function hasWebGpu() {
  * Split a track into stems and transcribe the vocals and instruments as notes.
  * The first run downloads the ~170 MB stem model; the browser keeps it for later runs.
  */
-export async function splitAndTranscribe(file: Blob, barMs: number, onProgress: (p: StemsProgress) => void, signal?: AbortSignal): Promise<{ melody: Melody; gpu: boolean }> {
+export async function splitAndTranscribe(file: Blob, analysis: StemsJob["analysis"], onProgress: (p: StemsProgress) => void, signal?: AbortSignal): Promise<{ melody: Melody; parts: Parts | null; gpu: boolean }> {
   const { left, right } = await decodeStereo(file)
   const worker = new Worker(new URL("./stems.worker.ts", import.meta.url), { type: "module" })
   return new Promise((resolve, reject) => {
@@ -46,10 +47,10 @@ export async function splitAndTranscribe(file: Blob, barMs: number, onProgress: 
       if (m.type === "progress") return onProgress(m)
       signal?.removeEventListener("abort", stop)
       worker.terminate()
-      if (m.type === "done") resolve({ melody: m.melody, gpu: m.gpu })
+      if (m.type === "done") resolve({ melody: m.melody, parts: m.parts, gpu: m.gpu })
       else reject(new Error(m.error))
     }
     worker.onerror = (e) => { worker.terminate(); reject(new Error(e.message || "The stem worker stopped.")) }
-    worker.postMessage({ left, right, barMs }, [left.buffer, right.buffer])
+    worker.postMessage({ left, right, analysis } satisfies StemsJob, [left.buffer, right.buffer])
   })
 }

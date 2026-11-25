@@ -129,7 +129,7 @@ export function decodeNotes(A: { note: Float32Array; onset: Float32Array; nFrame
  * One note at a time: stronger and longer notes win where notes overlap, then each
  * note is cut where the next begins, and repeats of a pitch with a tiny gap are joined.
  */
-export function monophonic(notes: MNote[], minVel = 25, minDur = 90): MNote[] {
+export function monophonic(notes: MNote[], minVel = 25, minDur = 90, joinGap = 60): MNote[] {
   const cand = notes.filter((n) => n[3] >= minVel && n[1] >= minDur).sort((a, b) => b[3] * Math.sqrt(b[1]) - a[3] * Math.sqrt(a[1]))
   const kept: MNote[] = []
   for (const n of cand) {
@@ -144,7 +144,7 @@ export function monophonic(notes: MNote[], minVel = 25, minDur = 90): MNote[] {
   for (const n of kept) {
     const last = out[out.length - 1]
     if (last && last[0] + last[1] > n[0]) last[1] = Math.max(0, n[0] - last[0])
-    if (last && last[2] === n[2] && n[0] - (last[0] + last[1]) < 60) { last[1] = n[0] + n[1] - last[0]; last[3] = Math.max(last[3], n[3]); continue }
+    if (last && last[2] === n[2] && n[0] - (last[0] + last[1]) < joinGap) { last[1] = n[0] + n[1] - last[0]; last[3] = Math.max(last[3], n[3]); continue }
     out.push(n)
   }
   return out.filter((n) => n[1] >= minDur * 0.6)
@@ -154,7 +154,8 @@ export function monophonic(notes: MNote[], minVel = 25, minDur = 90): MNote[] {
  * The top line of a polyphonic part: at each moment the highest sounding note, leaving
  * out notes held longer than `maxHold` ms (pads and drones), then made monophonic.
  */
-export function topLine(notes: MNote[], maxHold: number, minVel = 30): MNote[] {
+/** Notes that could be the lead: strong enough, and not part of a pad held longer than maxHold. */
+function topLineCandidates(notes: MNote[], maxHold: number, minVel = 30): MNote[] {
   // A pad is often heard as a string of short notes on one pitch, re-struck by whatever
   // plays over it; join those first, and leave out any pitch that holds longer than maxHold.
   const byPitch = new Map<number, MNote[]>()
@@ -178,7 +179,11 @@ export function topLine(notes: MNote[], maxHold: number, minVel = 30): MNote[] {
     }
     close()
   }
-  const cand = notes.filter((n) => n[3] >= minVel && !held.has(n))
+  return notes.filter((n) => n[3] >= minVel && !held.has(n))
+}
+
+export function topLine(notes: MNote[], maxHold: number, minVel = 30): MNote[] {
+  const cand = topLineCandidates(notes, maxHold, minVel)
   const top: MNote[] = []
   for (const n of cand) {
     const s = n[0], e = n[0] + n[1]
@@ -194,12 +199,116 @@ export function topLine(notes: MNote[], maxHold: number, minVel = 30): MNote[] {
   return monophonic(top, minVel, 90)
 }
 
+/**
+ * A sung line, cleaned up to read like a melody: syllables stay separate notes, but
+ * octave slips are folded back, short pitch blips from slides and vibrato join the
+ * note beside them, and small gaps inside a phrase are closed (breaths stay as rests).
+ */
+export function vocalLine(notes: MNote[], beatMs: number): MNote[] {
+  // Same-pitch notes stay apart: each is a separate syllable.
+  const line = monophonic(notes, 25, 70, -1)
+  // Octave slips: a note an octave from both neighbours (within a second) moves to their octave.
+  for (let i = 0; i < line.length; i++) {
+    const p = line[i - 1], q = line[i + 1], n = line[i]
+    const near = (o?: MNote) => o && Math.abs(o[0] - n[0]) < 1000
+    for (const d of [12, -12]) if (near(p) && near(q) && Math.abs(n[2] - d - p![2]) <= 2 && Math.abs(n[2] - d - q![2]) <= 2) n[2] -= d
+    if (!near(p) && near(q) && Math.abs(n[2] - q![2]) >= 10 && Math.abs(n[2] - q![2]) <= 14 && n[1] < 200) n[2] += Math.round((q![2] - n[2]) / 12) * 12
+  }
+  // Blips: very short notes touching a neighbour within a whole tone join the longer such neighbour.
+  let out: MNote[] = []
+  for (let i = 0; i < line.length; i++) {
+    const n = line[i]
+    const prev = out[out.length - 1], next = line[i + 1]
+    const touchesPrev = prev && n[0] - (prev[0] + prev[1]) < 60 && Math.abs(prev[2] - n[2]) <= 2
+    const touchesNext = next && next[0] - (n[0] + n[1]) < 60 && Math.abs(next[2] - n[2]) <= 2
+    if (n[1] < 120 && (touchesPrev || touchesNext)) {
+      if (touchesNext && (!touchesPrev || next[1] > prev[1])) { next[1] += next[0] - n[0]; next[0] = n[0]; continue }
+      prev[1] = n[0] + n[1] - prev[0]
+      continue
+    }
+    out.push(n)
+  }
+  // Legato: close gaps shorter than about half a beat, the way a singer carries a phrase.
+  const fill = Math.min(320, beatMs * 0.6)
+  out = out.map((n, i) => {
+    const next = out[i + 1]
+    const gap = next ? next[0] - (n[0] + n[1]) : Infinity
+    return gap > 0 && gap < fill ? [n[0], next[0] - n[0], n[2], n[3]] as MNote : n
+  })
+  return out.filter((n) => n[1] >= 80)
+}
+
+/**
+ * An instrument lead keeps its own articulation (synth leads are often short and
+ * spiky), so only blips are joined and the tiniest gaps closed.
+ */
+export function leadLine(notes: MNote[]): MNote[] {
+  const out: MNote[] = []
+  for (const n of notes) {
+    const prev = out[out.length - 1]
+    if (prev && n[1] < 90 && n[0] - (prev[0] + prev[1]) < 40 && Math.abs(prev[2] - n[2]) <= 1) { prev[1] = n[0] + n[1] - prev[0]; continue }
+    if (prev && n[0] - (prev[0] + prev[1]) > 0 && n[0] - (prev[0] + prev[1]) < 50) prev[1] = n[0] - prev[0]
+    out.push([...n] as MNote)
+  }
+  return out
+}
+
+/**
+ * The lead from a polyphonic instrument stem as one singable line. Notes that start
+ * together are one attack; for each attack we pick one note, scoring strength, length
+ * and height but charging for the size of the leap from the last note, and take the
+ * best-scoring path through the whole track (a Viterbi search). Held pads are left out.
+ */
+export function leadPath(notes: MNote[], barMs: number): MNote[] {
+  const pool = topLineCandidates(notes, barMs)
+  if (!pool.length) return []
+  // Group attacks: notes starting within 40 ms of the group’s first note.
+  const groups: MNote[][] = []
+  for (const n of [...pool].sort((x, y) => x[0] - y[0])) {
+    const g = groups[groups.length - 1]
+    if (g && n[0] - g[0][0] < 40) g.push(n)
+    else groups.push([n])
+  }
+  const sal = (n: MNote) => n[3] / 100 + Math.min(400, n[1]) / 1000 + (n[2] - 60) * 0.012
+  const LEAP = 0.045, REST = 0.25
+  // best[i][j]: best score ending on note j of group i; back pointers for the path. A group can also be skipped (a rest).
+  type Cell = { score: number; prev: [number, number] | null }
+  const best: Cell[][] = []
+  let lastBest: { score: number; at: [number, number] | null } = { score: 0, at: null }
+  for (let i = 0; i < groups.length; i++) {
+    const row: Cell[] = groups[i].map((n) => {
+      // From the best note of the previous group, or from the best path so far after a rest.
+      let score = lastBest.score - (lastBest.at ? REST : 0) + sal(n), prev = lastBest.at
+      if (i > 0) groups[i - 1].forEach((m, k) => {
+        const sc = best[i - 1][k].score + sal(n) - LEAP * Math.abs(n[2] - m[2])
+        if (sc > score) { score = sc; prev = [i - 1, k] }
+      })
+      return { score, prev }
+    })
+    best.push(row)
+    // The best path so far, for a rest before the next group.
+    row.forEach((c, j) => { if (c.score > lastBest.score) lastBest = { score: c.score, at: [i, j] } })
+    if (i > 0) best[i - 1].forEach((c, j) => { if (c.score > lastBest.score) lastBest = { score: c.score, at: [i - 1, j] } })
+  }
+  const path: MNote[] = []
+  let at: [number, number] | null = lastBest.at
+  while (at) { path.push([...groups[at[0]][at[1]]] as MNote); at = best[at[0]][at[1]].prev }
+  path.reverse()
+  // Each note lasts until it ends or the next begins.
+  for (let i = 0; i < path.length - 1; i++) path[i][1] = Math.max(60, Math.min(path[i][1], path[i + 1][0] - path[i][0]))
+  // Lone spikes: a short note far from both neighbours is usually another part poking through.
+  return path.filter((n, i) => {
+    const p = path[i - 1], q = path[i + 1]
+    return !(n[1] < 250 && p && q && Math.abs(n[2] - p[2]) > 7 && Math.abs(n[2] - q[2]) > 7 && q[0] - (p[0] + p[1]) < 800)
+  })
+}
+
 /** Every note in both stems, from model activations. */
 export function melodyFrom(vocal: ReturnType<typeof decodeNotes>, other: ReturnType<typeof decodeNotes>, barMs: number): Melody {
   return {
     version: 1,
-    vocals: monophonic(vocal),
-    lead: topLine(other.filter((n) => n[2] >= 55), barMs),
+    vocals: vocalLine(vocal, barMs / 4),
+    lead: leadLine(leadPath(other.filter((n) => n[2] >= 55), barMs)),
     other,
   }
 }

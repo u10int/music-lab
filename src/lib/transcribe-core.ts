@@ -62,11 +62,18 @@ export interface Parts {
   chords: (BarChord | null)[]
   /** Vocal and instrument notes from the stems, once the track has been split. */
   melody?: import("./melody-core").Melody
+  /** Drums, bass and chords came from separated stems rather than the full mix. */
+  fromStems?: boolean
 }
 
 interface Input {
   x: Float32Array
   sr: number
+  /**
+   * Separated stems at the same rate as x, when the track has been split: drums for the
+   * grid and drum parts, bass for the bassline, and the rest (no vocals) for the chords.
+   */
+  stems?: { drums: Float32Array; bass: Float32Array; harmony: Float32Array }
   tempo: number
   keyRoot: number
   minor: boolean
@@ -94,7 +101,7 @@ function features(x: Float32Array, sr: number) {
   const [l0, l1, c1, m0, m1, h0, h1] = [bin(40), bin(120), bin(250), bin(200), bin(2500), bin(3000), bin(Math.min(10000, sr / 2 - 200))]
   const frames = Math.max(0, Math.floor((x.length - n) / hop) + 1)
   const mk = () => new Float32Array(frames)
-  const low = mk(), lowE = mk(), midE = mk(), hiE = mk(), fcent = mk(), midLin = mk(), midFrac = mk(), hiLin = mk(), hiFrac = mk(), all = mk(), loud = mk()
+  const low = mk(), lowE = mk(), midE = mk(), hiE = mk(), fcent = mk(), mcent = mk(), midLin = mk(), midFrac = mk(), hiLin = mk(), hiFrac = mk(), all = mk(), loud = mk()
   const re = new Float64Array(n), im = new Float64Array(n)
   const hist = Array.from({ length: lag + 1 }, () => new Float64Array(n / 2))
   const histM = Array.from({ length: lag + 1 }, () => new Float64Array(n / 2))
@@ -118,7 +125,7 @@ function features(x: Float32Array, sr: number) {
     hiE[f] = he
     loud[f] = e / (m1 - m0 + 1)
     if (f < lag) continue
-    let sl = 0, sa = 0, nm = 0, nh = 0, ml = 0, hl = 0, cw = 0, cm = 0
+    let sl = 0, sa = 0, nm = 0, nh = 0, ml = 0, hl = 0, cw = 0, cm = 0, mw = 0
     for (let k = l0; k <= h1; k++) {
       const d = cur[k] - prev[k]
       const dm = curM[k] - prevM[k]
@@ -126,7 +133,7 @@ function features(x: Float32Array, sr: number) {
       if (d <= 0) continue
       sa += d
       if (k <= l1) sl += d
-      if (k >= m0 && k <= m1) { if (d > 0.35) nm++; if (dm > 0) ml += dm }
+      if (k >= m0 && k <= m1) { if (d > 0.35) nm++; if (dm > 0) { ml += dm; mw += dm * k } }
       if (k >= h0 && k <= h1) { if (d > 0.35) nh++; if (dm > 0) hl += dm }
     }
     low[f] = sl / (l1 - l0 + 1)
@@ -136,9 +143,10 @@ function features(x: Float32Array, sr: number) {
     midLin[f] = ml
     hiLin[f] = hl
     fcent[f] = cm > 1e-9 ? ((cw / cm) * sr) / n : 0
+    mcent[f] = ml > 1e-9 ? ((mw / ml) * sr) / n : 0
   }
   // `center`: frames from a frame’s start to its middle, for timing individual hits.
-  return { low, lowE, midE, hiE, fcent, midLin, midFrac, hiLin, hiFrac, all, loud, fps: sr / hop, center: n / 2 / hop }
+  return { low, lowE, midE, hiE, fcent, mcent, midLin, midFrac, hiLin, hiFrac, all, loud, fps: sr / hop, center: n / 2 / hop }
 }
 
 const percentile = (v: ArrayLike<number>, p: number) => {
@@ -255,7 +263,7 @@ function hatEnergy(x: Float32Array, sr: number) {
   return { env, fps: sr / hop, center: 1 }
 }
 
-function drumSteps(F: Feat, t0: number, step: number, steps: number, H: ReturnType<typeof hatEnergy>) {
+function drumSteps(F: Feat, t0: number, step: number, steps: number, H: ReturnType<typeof hatEnergy>, stem = false) {
   const lowRef = percentile(F.low, 0.97)
   const kick = new Float32Array(steps), snare = new Float32Array(steps), hat = new Float32Array(steps), low = new Float32Array(steps), open = new Float32Array(steps), hatLevel = new Float32Array(steps)
   // High-band energy in the frame centred on a time.
@@ -270,6 +278,14 @@ function drumSteps(F: Feat, t0: number, step: number, steps: number, H: ReturnTy
     for (let dt = 0; dt <= 0.03; dt += 0.006) peak = Math.max(peak, mean(F.midE, F.fps, t + dt, 0.006))
     const ring = peak > before ? Math.max(0, body - before) / (peak - before) : 0
     snare[s] = near(F.midLin, F.fps, t) * Math.sqrt(near(F.midFrac, F.fps, t)) * Math.max(0.25, Math.min(1, ring * 2.5))
+    if (stem) {
+      // On a drum stem a kick’s click is as loud as a snare in the mid band. Where the new mid
+      // energy sits tells them apart: around 0.5 kHz for a kick, nearer 1 kHz for a snare or clap.
+      const a = Math.max(0, Math.floor((t - 0.02) * F.fps)), b = Math.min(F.midLin.length - 1, Math.ceil((t + 0.035) * F.fps))
+      let bi = a
+      for (let i = a; i <= b; i++) if (F.midLin[i] > F.midLin[bi]) bi = i
+      snare[s] *= Math.max(0.15, Math.min(1, (F.mcent[bi] - 500) / 350))
+    }
     hat[s] = near(F.hiLin, F.fps, t) * Math.sqrt(near(F.hiFrac, F.fps, t))
     low[s] = near(F.low, F.fps, t) / (lowRef + 1e-9)
     // How much of the hit is still ringing halfway to the next 16th: a closed hat is gone, an open one isn’t.
@@ -295,7 +311,7 @@ function drumSteps(F: Feat, t0: number, step: number, steps: number, H: ReturnTy
   return { kick: norm(kick), snare: norm(snare), hat: norm(hat), low, open, hatLevel: norm(hatLevel), refs }
 }
 
-function sectionDrums(vals: Float32Array[], open: Float32Array, level: Float32Array, startBar: number, bars: number): DrumPart | null {
+function sectionDrums(vals: Float32Array[], open: Float32Array, level: Float32Array, startBar: number, bars: number, stem = false): DrumPart | null {
   if (bars < 1) return null
   // Per bar and lane: which steps hit, and how hard compared with the track’s strong hits.
   const hits = (lane: number, bar: number, s: number) => {
@@ -304,6 +320,8 @@ function sectionDrums(vals: Float32Array[], open: Float32Array, level: Float32Ar
     if (lane === 1 && vals[0][(startBar + bar) * 16 + s] >= 0.42 && v < 0.8) return 0
     // A snare hit also lights up the hat band; only count the hat if it stands out on its own.
     if (lane === 2) {
+      // On a drum stem a kick’s click is the loudest thing up there too.
+      if (stem && vals[0][(startBar + bar) * 16 + s] >= 0.5 && v < 0.75) return 0
       const sn = hits(1, bar, s)
       if (sn >= 0.38 && v < Math.max(1, sn * 1.15)) return 0
     }
@@ -325,7 +343,8 @@ function sectionDrums(vals: Float32Array[], open: Float32Array, level: Float32Ar
           const bar = g * per + Math.floor(s / 16), at = (startBar + bar) * 16 + (s % 16)
           const v = hits(li, bar, s % 16)
           // Hats are levelled by how loud they are rather than how sharp the attack is.
-          if (v >= thr) { count++; sum += li === 2 ? level[at] : v; op += open[at] }
+          // A kick rings on up there too, so a hat on a stem’s kick step can’t be told open from closed: call it closed.
+          if (v >= thr) { count++; sum += li === 2 ? level[at] : v; op += stem && vals[0][at] >= 0.5 ? 0 : open[at] }
         }
         const frac = count / groups
         consistency += Math.abs(2 * frac - 1); cells++
@@ -518,7 +537,7 @@ function yin(x: Float32Array, start: number, w: number, sr: number, fmin: number
   return { f0: sr / (best + (Math.abs(shift) < 1 ? shift : 0)), ap: bestV }
 }
 
-function transcribeBass(x: Float32Array, sr: number, t0: number, step: number, steps: number, scale: number[], keyRoot: number, lowOnset: Float32Array, lowRef: number, kick: Float32Array) {
+function transcribeBass(x: Float32Array, sr: number, t0: number, step: number, steps: number, scale: number[], keyRoot: number, lowOnset: Float32Array | null, lowRef: number, kick: Float32Array | null) {
   // Low-pass, then halve the sample rate: pitch tracking below 250 Hz doesn’t need more, and it’s 4× faster.
   const full = lowpass(lowpass(x, sr, 260), sr, 260)
   const lp = new Float32Array(Math.floor(full.length / 2))
@@ -561,10 +580,11 @@ function transcribeBass(x: Float32Array, sr: number, t0: number, step: number, s
   let cur: BassNote | null = null
   for (let s = 0; s < steps; s++) {
     const m = raw[s]
-    const onset = lowOnset[s] > lowRef * 0.55 && rms[s] > rms[Math.max(0, s - 1)] * 1.15
+    // From a bass stem there’s no kick in the way, so a clear rise in level marks a new note.
+    const onset = lowOnset ? lowOnset[s] > lowRef * 0.55 && rms[s] > rms[Math.max(0, s - 1)] * 1.15 : rms[s] > rms[Math.max(0, s - 1)] * 1.5
     if (m === null) { cur = null; continue }
     // Right on or after a kick, a new low pitch is usually the kick’s own tail, not a bass note.
-    if ((kick[s] > 0.35 || kick[s - 1] > 0.35) && (!cur || cur.midi !== m) && !(raw[s + 1] === m && raw[s + 2] === m)) { cur = null; continue }
+    if (kick && (kick[s] > 0.35 || kick[s - 1] > 0.35) && (!cur || cur.midi !== m) && !(raw[s + 1] === m && raw[s + 2] === m)) { cur = null; continue }
     if (cur && cur.midi === m && !onset && s === cur.step + cur.len) { cur.len++; continue }
     cur = { step: s, len: 1, midi: m }
     notes.push(cur)
@@ -690,27 +710,41 @@ function matchChords(bars: { chroma: number[]; energy: number }[], bassPc: (numb
 
 /* ---------- Everything ---------- */
 
-export function transcribe({ x: xIn, sr: srIn, tempo, keyRoot, minor, sections, end }: Input): Parts {
+export function transcribe({ x: xIn, sr: srIn, tempo, keyRoot, minor, sections, end, stems }: Input): Parts {
   const scale = minor ? MINOR_IV : MAJOR_IV
-  // Drums use the full input (22050 Hz reaches the hats); pitch work uses half that.
-  const F = features(xIn, srIn)
-  let x = xIn, sr = srIn
-  if (srIn > 16000) {
-    x = new Float32Array(Math.floor(xIn.length / 2))
-    for (let i = 0; i < x.length; i++) x[i] = 0.5 * (xIn[2 * i] + xIn[2 * i + 1])
-    sr = srIn / 2
+  const halve = (v: Float32Array) => {
+    if (srIn <= 16000) return v
+    const y = new Float32Array(Math.floor(v.length / 2))
+    for (let i = 0; i < y.length; i++) y[i] = 0.5 * (v[2 * i] + v[2 * i + 1])
+    return y
   }
-  // Where the sound starts.
-  const loudRef = percentile(F.loud, 0.95)
-  let start = 0
-  while (start < F.loud.length && F.loud[start] < loudRef * 0.3) start++
-  const startSec = start / F.fps, endSec = Math.max(startSec + 4, end || x.length / sr)
+  // Drums use the full rate (22050 Hz reaches the hats); pitch work uses half that.
+  const drumSrc = stems?.drums ?? xIn
+  const F = features(drumSrc, srIn)
+  const x = halve(xIn), sr = srIn > 16000 ? srIn / 2 : srIn
+  const harmony = stems ? halve(stems.harmony) : x, bassSrc = stems ? halve(stems.bass) : x
+  // Where the sound starts: from the mix, since a stem (drums, say) may come in late.
+  let startSec = 0
+  if (stems) {
+    const w = Math.round(sr * 0.05), lv: number[] = []
+    for (let i = 0; i + w <= x.length; i += w) { let e = 0; for (let k = i; k < i + w; k++) e += x[k] * x[k]; lv.push(Math.sqrt(e / w)) }
+    const ref = percentile(lv, 0.95)
+    let k = 0
+    while (k < lv.length && lv[k] < ref * 0.03) k++
+    startSec = k * 0.05
+  } else {
+    const loudRef = percentile(F.loud, 0.95)
+    let start = 0
+    while (start < F.loud.length && F.loud[start] < loudRef * 0.3) start++
+    startSec = start / F.fps
+  }
+  const endSec = Math.max(startSec + 4, end || x.length / sr)
 
-  const grid = beatGrid(F, x, sr, tempo, startSec, endSec)
+  const grid = beatGrid(F, harmony, sr, tempo, startSec, endSec)
   const step = 60 / grid.bpm / 4, barSec = step * 16
   const bars = Math.max(0, Math.floor((endSec - grid.t0) / barSec))
   const steps = bars * 16
-  const D = drumSteps(F, grid.t0, step, steps, hatEnergy(xIn, srIn))
+  const D = drumSteps(F, grid.t0, step, steps, hatEnergy(drumSrc, srIn), !!stems)
   const vals = [D.kick, D.snare, D.hat]
 
   // Sections in bars, from the analysis.
@@ -722,12 +756,12 @@ export function transcribe({ x: xIn, sr: srIn, tempo, keyRoot, minor, sections, 
     const next = i + 1 < cuts.length ? cuts[i + 1].bar : bars
     const n = Math.min(next, bars) - c.bar
     if (n <= 0) return
-    const drums = sectionDrums(vals, D.open, D.hatLevel, c.bar, n)
+    const drums = sectionDrums(vals, D.open, D.hatLevel, c.bar, n, !!stems)
     const sec = { label: c.label, startBar: c.bar, bars: n, drums }
     partSections.push({ ...sec, fills: sectionFills(F, D, grid.t0, step, sec) })
   })
 
-  const bass = transcribeBass(x, sr, grid.t0, step, steps, scale, keyRoot, D.low, 1, D.kick)
+  const bass = stems ? transcribeBass(bassSrc, sr, grid.t0, step, steps, scale, keyRoot, null, 1, null) : transcribeBass(x, sr, grid.t0, step, steps, scale, keyRoot, D.low, 1, D.kick)
   // The bass note that sounds longest in each bar helps pick the chord root.
   const bassPc: (number | null)[] = Array.from({ length: bars }, (_, b) => {
     const tally = new Map<number, number>()
@@ -739,7 +773,7 @@ export function transcribe({ x: xIn, sr: srIn, tempo, keyRoot, minor, sections, 
     for (const [pc, v] of tally) if (v > bv) { bv = v; best = pc }
     return bv >= 3 ? best : null
   })
-  const chords = matchChords(windowChroma(x, sr, Array.from({ length: bars }, (_, b) => grid.t0 + b * barSec), barSec), bassPc, keyRoot, scale)
+  const chords = matchChords(windowChroma(harmony, sr, Array.from({ length: bars }, (_, b) => grid.t0 + b * barSec), barSec), bassPc, keyRoot, scale)
 
   return { version: 1, tempo: grid.bpm, t0: Math.round(grid.t0 * 1000) / 1000, bars, sections: partSections, bass, chords }
 }

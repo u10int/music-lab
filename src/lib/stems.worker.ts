@@ -6,13 +6,14 @@
 import * as ort from "onnxruntime-web/webgpu"
 import { CONSTANTS, prepareModelInput, standaloneIspec, standaloneMask } from "demucs-web"
 import { activations, BP_SR, decodeNotes, halfRate, melodyFrom, type Melody } from "./melody-core"
+import { transcribe, type Parts } from "./transcribe-core"
 
 export const DEMUCS_URL = "https://huggingface.co/timcsy/demucs-web-onnx/resolve/main/htdemucs_embedded.onnx"
 const CACHE = "music-lab-models-v1"
 
 export type StemsMsg =
   | { type: "progress"; phase: "download" | "load" | "separate" | "notes"; p: number; detail?: string }
-  | { type: "done"; melody: Melody; gpu: boolean }
+  | { type: "done"; melody: Melody; parts: Parts | null; gpu: boolean }
   | { type: "error"; error: string }
 
 const post = (m: StemsMsg) => self.postMessage(m)
@@ -42,12 +43,12 @@ async function model(): Promise<ArrayBuffer> {
   return buf.buffer
 }
 
-/** Vocals and everything-but-drums-and-bass, each as mono at the input rate. */
+/** All four stems (drums, bass, other, vocals), each as mono at the input rate. */
 async function separate(session: ort.InferenceSession, left: Float32Array, right: Float32Array) {
   const { TRAINING_SAMPLES: L, MODEL_SPEC_BINS, MODEL_SPEC_FRAMES, SEGMENT_OVERLAP } = CONSTANTS
   const total = left.length, stride = Math.floor(L * (1 - SEGMENT_OVERLAP))
   const segments = Math.max(1, Math.ceil((total - L) / stride) + 1)
-  const vocals = new Float32Array(total), other = new Float32Array(total), weight = new Float32Array(total)
+  const acc = [0, 1, 2, 3].map(() => new Float32Array(total)), weight = new Float32Array(total)
   let seg = 0
   for (let start = 0; start < total; start += stride) {
     const len = Math.min(L, total - start)
@@ -73,22 +74,30 @@ async function separate(session: ort.InferenceSession, left: Float32Array, right
       for (let i = 0; i < len; i++) y[i] = 0.5 * (td[t * 2 * n + i] + td[t * 2 * n + n + i] + (f ? f.left[i] + f.right[i] : 0))
       return y
     }
-    const v = stem(3), o = stem(2)
+    const ys = [0, 1, 2, 3].map(stem)
     for (let i = 0; i < len; i++) {
       const w = Math.min(1, i / (stride * 0.5), (len - i) / (stride * 0.5))
-      vocals[start + i] += v[i] * w; other[start + i] += o[i] * w; weight[start + i] += w
+      for (let t = 0; t < 4; t++) acc[t][start + i] += ys[t][i] * w
+      weight[start + i] += w
     }
     for (const name of session.outputNames) out[name].dispose?.()
     post({ type: "progress", phase: "separate", p: ++seg / segments, detail: `Part ${seg} of ${segments}` })
     if (start + L >= total) break
   }
-  for (let i = 0; i < total; i++) if (weight[i] > 0) { vocals[i] /= weight[i]; other[i] /= weight[i] }
-  return { vocals, other }
+  for (let i = 0; i < total; i++) if (weight[i] > 0) for (let t = 0; t < 4; t++) acc[t][i] /= weight[i]
+  return { drums: acc[0], bass: acc[1], other: acc[2], vocals: acc[3] }
 }
 
-self.onmessage = async (e: MessageEvent<{ left: Float32Array; right: Float32Array; barMs: number }>) => {
+export interface StemsJob {
+  left: Float32Array
+  right: Float32Array
+  /** The track’s analysis, to line the parts up the same way. */
+  analysis: { tempo: number; keyRoot: number; minor: boolean; sections: { t: number; label: string }[]; end: number }
+}
+
+self.onmessage = async (e: MessageEvent<StemsJob>) => {
   try {
-    const { left, right, barMs } = e.data
+    const { left, right, analysis } = e.data
     const gpu = typeof navigator !== "undefined" && "gpu" in navigator && !!(await (navigator as unknown as { gpu: { requestAdapter(): Promise<unknown> } }).gpu.requestAdapter().catch(() => null))
     const buf = await model()
     post({ type: "progress", phase: "load", p: 0 })
@@ -109,8 +118,17 @@ self.onmessage = async (e: MessageEvent<{ left: Float32Array; right: Float32Arra
       onGpu = false; demucs = await open(false)
       stems = await separate(demucs, left, right)
     }
-    const { vocals, other } = stems
     await demucs.release()
+    // Stems come out at 44.1 kHz; the transcription and Basic Pitch want 22.05.
+    const drums = halfRate(stems.drums), bass = halfRate(stems.bass), o = halfRate(stems.other), v = halfRate(stems.vocals)
+
+    // Drums, bass and chords again, now from their own stems.
+    post({ type: "progress", phase: "notes", p: 0, detail: "Drums, bass and chords" })
+    const mix = new Float32Array(drums.length)
+    for (let i = 0; i < mix.length; i++) mix[i] = drums[i] + bass[i] + o[i] + v[i]
+    let parts: Parts | null = null
+    try { parts = transcribe({ x: mix, sr: BP_SR, ...analysis, stems: { drums, bass, harmony: o } }) } catch (err) { console.warn("Parts from stems failed:", err) }
+    const barMs = (60 / (parts?.tempo ?? analysis.tempo)) * 4 * 1000
 
     // Basic Pitch is small: the CPU is quick and avoids GPU quirks.
     const bpBuf = await (await fetch(new URL("/models/basic-pitch.onnx", self.location.origin))).arrayBuffer()
@@ -119,14 +137,11 @@ self.onmessage = async (e: MessageEvent<{ left: Float32Array; right: Float32Arra
       const r = await bp.run({ [bp.inputNames[0]]: new ort.Tensor("float32", x, [1, x.length, 1]) })
       return { note: r["StatefulPartitionedCall:1"].data as Float32Array, onset: r["StatefulPartitionedCall:2"].data as Float32Array }
     }
-    // Stems come out at 44.1 kHz; Basic Pitch wants 22.05.
-    const v = halfRate(vocals), o = halfRate(other)
-    if (Math.abs(44100 / 2 - BP_SR) > 1) throw new Error("Unexpected sample rate.")
     const vA = await activations(v, run, (p) => post({ type: "progress", phase: "notes", p: p / 2, detail: "Vocals" }))
     const vocalNotes = decodeNotes(vA, { minMidi: 40, maxMidi: 88 })
     const oA = await activations(o, run, (p) => post({ type: "progress", phase: "notes", p: 0.5 + p / 2, detail: "Instruments" }))
     const otherNotes = decodeNotes(oA)
-    post({ type: "done", melody: melodyFrom(vocalNotes, otherNotes, barMs), gpu: onGpu })
+    post({ type: "done", melody: melodyFrom(vocalNotes, otherNotes, barMs), parts, gpu: onGpu })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     post({ type: "error", error: `The stem split stopped: ${msg.slice(0, 300)}` })
